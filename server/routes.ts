@@ -160,6 +160,196 @@ Return ONLY valid JSON, no markdown formatting.`
     }
   });
 
+  app.post("/api/scan-post", async (req: Request, res: Response) => {
+    try {
+      const { postText, url, reports, profiles } = req.body as {
+        postText?: string;
+        url?: string;
+        reports: PetReport[];
+        profiles: PetProfile[];
+      };
+
+      if (!postText && !url) {
+        return res.status(400).json({ error: "Post text or URL is required" });
+      }
+
+      let contentToAnalyze = postText || '';
+
+      if (url && !postText) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 10000);
+          const response = await fetch(url, {
+            signal: controller.signal,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; PetReunite/1.0)',
+            },
+          });
+          clearTimeout(timeout);
+          const html = await response.text();
+          contentToAnalyze = html
+            .replace(/<script[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[\s\S]*?<\/style>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 5000);
+        } catch (fetchErr) {
+          if (!postText) {
+            return res.status(400).json({
+              error: "Could not fetch that URL. Try copying and pasting the post text instead."
+            });
+          }
+        }
+      }
+
+      if (!contentToAnalyze.trim()) {
+        return res.status(400).json({ error: "No content to analyze" });
+      }
+
+      const extractionResult = await openai.chat.completions.create({
+        model: "gpt-5.2",
+        messages: [
+          {
+            role: "system",
+            content: `You are an AI that extracts pet information from social media posts (Facebook, Instagram, Nextdoor, community boards, etc.) about lost or found pets.
+
+Extract the following details from the post text. If a detail is not mentioned, use "unknown".
+
+Return a JSON object with:
+- "isRelevant": boolean - true if this appears to be about a lost or found pet, false otherwise
+- "status": "lost" or "found" 
+- "petType": one of "dog", "cat", "bird", "rabbit", "other"
+- "petName": the pet's name if mentioned
+- "breed": breed if mentioned
+- "size": "small", "medium", or "large"
+- "color": color/coloring description
+- "markings": distinguishing markings
+- "description": a cleaned up summary of the pet description from the post
+- "locationName": location/area mentioned in the post
+- "contactInfo": any contact info (phone, email) from the post
+- "reward": reward amount if mentioned
+- "postSummary": a 1-2 sentence summary of the post
+
+Return ONLY valid JSON, no markdown.`
+          },
+          {
+            role: "user",
+            content: contentToAnalyze
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_completion_tokens: 8192,
+      });
+
+      const extractedContent = extractionResult.choices[0]?.message?.content || '{}';
+      let extracted;
+      try {
+        extracted = JSON.parse(extractedContent);
+      } catch {
+        return res.status(500).json({ error: "Could not parse the post content" });
+      }
+
+      if (!extracted.isRelevant) {
+        return res.json({
+          extracted,
+          matches: [],
+          message: "This doesn't appear to be about a lost or found pet."
+        });
+      }
+
+      const allCandidates: { type: string; id: string; summary: string }[] = [];
+
+      const filteredReports = (reports || []).filter(r => {
+        if (extracted.petType !== 'unknown' && r.petType !== extracted.petType) return false;
+        if (extracted.status === 'lost') return r.status === 'found';
+        if (extracted.status === 'found') return r.status === 'lost';
+        return true;
+      });
+
+      for (const r of filteredReports) {
+        allCandidates.push({
+          type: 'report',
+          id: r.id,
+          summary: `[App Report] ${r.status.toUpperCase()} ${r.petType} named "${r.petName}", breed: ${r.breed}, size: ${r.size}, color: ${r.color}, markings: "${r.markings}", location: ${r.locationName}, date: ${r.lastSeenDate}, description: "${r.description}"`,
+        });
+      }
+
+      const filteredProfiles = (profiles || []).filter(p => {
+        if (extracted.petType !== 'unknown' && p.petType !== extracted.petType) return false;
+        return true;
+      });
+
+      for (const p of filteredProfiles) {
+        allCandidates.push({
+          type: 'profile',
+          id: p.id,
+          summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || 'none'}`,
+        });
+      }
+
+      if (allCandidates.length === 0) {
+        return res.json({ extracted, matches: [] });
+      }
+
+      const postSummary = `${extracted.status?.toUpperCase() || 'UNKNOWN'} ${extracted.petType || 'pet'} named "${extracted.petName || 'unknown'}", breed: ${extracted.breed || 'unknown'}, size: ${extracted.size || 'unknown'}, color: ${extracted.color || 'unknown'}, markings: "${extracted.markings || 'none'}", location: ${extracted.locationName || 'unknown'}, description: "${extracted.description || ''}"`;
+
+      const candidateList = allCandidates.map((c, i) => `${i + 1}. (${c.type}:${c.id}) ${c.summary}`).join('\n');
+
+      const matchResult = await openai.chat.completions.create({
+        model: "gpt-5.2",
+        messages: [
+          {
+            role: "system",
+            content: `You are an AI that matches pets from online social media posts with existing pet reports and registered profiles in a lost & found pets app.
+
+Given extracted details from an online post and a list of candidates from the app database, determine which candidates could potentially be the same pet.
+
+Consider these factors:
+- Breed similarity (exact match is strongest signal)
+- Color and markings similarity
+- Size match
+- Geographic proximity based on location names
+- Description details overlap
+
+Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
+- "id": candidate id
+- "type": "report" or "profile"
+- "confidence": 0-100
+- "reason": 1-2 sentence explanation
+
+Only include candidates with confidence >= 25. Return at most 10 matches.
+Return ONLY valid JSON, no markdown.`
+          },
+          {
+            role: "user",
+            content: `Online post pet info:\n${postSummary}\n\nApp database candidates:\n${candidateList}`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_completion_tokens: 8192,
+      });
+
+      const matchContent = matchResult.choices[0]?.message?.content || '{"matches":[]}';
+      let matchParsed;
+      try {
+        matchParsed = JSON.parse(matchContent);
+      } catch {
+        matchParsed = { matches: [] };
+      }
+
+      const matches = (matchParsed.matches || matchParsed.results || [])
+        .filter((m: any) => m.confidence >= 25)
+        .sort((a: any, b: any) => b.confidence - a.confidence)
+        .slice(0, 10);
+
+      return res.json({ extracted, matches });
+    } catch (error) {
+      console.error("Scan post error:", error);
+      return res.status(500).json({ error: "Failed to analyze the post" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
