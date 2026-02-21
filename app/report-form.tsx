@@ -9,6 +9,7 @@ import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
+import { useSubscription } from '@/lib/subscription-context';
 import { PetType, PetSize } from '@/lib/types';
 
 const PET_TYPES: { key: PetType; label: string; icon: string }[] = [
@@ -28,7 +29,8 @@ const PET_SIZES: { key: PetSize; label: string }[] = [
 export default function ReportFormScreen() {
   const { type, fromProfileId } = useLocalSearchParams<{ type: string; fromProfileId?: string }>();
   const insets = useSafeAreaInsets();
-  const { addReport, getProfile } = usePets();
+  const { addReport, getProfile, reports } = usePets();
+  const { canUseMultiPhoto, canAddReport, isPremium } = useSubscription();
   const isLost = type === 'lost';
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
@@ -51,9 +53,18 @@ export default function ReportFormScreen() {
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const photoLimit = canUseMultiPhoto() ? 5 : 1;
+
   const pickImage = async () => {
-    if (photoUris.length >= 5) {
-      Alert.alert('Limit reached', 'You can add up to 5 photos.');
+    if (photoUris.length >= photoLimit) {
+      if (!canUseMultiPhoto()) {
+        Alert.alert('Premium Feature', 'Upgrade to Premium to add up to 5 photos per report.', [
+          { text: 'Maybe Later' },
+          { text: 'Upgrade', onPress: () => router.push('/paywall') },
+        ]);
+      } else {
+        Alert.alert('Limit reached', 'You can add up to 5 photos.');
+      }
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -64,13 +75,20 @@ export default function ReportFormScreen() {
     });
 
     if (!result.canceled) {
-      setPhotoUris(prev => [...prev, result.assets[0].uri].slice(0, 5));
+      setPhotoUris(prev => [...prev, result.assets[0].uri].slice(0, photoLimit));
     }
   };
 
   const takePhoto = async () => {
-    if (photoUris.length >= 5) {
-      Alert.alert('Limit reached', 'You can add up to 5 photos.');
+    if (photoUris.length >= photoLimit) {
+      if (!canUseMultiPhoto()) {
+        Alert.alert('Premium Feature', 'Upgrade to Premium to add up to 5 photos per report.', [
+          { text: 'Maybe Later' },
+          { text: 'Upgrade', onPress: () => router.push('/paywall') },
+        ]);
+      } else {
+        Alert.alert('Limit reached', 'You can add up to 5 photos.');
+      }
       return;
     }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -128,6 +146,13 @@ export default function ReportFormScreen() {
   };
 
   const handleSubmit = async () => {
+    if (!canAddReport(reports.length)) {
+      Alert.alert('Report Limit', 'Free users can create 1 report. Upgrade to Premium for unlimited reports.', [
+        { text: 'Maybe Later' },
+        { text: 'Upgrade', onPress: () => router.push('/paywall') },
+      ]);
+      return;
+    }
     if (!breed.trim()) {
       Alert.alert('Missing info', 'Please enter the pet breed.');
       return;

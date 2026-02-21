@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
+import { useSubscription } from '@/lib/subscription-context';
 import { PetType, PetSize } from '@/lib/types';
 
 const PET_TYPES: { key: PetType; label: string; icon: string }[] = [
@@ -27,7 +28,8 @@ const PET_SIZES: { key: PetSize; label: string }[] = [
 export default function RegisterPetScreen() {
   const { editId } = useLocalSearchParams<{ editId?: string }>();
   const insets = useSafeAreaInsets();
-  const { addProfile, updateProfile, getProfile } = usePets();
+  const { addProfile, updateProfile, getProfile, profiles } = usePets();
+  const { canAddProfile } = useSubscription();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
   const existingProfile = editId ? getProfile(editId) : undefined;
@@ -89,6 +91,14 @@ export default function RegisterPetScreen() {
     }
     if (!ownerName.trim() || !ownerPhone.trim()) {
       Alert.alert('Missing info', 'Please enter your contact details.');
+      return;
+    }
+
+    if (!existingProfile && !canAddProfile(profiles.length)) {
+      Alert.alert('Profile Limit', 'Free users can register 1 pet profile. Upgrade to Premium for unlimited profiles.', [
+        { text: 'Maybe Later' },
+        { text: 'Upgrade', onPress: () => router.push('/paywall') },
+      ]);
       return;
     }
 

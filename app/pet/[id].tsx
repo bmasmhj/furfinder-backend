@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
+import { useSubscription } from '@/lib/subscription-context';
 import { Comment, TimelineEvent } from '@/lib/types';
 import { getStatusColor, getStatusBg, getStatusLabel, getPetTypeIcon, getSizeLabel, formatDate } from '@/lib/helpers';
 
@@ -29,6 +30,7 @@ export default function PetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { getReport, updateReportStatus, addComment, addRewardContribution } = usePets();
+  const { canUseAIMatching } = useSubscription();
   const report = getReport(id);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
@@ -389,12 +391,22 @@ export default function PetDetailScreen() {
                 if (Platform.OS !== 'web') {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 }
+                if (!canUseAIMatching()) {
+                  router.push('/paywall');
+                  return;
+                }
                 router.push(`/matches?reportId=${report.id}`);
               }}
               style={({ pressed }) => [styles.findMatchesBtn, pressed && { opacity: 0.9 }]}
             >
               <Ionicons name="sparkles" size={20} color="#fff" />
               <Text style={styles.findMatchesBtnText}>Find AI Matches</Text>
+              {!canUseAIMatching() && (
+                <View style={styles.premiumLockBadge}>
+                  <Ionicons name="diamond" size={10} color="#F59E0B" />
+                  <Text style={styles.premiumLockText}>PRO</Text>
+                </View>
+              )}
             </Pressable>
           )}
 
@@ -880,5 +892,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
     color: '#fff',
+  },
+  premiumLockBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    gap: 3,
+    marginLeft: 4,
+  },
+  premiumLockText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FEF3C7',
+    letterSpacing: 0.5,
   },
 });

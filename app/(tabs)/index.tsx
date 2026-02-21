@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
+import { useSubscription } from '@/lib/subscription-context';
 import PetCard from '@/components/PetCard';
 import FilterBar from '@/components/FilterBar';
 import EmptyState from '@/components/EmptyState';
@@ -13,6 +14,7 @@ import EmptyState from '@/components/EmptyState';
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { reports, isLoading, unreadCount } = usePets();
+  const { isPremium, canUseScanPost } = useSubscription();
   const [filter, setFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -69,10 +71,17 @@ export default function HomeScreen() {
             </View>
             <Pressable
               style={styles.scanBubble}
-              onPress={() => router.push('/scan-post')}
+              onPress={() => {
+                if (!canUseScanPost()) {
+                  router.push('/paywall');
+                  return;
+                }
+                router.push('/scan-post');
+              }}
             >
               <Feather name="search" size={14} color="#F97316" />
               <Text style={styles.scanBubbleText}>Scan Post</Text>
+              {!canUseScanPost() && <Ionicons name="diamond" size={10} color="#F59E0B" style={{ marginLeft: 2 }} />}
             </Pressable>
           </View>
           <View style={styles.statsRow}>
@@ -83,6 +92,15 @@ export default function HomeScreen() {
               <Ionicons name="shield-checkmark" size={14} color="#059669" />
               <Text style={styles.tipsBubbleText}>Safety Tips</Text>
             </Pressable>
+            {!isPremium && (
+              <Pressable
+                style={styles.upgradeBubble}
+                onPress={() => router.push('/paywall')}
+              >
+                <Ionicons name="diamond" size={14} color="#F59E0B" />
+                <Text style={styles.upgradeBubbleText}>Upgrade</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -220,6 +238,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Poppins_500Medium',
     color: '#059669',
+  },
+  upgradeBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  upgradeBubbleText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#D97706',
   },
   listContent: {
     paddingTop: 4,
