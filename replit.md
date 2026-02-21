@@ -27,6 +27,16 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 15. **Reward Pool**: Community reward pooling for lost pets with contribution system
 16. **Area Alerts**: In-app notifications when a lost/found pet is reported near registered pet profiles (matched by suburb, pet type, and 10km proximity radius)
 
+## Subscription / Monetization
+- **RevenueCat** SDK (`react-native-purchases`) for in-app subscriptions
+- **Free Tier**: 1 report, 1 profile, 1 photo per report, standard alerts
+- **Premium ($2.99/month or $24.99/year)**: Unlimited reports/profiles, AI matching, scan posts, multi-photo (up to 5), priority alerts
+- Subscription context: `lib/subscription-context.tsx` - manages premium state with AsyncStorage persistence
+- Paywall screen: `app/paywall.tsx` - plan selection, purchase, restore flow
+- Feature gating via `useSubscription()` hook: `canUseAIMatching()`, `canUseScanPost()`, `canUseMultiPhoto()`, `canAddReport()`, `canAddProfile()`
+- RevenueCat loads dynamically (non-web only); web uses local state for testing
+- User needs to configure RevenueCat API keys before publishing to stores
+
 ## Project Structure
 - `app/(tabs)/` - Tab screens: index (home), map, report, my-reports (renamed to "My Pets")
 - `app/report-form.tsx` - Lost/found report form (supports pre-fill from profile via `fromProfileId` param)
@@ -78,3 +88,7 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-21: Added Nearby Services directory on web map fallback
 - 2026-02-21: Added area-based notification alerts for lost/found pets near registered profiles
 - 2026-02-21: Added notifications screen with bell icon badge on home header
+- 2026-02-21: Added premium subscription system with RevenueCat ($2.99/month, $24.99/year)
+- 2026-02-21: Added paywall screen with plan comparison, feature list, purchase/restore flow
+- 2026-02-21: Added feature gating for AI matching, scan post, multi-photo, unlimited reports/profiles
+- 2026-02-21: Added upgrade entry points on home screen, My Pets tab, and premium-locked features
