@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Purchases, { CustomerInfo, PurchasesPackage, LOG_LEVEL } from 'react-native-purchases';
 
 const SUBSCRIPTION_KEY = '@subscription_state';
 const REVENUECAT_API_KEY_IOS = 'appl_REPLACE_WITH_YOUR_KEY';
@@ -23,8 +22,8 @@ export interface SubscriptionContextValue {
   isPremium: boolean;
   isLoading: boolean;
   limits: typeof FREE_LIMITS;
-  offerings: PurchasesPackage[];
-  purchasePackage: (pkg: PurchasesPackage) => Promise<boolean>;
+  offerings: any[];
+  purchasePackage: (pkg: any) => Promise<boolean>;
   restorePurchases: () => Promise<boolean>;
   canAddReport: (currentCount: number) => boolean;
   canAddProfile: (currentCount: number) => boolean;
@@ -36,10 +35,26 @@ export interface SubscriptionContextValue {
 
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
 
+let Purchases: any = null;
+
+async function loadPurchases() {
+  if (Platform.OS !== 'web') {
+    try {
+      const mod = await import('react-native-purchases');
+      Purchases = mod.default;
+      return Purchases;
+    } catch (e) {
+      console.log('RevenueCat not available:', e);
+      return null;
+    }
+  }
+  return null;
+}
+
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [offerings, setOfferings] = useState<PurchasesPackage[]>([]);
+  const [offerings, setOfferings] = useState<any[]>([]);
   const [isConfigured, setIsConfigured] = useState(false);
 
   useEffect(() => {
@@ -54,17 +69,20 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         setIsPremium(parsed.isPremium || false);
       }
 
-      if (Platform.OS !== 'web') {
-        Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+      const rc = await loadPurchases();
+      if (rc && Platform.OS !== 'web') {
+        try {
+          rc.setLogLevel(rc.LOG_LEVEL?.DEBUG ?? 4);
+        } catch (_e) {}
         const apiKey = Platform.OS === 'ios' ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
-        await Purchases.configure({ apiKey });
+        await rc.configure({ apiKey });
         setIsConfigured(true);
 
-        const customerInfo = await Purchases.getCustomerInfo();
+        const customerInfo = await rc.getCustomerInfo();
         checkPremiumStatus(customerInfo);
 
         try {
-          const offeringsResult = await Purchases.getOfferings();
+          const offeringsResult = await rc.getOfferings();
           if (offeringsResult.current?.availablePackages) {
             setOfferings(offeringsResult.current.availablePackages);
           }
@@ -79,15 +97,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const checkPremiumStatus = (customerInfo: CustomerInfo) => {
-    const hasActive = Object.keys(customerInfo.entitlements.active).length > 0;
-    setIsPremium(hasActive);
-    AsyncStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify({ isPremium: hasActive }));
+  const checkPremiumStatus = (customerInfo: any) => {
+    const hasActive = customerInfo?.entitlements?.active && Object.keys(customerInfo.entitlements.active).length > 0;
+    setIsPremium(hasActive || false);
+    AsyncStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify({ isPremium: hasActive || false }));
   };
 
-  const purchasePackage = useCallback(async (pkg: PurchasesPackage): Promise<boolean> => {
+  const purchasePackage = useCallback(async (pkg: any): Promise<boolean> => {
     try {
-      if (!isConfigured) {
+      if (!isConfigured || !Purchases) {
         setIsPremium(true);
         await AsyncStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify({ isPremium: true }));
         return true;
@@ -105,7 +123,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const restorePurchases = useCallback(async (): Promise<boolean> => {
     try {
-      if (!isConfigured) return false;
+      if (!isConfigured || !Purchases) return false;
       const customerInfo = await Purchases.restorePurchases();
       checkPremiumStatus(customerInfo);
       return Object.keys(customerInfo.entitlements.active).length > 0;
