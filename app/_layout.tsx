@@ -7,6 +7,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
 import { PetProvider } from "@/lib/pet-context";
+import { SubscriptionProvider } from "@/lib/subscription-context";
 import {
   useFonts,
   Poppins_400Regular,
@@ -53,6 +54,10 @@ function RootLayoutNav() {
         name="notifications"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="paywall"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
     </Stack>
   );
 }
@@ -76,13 +81,15 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <PetProvider>
-          <GestureHandlerRootView>
-            <KeyboardProvider>
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </PetProvider>
+        <SubscriptionProvider>
+          <PetProvider>
+            <GestureHandlerRootView>
+              <KeyboardProvider>
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </PetProvider>
+        </SubscriptionProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
