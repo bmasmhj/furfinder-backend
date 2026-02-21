@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, FlatList, Pressable, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Pressable, Alert, Platform, SectionList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -7,9 +7,72 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
-import { PetReport, PetStatus } from '@/lib/types';
-import { getStatusColor, getStatusBg, getStatusLabel, getPetTypeIcon, formatDate } from '@/lib/helpers';
+import { PetReport, PetProfile, PetStatus } from '@/lib/types';
+import { getStatusColor, getStatusBg, getStatusLabel, getPetTypeIcon, formatDate, getSizeLabel } from '@/lib/helpers';
 import EmptyState from '@/components/EmptyState';
+
+function PetProfileCard({ profile, index }: { profile: PetProfile; index: number }) {
+  const handlePress = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push({ pathname: '/my-pet/[id]', params: { id: profile.id } });
+  };
+
+  return (
+    <Animated.View entering={FadeInRight.delay(index * 60).duration(300)}>
+      <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+      >
+        {profile.photoUris.length > 0 ? (
+          <View style={styles.profileImageContainer}>
+            <Animated.Image
+              source={{ uri: profile.photoUris[0] }}
+              style={styles.profileImage}
+              resizeMode="cover"
+            />
+          </View>
+        ) : (
+          <View style={[styles.profileIconCircle]}>
+            <MaterialCommunityIcons
+              name={getPetTypeIcon(profile.petType) as any}
+              size={28}
+              color={Colors.secondary}
+            />
+          </View>
+        )}
+        <View style={styles.profileContent}>
+          <View style={styles.profileHeader}>
+            <Text style={styles.profileName} numberOfLines={1}>{profile.petName}</Text>
+            <View style={styles.registeredPill}>
+              <Ionicons name="shield-checkmark" size={10} color={Colors.secondary} />
+              <Text style={styles.registeredPillText}>Registered</Text>
+            </View>
+          </View>
+          <Text style={styles.profileMeta} numberOfLines={1}>
+            {profile.breed} · {getSizeLabel(profile.size)}
+          </Text>
+          <View style={styles.profileDetails}>
+            {!!profile.microchipNumber && (
+              <View style={styles.profileTag}>
+                <Ionicons name="hardware-chip-outline" size={12} color={Colors.secondary} />
+                <Text style={styles.profileTagText}>Chipped</Text>
+              </View>
+            )}
+            {!!profile.suburb && (
+              <View style={styles.profileTag}>
+                <Ionicons name="location-outline" size={12} color={Colors.textSecondary} />
+                <Text style={styles.profileTagText}>{profile.suburb}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 function MyReportItem({ report, index }: { report: PetReport; index: number }) {
   const { updateReportStatus, deleteReport } = usePets();
@@ -28,7 +91,6 @@ function MyReportItem({ report, index }: { report: PetReport; index: number }) {
     }
     if (report.status === 'reunited') return;
 
-    const newStatus: PetStatus = 'reunited';
     Alert.alert(
       'Mark as Reunited?',
       'This will mark the pet as safely returned home.',
@@ -36,7 +98,7 @@ function MyReportItem({ report, index }: { report: PetReport; index: number }) {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Yes, Reunited!',
-          onPress: () => updateReportStatus(report.id, newStatus),
+          onPress: () => updateReportStatus(report.id, 'reunited'),
         },
       ]
     );
@@ -104,36 +166,99 @@ function MyReportItem({ report, index }: { report: PetReport; index: number }) {
   );
 }
 
-export default function MyReportsScreen() {
+export default function MyPetsScreen() {
   const insets = useSafeAreaInsets();
-  const { myReports } = usePets();
+  const { myReports, profiles } = usePets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+  const [activeTab, setActiveTab] = useState<'pets' | 'reports'>('pets');
+
+  const handleAddPet = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    router.push('/register-pet');
+  };
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + webTopPadding + 20 }]}>
-        <Text style={styles.title}>My Reports</Text>
-        <Text style={styles.subtitle}>{myReports.length} active reports</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>My Pets</Text>
+          <Pressable onPress={handleAddPet} style={styles.addBtn}>
+            <Ionicons name="add" size={24} color="#fff" />
+          </Pressable>
+        </View>
+
+        <View style={styles.tabsRow}>
+          <Pressable
+            onPress={() => setActiveTab('pets')}
+            style={[styles.tabBtn, activeTab === 'pets' && styles.tabBtnActive]}
+          >
+            <Text style={[styles.tabBtnText, activeTab === 'pets' && styles.tabBtnTextActive]}>
+              My Pets ({profiles.length})
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setActiveTab('reports')}
+            style={[styles.tabBtn, activeTab === 'reports' && styles.tabBtnActive]}
+          >
+            <Text style={[styles.tabBtnText, activeTab === 'reports' && styles.tabBtnTextActive]}>
+              My Reports ({myReports.length})
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
-      <FlatList
-        data={myReports}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <MyReportItem report={item} index={index} />}
-        ListEmptyComponent={
-          <EmptyState
-            icon="clipboard-text-outline"
-            title="No reports yet"
-            subtitle="When you report a lost or found pet, it will appear here"
-          />
-        }
-        contentContainerStyle={[
-          styles.listContent,
-          myReports.length === 0 && styles.emptyList,
-        ]}
-        scrollEnabled={!!myReports.length || true}
-        showsVerticalScrollIndicator={false}
-      />
+      {activeTab === 'pets' ? (
+        <FlatList
+          data={profiles}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => <PetProfileCard profile={item} index={index} />}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconContainer}>
+                <MaterialCommunityIcons name="paw" size={48} color={Colors.secondary} />
+              </View>
+              <Text style={styles.emptyTitle}>No pets registered yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Register your pets now with their details, photos, and microchip number. If they ever go missing, you can quickly create a lost report.
+              </Text>
+              <Pressable
+                onPress={handleAddPet}
+                style={({ pressed }) => [styles.emptyBtn, pressed && { opacity: 0.9 }]}
+              >
+                <Ionicons name="add" size={20} color="#fff" />
+                <Text style={styles.emptyBtnText}>Register My Pet</Text>
+              </Pressable>
+            </View>
+          }
+          contentContainerStyle={[
+            styles.listContent,
+            profiles.length === 0 && styles.emptyList,
+          ]}
+          scrollEnabled={!!profiles.length || true}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <FlatList
+          data={myReports}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => <MyReportItem report={item} index={index} />}
+          ListEmptyComponent={
+            <EmptyState
+              icon="clipboard-text-outline"
+              title="No reports yet"
+              subtitle="When you report a lost or found pet, it will appear here"
+            />
+          }
+          contentContainerStyle={[
+            styles.listContent,
+            myReports.length === 0 && styles.emptyList,
+          ]}
+          scrollEnabled={!!myReports.length || true}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }
@@ -145,25 +270,188 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_700Bold',
     color: Colors.text,
   },
-  subtitle: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+  addBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabsRow: {
+    flexDirection: 'row',
+    marginTop: 16,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: 12,
+    padding: 4,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  tabBtnActive: {
+    backgroundColor: Colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  tabBtnText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
     color: Colors.textSecondary,
-    marginTop: 4,
+  },
+  tabBtnTextActive: {
+    color: Colors.text,
+    fontFamily: 'Poppins_600SemiBold',
   },
   listContent: {
     paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 100,
   },
   emptyList: {
     flexGrow: 1,
+  },
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  profileImageContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  profileIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: Colors.foundBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileContent: {
+    flex: 1,
+    gap: 3,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  profileName: {
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.text,
+    flex: 1,
+  },
+  registeredPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.foundBg,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  registeredPillText: {
+    fontSize: 10,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.secondary,
+  },
+  profileMeta: {
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textSecondary,
+  },
+  profileDetails: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 2,
+  },
+  profileTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  profileTagText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textSecondary,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    gap: 12,
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.foundBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.text,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  emptyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.secondary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 8,
+  },
+  emptyBtnText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#fff',
   },
   reportItem: {
     flexDirection: 'row',

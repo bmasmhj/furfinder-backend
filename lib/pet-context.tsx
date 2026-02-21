@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
-import { PetReport, PetStatus } from './types';
+import { PetReport, PetStatus, PetProfile } from './types';
 
-const STORAGE_KEY = '@pet_reports';
+const REPORTS_KEY = '@pet_reports';
+const PROFILES_KEY = '@pet_profiles';
 
 const SAMPLE_REPORTS: PetReport[] = [
   {
@@ -99,6 +100,11 @@ interface PetContextValue {
   updateReportStatus: (id: string, status: PetStatus) => Promise<void>;
   deleteReport: (id: string) => Promise<void>;
   getReport: (id: string) => PetReport | undefined;
+  profiles: PetProfile[];
+  addProfile: (profile: Omit<PetProfile, 'id' | 'createdAt' | 'updatedAt'>) => Promise<PetProfile>;
+  updateProfile: (id: string, updates: Partial<PetProfile>) => Promise<void>;
+  deleteProfile: (id: string) => Promise<void>;
+  getProfile: (id: string) => PetProfile | undefined;
   isLoading: boolean;
 }
 
@@ -106,23 +112,32 @@ const PetContext = createContext<PetContextValue | null>(null);
 
 export function PetProvider({ children }: { children: ReactNode }) {
   const [reports, setReports] = useState<PetReport[]>([]);
+  const [profiles, setProfiles] = useState<PetProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadReports();
+    loadData();
   }, []);
 
-  const loadReports = async () => {
+  const loadData = async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setReports(JSON.parse(stored));
+      const [storedReports, storedProfiles] = await Promise.all([
+        AsyncStorage.getItem(REPORTS_KEY),
+        AsyncStorage.getItem(PROFILES_KEY),
+      ]);
+
+      if (storedReports) {
+        setReports(JSON.parse(storedReports));
       } else {
         setReports(SAMPLE_REPORTS);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(SAMPLE_REPORTS));
+        await AsyncStorage.setItem(REPORTS_KEY, JSON.stringify(SAMPLE_REPORTS));
+      }
+
+      if (storedProfiles) {
+        setProfiles(JSON.parse(storedProfiles));
       }
     } catch (e) {
-      console.error('Failed to load reports', e);
+      console.error('Failed to load data', e);
       setReports(SAMPLE_REPORTS);
     } finally {
       setIsLoading(false);
@@ -131,9 +146,17 @@ export function PetProvider({ children }: { children: ReactNode }) {
 
   const saveReports = async (updated: PetReport[]) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      await AsyncStorage.setItem(REPORTS_KEY, JSON.stringify(updated));
     } catch (e) {
       console.error('Failed to save reports', e);
+    }
+  };
+
+  const saveProfiles = async (updated: PetProfile[]) => {
+    try {
+      await AsyncStorage.setItem(PROFILES_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save profiles', e);
     }
   };
 
@@ -164,6 +187,38 @@ export function PetProvider({ children }: { children: ReactNode }) {
     return reports.find(r => r.id === id);
   }, [reports]);
 
+  const addProfile = useCallback(async (profile: Omit<PetProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
+    const newProfile: PetProfile = {
+      ...profile,
+      id: Crypto.randomUUID(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    const updated = [newProfile, ...profiles];
+    setProfiles(updated);
+    await saveProfiles(updated);
+    return newProfile;
+  }, [profiles]);
+
+  const updateProfile = useCallback(async (id: string, updates: Partial<PetProfile>) => {
+    const updated = profiles.map(p =>
+      p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
+    );
+    setProfiles(updated);
+    await saveProfiles(updated);
+  }, [profiles]);
+
+  const deleteProfile = useCallback(async (id: string) => {
+    const updated = profiles.filter(p => p.id !== id);
+    setProfiles(updated);
+    await saveProfiles(updated);
+  }, [profiles]);
+
+  const getProfile = useCallback((id: string) => {
+    return profiles.find(p => p.id === id);
+  }, [profiles]);
+
   const myReports = useMemo(() => reports.filter(r => r.isOwner), [reports]);
 
   const value = useMemo(() => ({
@@ -173,8 +228,13 @@ export function PetProvider({ children }: { children: ReactNode }) {
     updateReportStatus,
     deleteReport,
     getReport,
+    profiles,
+    addProfile,
+    updateProfile,
+    deleteProfile,
+    getProfile,
     isLoading,
-  }), [reports, myReports, addReport, updateReportStatus, deleteReport, getReport, isLoading]);
+  }), [reports, myReports, addReport, updateReportStatus, deleteReport, getReport, profiles, addProfile, updateProfile, deleteProfile, getProfile, isLoading]);
 
   return (
     <PetContext.Provider value={value}>

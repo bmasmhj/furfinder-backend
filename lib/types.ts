@@ -24,6 +24,24 @@ export interface PetReport {
   isOwner: boolean;
 }
 
+export interface PetProfile {
+  id: string;
+  petType: PetType;
+  petName: string;
+  breed: string;
+  size: PetSize;
+  color: string;
+  markings: string;
+  photoUris: string[];
+  microchipNumber: string;
+  medicalNotes: string;
+  suburb: string;
+  ownerName: string;
+  ownerPhone: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface LocationCoords {
   latitude: number;
   longitude: number;

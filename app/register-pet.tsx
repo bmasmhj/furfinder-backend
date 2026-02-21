@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
@@ -25,102 +24,70 @@ const PET_SIZES: { key: PetSize; label: string }[] = [
   { key: 'large', label: 'Large' },
 ];
 
-export default function ReportFormScreen() {
-  const { type, fromProfileId } = useLocalSearchParams<{ type: string; fromProfileId?: string }>();
+export default function RegisterPetScreen() {
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
   const insets = useSafeAreaInsets();
-  const { addReport, getProfile } = usePets();
-  const isLost = type === 'lost';
+  const { addProfile, updateProfile, getProfile } = usePets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
-  const prefillProfile = fromProfileId ? getProfile(fromProfileId) : undefined;
+  const existingProfile = editId ? getProfile(editId) : undefined;
 
-  const [photoUri, setPhotoUri] = useState(prefillProfile?.photoUris[0] || '');
-  const [petType, setPetType] = useState<PetType>(prefillProfile?.petType || 'dog');
-  const [petName, setPetName] = useState(prefillProfile?.petName || '');
-  const [breed, setBreed] = useState(prefillProfile?.breed || '');
-  const [size, setSize] = useState<PetSize>(prefillProfile?.size || 'medium');
-  const [color, setColor] = useState(prefillProfile?.color || '');
-  const [markings, setMarkings] = useState(prefillProfile?.markings || '');
-  const [description, setDescription] = useState(prefillProfile ? `${prefillProfile.petName} is missing. ${prefillProfile.microchipNumber ? `Microchip: ${prefillProfile.microchipNumber}. ` : ''}Please contact if found.` : '');
-  const [locationName, setLocationName] = useState(prefillProfile?.suburb || '');
-  const [latitude, setLatitude] = useState(-33.8688);
-  const [longitude, setLongitude] = useState(151.2093);
-  const [reward, setReward] = useState('');
-  const [contactName, setContactName] = useState(prefillProfile?.ownerName || '');
-  const [contactPhone, setContactPhone] = useState(prefillProfile?.ownerPhone || '');
-  const [isLocating, setIsLocating] = useState(false);
+  const [photoUris, setPhotoUris] = useState<string[]>(existingProfile?.photoUris || []);
+  const [petType, setPetType] = useState<PetType>(existingProfile?.petType || 'dog');
+  const [petName, setPetName] = useState(existingProfile?.petName || '');
+  const [breed, setBreed] = useState(existingProfile?.breed || '');
+  const [size, setSize] = useState<PetSize>(existingProfile?.size || 'medium');
+  const [color, setColor] = useState(existingProfile?.color || '');
+  const [markings, setMarkings] = useState(existingProfile?.markings || '');
+  const [microchipNumber, setMicrochipNumber] = useState(existingProfile?.microchipNumber || '');
+  const [medicalNotes, setMedicalNotes] = useState(existingProfile?.medicalNotes || '');
+  const [suburb, setSuburb] = useState(existingProfile?.suburb || '');
+  const [ownerName, setOwnerName] = useState(existingProfile?.ownerName || '');
+  const [ownerPhone, setOwnerPhone] = useState(existingProfile?.ownerPhone || '');
   const [isSaving, setIsSaving] = useState(false);
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
-    }
-  };
-
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera access is needed to take pet photos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
-    }
-  };
-
-  const detectLocation = async () => {
-    setIsLocating(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+  const addPhoto = async (source: 'camera' | 'gallery') => {
+    if (source === 'camera') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Location access helps others find the pet.');
-        setIsLocating(false);
+        Alert.alert('Permission needed', 'Camera access is needed to take pet photos.');
         return;
       }
-
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setLatitude(loc.coords.latitude);
-      setLongitude(loc.coords.longitude);
-
-      const geocode = await Location.reverseGeocodeAsync({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
       });
-
-      if (geocode.length > 0) {
-        const addr = geocode[0];
-        const name = [addr.street, addr.city, addr.region].filter(Boolean).join(', ');
-        setLocationName(name || 'Current Location');
-      } else {
-        setLocationName('Current Location');
+      if (!result.canceled) {
+        setPhotoUris(prev => [...prev, result.assets[0].uri]);
       }
-    } catch (e) {
-      Alert.alert('Error', 'Could not detect location. Please enter it manually.');
-    } finally {
-      setIsLocating(false);
+    } else {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      if (!result.canceled) {
+        setPhotoUris(prev => [...prev, result.assets[0].uri]);
+      }
     }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotoUris(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
-    if (!breed.trim()) {
-      Alert.alert('Missing info', 'Please enter the pet breed.');
+    if (!petName.trim()) {
+      Alert.alert('Missing info', 'Please enter your pet\'s name.');
       return;
     }
-    if (!contactName.trim() || !contactPhone.trim()) {
+    if (!breed.trim()) {
+      Alert.alert('Missing info', 'Please enter the breed.');
+      return;
+    }
+    if (!ownerName.trim() || !ownerPhone.trim()) {
       Alert.alert('Missing info', 'Please enter your contact details.');
       return;
     }
@@ -131,29 +98,40 @@ export default function ReportFormScreen() {
 
     setIsSaving(true);
     try {
-      await addReport({
-        status: isLost ? 'lost' : 'found',
-        petType,
-        petName: petName.trim() || 'Unknown',
-        breed: breed.trim(),
-        size,
-        color: color.trim(),
-        markings: markings.trim(),
-        photoUri,
-        description: description.trim(),
-        latitude,
-        longitude,
-        locationName: locationName.trim() || 'Unknown location',
-        lastSeenDate: new Date().toISOString().split('T')[0],
-        reward: isLost ? reward.trim() : '',
-        contactName: contactName.trim(),
-        contactPhone: contactPhone.trim(),
-        isOwner: true,
-      });
-
+      if (existingProfile) {
+        await updateProfile(existingProfile.id, {
+          petType,
+          petName: petName.trim(),
+          breed: breed.trim(),
+          size,
+          color: color.trim(),
+          markings: markings.trim(),
+          photoUris,
+          microchipNumber: microchipNumber.trim(),
+          medicalNotes: medicalNotes.trim(),
+          suburb: suburb.trim(),
+          ownerName: ownerName.trim(),
+          ownerPhone: ownerPhone.trim(),
+        });
+      } else {
+        await addProfile({
+          petType,
+          petName: petName.trim(),
+          breed: breed.trim(),
+          size,
+          color: color.trim(),
+          markings: markings.trim(),
+          photoUris,
+          microchipNumber: microchipNumber.trim(),
+          medicalNotes: medicalNotes.trim(),
+          suburb: suburb.trim(),
+          ownerName: ownerName.trim(),
+          ownerPhone: ownerPhone.trim(),
+        });
+      }
       router.back();
     } catch (e) {
-      Alert.alert('Error', 'Failed to save report. Please try again.');
+      Alert.alert('Error', 'Failed to save. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -166,7 +144,7 @@ export default function ReportFormScreen() {
           <Ionicons name="close" size={28} color={Colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>
-          {isLost ? 'Report Lost Pet' : 'Report Found Pet'}
+          {existingProfile ? 'Edit Pet Profile' : 'Register My Pet'}
         </Text>
         <View style={{ width: 28 }} />
       </View>
@@ -176,27 +154,32 @@ export default function ReportFormScreen() {
         contentContainerStyle={[styles.form, { paddingBottom: insets.bottom + (Platform.OS === 'web' ? 34 : 0) + 40 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.photoSection}>
-          {photoUri ? (
-            <Pressable onPress={pickImage} style={styles.photoPreview}>
-              <Image source={{ uri: photoUri }} style={styles.photoImage} contentFit="cover" />
-              <View style={styles.photoOverlay}>
-                <Ionicons name="camera" size={24} color="#fff" />
-              </View>
-            </Pressable>
-          ) : (
-            <View style={styles.photoButtons}>
-              <Pressable onPress={takePhoto} style={styles.photoBtn}>
-                <Ionicons name="camera" size={28} color={Colors.primary} />
-                <Text style={styles.photoBtnText}>Camera</Text>
-              </Pressable>
-              <Pressable onPress={pickImage} style={styles.photoBtn}>
-                <Ionicons name="images" size={28} color={Colors.primary} />
-                <Text style={styles.photoBtnText}>Gallery</Text>
+        <View style={styles.infoBanner}>
+          <Ionicons name="shield-checkmark" size={20} color={Colors.secondary} />
+          <Text style={styles.infoText}>
+            Register your pet now so if they ever go missing, you can quickly create a lost report with all their details.
+          </Text>
+        </View>
+
+        <Text style={styles.sectionLabel}>Photos</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photosRow}>
+          {photoUris.map((uri, index) => (
+            <View key={index} style={styles.photoThumb}>
+              <Image source={{ uri }} style={styles.photoThumbImage} contentFit="cover" />
+              <Pressable onPress={() => removePhoto(index)} style={styles.removePhotoBtn}>
+                <Ionicons name="close-circle" size={22} color={Colors.danger} />
               </Pressable>
             </View>
-          )}
-        </View>
+          ))}
+          <View style={styles.addPhotoButtons}>
+            <Pressable onPress={() => addPhoto('camera')} style={styles.addPhotoBtn}>
+              <Ionicons name="camera" size={22} color={Colors.primary} />
+            </Pressable>
+            <Pressable onPress={() => addPhoto('gallery')} style={styles.addPhotoBtn}>
+              <Ionicons name="images" size={22} color={Colors.primary} />
+            </Pressable>
+          </View>
+        </ScrollView>
 
         <Text style={styles.sectionLabel}>Pet Type</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.typeRow}>
@@ -221,18 +204,14 @@ export default function ReportFormScreen() {
           ))}
         </ScrollView>
 
-        {isLost && (
-          <>
-            <Text style={styles.sectionLabel}>Pet Name</Text>
-            <TextInput
-              style={styles.input}
-              value={petName}
-              onChangeText={setPetName}
-              placeholder="Enter pet name"
-              placeholderTextColor={Colors.textLight}
-            />
-          </>
-        )}
+        <Text style={styles.sectionLabel}>Pet Name *</Text>
+        <TextInput
+          style={styles.input}
+          value={petName}
+          onChangeText={setPetName}
+          placeholder="Enter your pet's name"
+          placeholderTextColor={Colors.textLight}
+        />
 
         <Text style={styles.sectionLabel}>Breed *</Text>
         <TextInput
@@ -275,68 +254,56 @@ export default function ReportFormScreen() {
           style={styles.input}
           value={markings}
           onChangeText={setMarkings}
-          placeholder="Any distinctive markings"
+          placeholder="Any distinctive markings or features"
           placeholderTextColor={Colors.textLight}
         />
 
-        <Text style={styles.sectionLabel}>Description</Text>
+        <View style={styles.divider} />
+
+        <Text style={styles.sectionLabel}>Microchip Number</Text>
+        <TextInput
+          style={styles.input}
+          value={microchipNumber}
+          onChangeText={setMicrochipNumber}
+          placeholder="Enter microchip number (if available)"
+          placeholderTextColor={Colors.textLight}
+        />
+
+        <Text style={styles.sectionLabel}>Medical Notes</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Add any details that might help identify this pet..."
+          value={medicalNotes}
+          onChangeText={setMedicalNotes}
+          placeholder="Any medical conditions, allergies, medications..."
           placeholderTextColor={Colors.textLight}
           multiline
-          numberOfLines={4}
+          numberOfLines={3}
           textAlignVertical="top"
         />
 
-        <Text style={styles.sectionLabel}>Location</Text>
-        <Pressable onPress={detectLocation} style={styles.locationBtn}>
-          {isLocating ? (
-            <ActivityIndicator size="small" color={Colors.primary} />
-          ) : (
-            <Ionicons name="locate" size={20} color={Colors.primary} />
-          )}
-          <Text style={styles.locationBtnText}>
-            {locationName || 'Detect Current Location'}
-          </Text>
-        </Pressable>
-        {!locationName && (
-          <TextInput
-            style={styles.input}
-            value={locationName}
-            onChangeText={setLocationName}
-            placeholder="Or enter location manually"
-            placeholderTextColor={Colors.textLight}
-          />
-        )}
-
-        {isLost && (
-          <>
-            <Text style={styles.sectionLabel}>Reward (optional)</Text>
-            <TextInput
-              style={styles.input}
-              value={reward}
-              onChangeText={setReward}
-              placeholder="e.g. $100"
-              placeholderTextColor={Colors.textLight}
-            />
-          </>
-        )}
-
-        <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Your Contact Details</Text>
+        <Text style={styles.sectionLabel}>Suburb</Text>
         <TextInput
           style={styles.input}
-          value={contactName}
-          onChangeText={setContactName}
+          value={suburb}
+          onChangeText={setSuburb}
+          placeholder="Suburb where your pet lives"
+          placeholderTextColor={Colors.textLight}
+        />
+
+        <View style={styles.divider} />
+
+        <Text style={[styles.sectionLabel, { marginTop: 4 }]}>Owner Contact Details</Text>
+        <TextInput
+          style={styles.input}
+          value={ownerName}
+          onChangeText={setOwnerName}
           placeholder="Your name *"
           placeholderTextColor={Colors.textLight}
         />
         <TextInput
           style={styles.input}
-          value={contactPhone}
-          onChangeText={setContactPhone}
+          value={ownerPhone}
+          onChangeText={setOwnerPhone}
           placeholder="Phone number *"
           placeholderTextColor={Colors.textLight}
           keyboardType="phone-pad"
@@ -347,7 +314,6 @@ export default function ReportFormScreen() {
           disabled={isSaving}
           style={({ pressed }) => [
             styles.submitBtn,
-            { backgroundColor: isLost ? Colors.lost : Colors.found },
             pressed && { opacity: 0.9 },
             isSaving && { opacity: 0.6 },
           ]}
@@ -358,7 +324,7 @@ export default function ReportFormScreen() {
             <>
               <Ionicons name="checkmark-circle" size={22} color="#fff" />
               <Text style={styles.submitBtnText}>
-                {isLost ? 'Submit Lost Report' : 'Submit Found Report'}
+                {existingProfile ? 'Save Changes' : 'Register Pet'}
               </Text>
             </>
           )}
@@ -391,50 +357,59 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
   },
-  photoSection: {
-    marginBottom: 8,
+  infoBanner: {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: Colors.foundBg,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+    alignItems: 'flex-start',
   },
-  photoPreview: {
-    height: 200,
-    borderRadius: 16,
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.text,
+    lineHeight: 19,
+  },
+  photosRow: {
+    gap: 10,
+    paddingVertical: 4,
+  },
+  photoThumb: {
+    width: 90,
+    height: 90,
+    borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
   },
-  photoImage: {
+  photoThumbImage: {
     width: '100%',
     height: '100%',
   },
-  photoOverlay: {
+  removePhotoBtn: {
     position: 'absolute',
-    bottom: 12,
-    right: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    top: 4,
+    right: 4,
+    backgroundColor: '#fff',
+    borderRadius: 11,
   },
-  photoButtons: {
+  addPhotoButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
-  photoBtn: {
-    flex: 1,
-    height: 100,
-    borderRadius: 16,
+  addPhotoBtn: {
+    width: 90,
+    height: 90,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.border,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
     backgroundColor: Colors.surface,
-  },
-  photoBtnText: {
-    fontSize: 13,
-    fontFamily: 'Poppins_500Medium',
-    color: Colors.textSecondary,
   },
   sectionLabel: {
     fontSize: 14,
@@ -480,7 +455,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   textArea: {
-    height: 100,
+    height: 80,
     paddingTop: 14,
   },
   sizeRow: {
@@ -508,22 +483,10 @@ const styles = StyleSheet.create({
   sizeChipTextActive: {
     color: '#fff',
   },
-  locationBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderStyle: 'dashed',
-  },
-  locationBtnText: {
-    fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    color: Colors.primary,
-    flex: 1,
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 8,
   },
   submitBtn: {
     flexDirection: 'row',
@@ -533,6 +496,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 14,
     marginTop: 20,
+    backgroundColor: Colors.secondary,
   },
   submitBtnText: {
     fontSize: 16,

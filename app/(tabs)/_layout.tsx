@@ -24,8 +24,8 @@ function NativeTabLayout() {
         <Label>Report</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="my-reports">
-        <Icon sf={{ default: "list.clipboard", selected: "list.clipboard.fill" }} />
-        <Label>My Reports</Label>
+        <Icon sf={{ default: "pawprint", selected: "pawprint.fill" }} />
+        <Label>My Pets</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -36,7 +36,6 @@ function ClassicTabLayout() {
   const isDark = colorScheme === "dark";
   const isWeb = Platform.OS === "web";
   const isIOS = Platform.OS === "ios";
-  const safeAreaInsets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -98,9 +97,9 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="my-reports"
         options={{
-          title: "My Reports",
+          title: "My Pets",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "list" : "list-outline"} size={24} color={color} />
+            <Ionicons name={focused ? "paw" : "paw-outline"} size={24} color={color} />
           ),
         }}
       />

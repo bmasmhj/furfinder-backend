@@ -23,16 +23,19 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="pet/[id]"
-        options={{
-          headerShown: false,
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="report-form"
-        options={{
-          headerShown: false,
-          presentation: 'modal',
-        }}
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="register-pet"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="my-pet/[id]"
+        options={{ headerShown: false }}
       />
     </Stack>
   );
