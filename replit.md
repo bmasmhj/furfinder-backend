@@ -17,6 +17,7 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 5. Quick "Report as Lost" from registered pet profiles (pre-fills report form)
 6. Combined "My Pets" tab with sub-tabs for registered pets and active reports
 7. **AI Matching**: Uses OpenAI (via Replit AI Integrations) to find potential matches between lost/found reports and registered profiles based on breed, color, markings, size, location, and descriptions
+8. **Scan Online Posts**: Paste text from Facebook, Instagram, Nextdoor, or any online lost/found pet post - AI extracts pet details and matches against app data
 
 ## Project Structure
 - `app/(tabs)/` - Tab screens: index (home), map, report, my-reports (renamed to "My Pets")
@@ -25,6 +26,7 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - `app/my-pet/[id].tsx` - Registered pet detail view
 - `app/pet/[id].tsx` - Pet report detail view (includes "Find AI Matches" button)
 - `app/matches.tsx` - AI matches results screen
+- `app/scan-post.tsx` - Scan online posts screen (paste text/URL, AI extracts pet info and matches)
 - `lib/pet-context.tsx` - State management for reports + profiles
 - `lib/types.ts` - TypeScript types (PetReport, PetProfile, PetMatch)
 - `lib/helpers.ts` - Utility functions
@@ -43,9 +45,11 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - Uses Replit AI Integrations for OpenAI access (no separate API key needed, billed to credits)
 - Model: gpt-5.2 for matching analysis
 - Endpoint: POST /api/match - accepts target report + all reports/profiles, returns ranked matches with confidence scores
+- Endpoint: POST /api/scan-post - accepts pasted text or URL from online posts, extracts pet info, then matches against app data
 - Pre-filters candidates by pet type and opposite status before sending to AI
 
 ## Recent Changes
+- 2026-02-21: Added "Scan Online Post" feature to match Facebook/social media posts against app data
 - 2026-02-21: Added AI-powered matching feature with OpenAI integration
 - 2026-02-21: Added matches screen with confidence scores and AI reasoning
 - 2026-02-21: Added "Find AI Matches" button on pet report detail screen
