@@ -46,3 +46,10 @@ export interface LocationCoords {
   latitude: number;
   longitude: number;
 }
+
+export interface PetMatch {
+  id: string;
+  type: 'report' | 'profile';
+  confidence: number;
+  reason: string;
+}

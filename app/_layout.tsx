@@ -37,6 +37,10 @@ function RootLayoutNav() {
         name="my-pet/[id]"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="matches"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

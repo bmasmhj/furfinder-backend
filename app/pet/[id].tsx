@@ -188,6 +188,21 @@ export default function PetDetailScreen() {
             </View>
           </View>
 
+          {report.status !== 'reunited' && (
+            <Pressable
+              onPress={() => {
+                if (Platform.OS !== 'web') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }
+                router.push(`/matches?reportId=${report.id}`);
+              }}
+              style={({ pressed }) => [styles.findMatchesBtn, pressed && { opacity: 0.9 }]}
+            >
+              <Ionicons name="sparkles" size={20} color="#fff" />
+              <Text style={styles.findMatchesBtnText}>Find AI Matches</Text>
+            </Pressable>
+          )}
+
           {report.isOwner && report.status !== 'reunited' && (
             <Pressable
               onPress={handleReunited}
@@ -402,6 +417,20 @@ const styles = StyleSheet.create({
   },
   contactBtnText: {
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#fff',
+  },
+  findMatchesBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#6366F1',
+    paddingVertical: 16,
+    borderRadius: 14,
+  },
+  findMatchesBtnText: {
+    fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
     color: '#fff',
   },
