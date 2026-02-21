@@ -11,13 +11,20 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 
 ## Key Features
 1. Home feed with lost/found pet cards
-2. Interactive map view (platform-specific: react-native-maps on mobile, web fallback)
-3. Report lost/found pets with photo upload + GPS location
+2. Interactive map view (platform-specific: react-native-maps on mobile, web fallback) with vet/shelter/rescue markers
+3. Report lost/found pets with **multi-photo upload** (up to 5 photos) + GPS location
 4. **Pet Profile Registration**: Owners can pre-register pets with photos, microchip number, breed, suburb, medical notes
 5. Quick "Report as Lost" from registered pet profiles (pre-fills report form)
 6. Combined "My Pets" tab with sub-tabs for registered pets and active reports
 7. **AI Matching**: Uses OpenAI (via Replit AI Integrations) to find potential matches between lost/found reports and registered profiles based on breed, color, markings, size, location, and descriptions
 8. **Scan Online Posts**: Paste text from Facebook, Instagram, Nextdoor, or any online lost/found pet post - AI extracts pet details and matches against app data
+9. **Photo Gallery**: Swipeable multi-photo gallery on pet detail view with dot indicators
+10. **Social Sharing**: Share pet reports via native Share API with pet details
+11. **Community Comments**: "Community Tips" section on each report for public comments
+12. **Timeline**: Visual timeline tracking all report events (created, status changes, comments, sightings)
+13. **Safety Tips Guide**: Comprehensive pet safety guide with tips for lost/found situations, prevention, emergency contacts
+14. **Vet & Shelter Directory**: Map markers and web listing of nearby vets, shelters, and rescue organizations
+15. **Reward Pool**: Community reward pooling for lost pets with contribution system
 
 ## Project Structure
 - `app/(tabs)/` - Tab screens: index (home), map, report, my-reports (renamed to "My Pets")
@@ -27,10 +34,12 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - `app/pet/[id].tsx` - Pet report detail view (includes "Find AI Matches" button)
 - `app/matches.tsx` - AI matches results screen
 - `app/scan-post.tsx` - Scan online posts screen (paste text/URL, AI extracts pet info and matches)
+- `app/safety-tips.tsx` - Pet safety guide with tips for lost/found situations
 - `lib/pet-context.tsx` - State management for reports + profiles
-- `lib/types.ts` - TypeScript types (PetReport, PetProfile, PetMatch)
+- `lib/types.ts` - TypeScript types (PetReport, PetProfile, PetMatch, VetShelter)
 - `lib/helpers.ts` - Utility functions
 - `lib/query-client.ts` - API client with getApiUrl(), apiRequest()
+- `lib/vet-shelters.ts` - Vet, shelter, and rescue organization data
 - `constants/colors.ts` - App color constants
 - `components/` - Shared components (MapViewNative, EmptyState, ErrorBoundary)
 - `server/routes.ts` - Backend API routes (POST /api/match for AI matching)
@@ -57,3 +66,12 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-21: Transformed "My Reports" tab into combined "My Pets" tab with sub-tabs
 - 2026-02-21: Added "Report as Lost" quick action from registered pet profiles
 - 2026-02-21: Added pet profile detail view with edit/delete capabilities
+- 2026-02-21: Added multi-photo upload (up to 5 photos) on report form with thumbnail carousel
+- 2026-02-21: Added swipeable photo gallery with dot indicators on pet detail view
+- 2026-02-21: Added social sharing via native Share API on pet detail view
+- 2026-02-21: Added Community Tips (comments) section on pet detail view
+- 2026-02-21: Added visual timeline tracking report events on pet detail view
+- 2026-02-21: Added reward pool with community contribution system on pet detail view
+- 2026-02-21: Added Safety Tips Guide screen with 4 categories of pet safety advice
+- 2026-02-21: Added vet/shelter/rescue markers on map with toggle and legend
+- 2026-02-21: Added Nearby Services directory on web map fallback

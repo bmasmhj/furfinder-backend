@@ -62,6 +62,15 @@ export default function HomeScreen() {
               <Text style={styles.scanBubbleText}>Scan Post</Text>
             </Pressable>
           </View>
+          <View style={styles.statsRow}>
+            <Pressable
+              style={styles.tipsBubble}
+              onPress={() => router.push('/safety-tips')}
+            >
+              <Ionicons name="shield-checkmark" size={14} color="#059669" />
+              <Text style={styles.tipsBubbleText}>Safety Tips</Text>
+            </Pressable>
+          </View>
         </View>
       </LinearGradient>
 
@@ -150,6 +159,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Poppins_500Medium',
     color: '#F97316',
+  },
+  tipsBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#6EE7B7',
+  },
+  tipsBubbleText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    color: '#059669',
   },
   listContent: {
     paddingTop: 4,

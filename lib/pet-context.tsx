@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Crypto from 'expo-crypto';
-import { PetReport, PetStatus, PetProfile } from './types';
+import { PetReport, PetStatus, PetProfile, Comment, TimelineEvent } from './types';
 
 const REPORTS_KEY = '@pet_reports';
 const PROFILES_KEY = '@pet_profiles';
@@ -17,16 +17,25 @@ const SAMPLE_REPORTS: PetReport[] = [
     color: 'Golden',
     markings: 'White patch on chest',
     photoUri: '',
+    photoUris: [],
     description: 'Friendly golden retriever, responds to name. Wearing blue collar with tag.',
     latitude: -33.8688,
     longitude: 151.2093,
     locationName: 'Sydney CBD',
     lastSeenDate: '2026-02-20',
     reward: '$200',
+    rewardPool: 0,
     contactName: 'Sarah M.',
     contactPhone: '0412 345 678',
     createdAt: '2026-02-20T10:30:00Z',
     isOwner: false,
+    comments: [
+      { id: 'c1', author: 'Mike D.', text: 'I think I saw a golden retriever near Hyde Park yesterday afternoon!', createdAt: '2026-02-20T14:00:00Z' },
+    ],
+    timeline: [
+      { id: 't1', type: 'created', description: 'Report created by Sarah M.', createdAt: '2026-02-20T10:30:00Z' },
+      { id: 't2', type: 'sighting', description: 'Possible sighting reported near Hyde Park', createdAt: '2026-02-20T14:00:00Z' },
+    ],
   },
   {
     id: 'sample-2',
@@ -38,16 +47,22 @@ const SAMPLE_REPORTS: PetReport[] = [
     color: 'Grey with stripes',
     markings: 'White paws',
     photoUri: '',
+    photoUris: [],
     description: 'Found hiding under a car. Very timid but friendly once approached. No collar.',
     latitude: -33.8750,
     longitude: 151.2100,
     locationName: 'Darling Harbour',
     lastSeenDate: '2026-02-19',
     reward: '',
+    rewardPool: 0,
     contactName: 'James K.',
     contactPhone: '0423 456 789',
     createdAt: '2026-02-19T15:45:00Z',
     isOwner: false,
+    comments: [],
+    timeline: [
+      { id: 't3', type: 'created', description: 'Report created by James K.', createdAt: '2026-02-19T15:45:00Z' },
+    ],
   },
   {
     id: 'sample-3',
@@ -59,16 +74,22 @@ const SAMPLE_REPORTS: PetReport[] = [
     color: 'Black and white',
     markings: 'Half white face',
     photoUri: '',
+    photoUris: [],
     description: 'Very energetic, might be scared. Microchipped. Please contact ASAP.',
     latitude: -33.8600,
     longitude: 151.2050,
     locationName: 'The Rocks',
     lastSeenDate: '2026-02-21',
     reward: '$500',
+    rewardPool: 0,
     contactName: 'Emma L.',
     contactPhone: '0434 567 890',
     createdAt: '2026-02-21T08:15:00Z',
     isOwner: false,
+    comments: [],
+    timeline: [
+      { id: 't4', type: 'created', description: 'Report created by Emma L.', createdAt: '2026-02-21T08:15:00Z' },
+    ],
   },
   {
     id: 'sample-4',
@@ -80,26 +101,45 @@ const SAMPLE_REPORTS: PetReport[] = [
     color: 'White and brown',
     markings: 'Floppy ears',
     photoUri: '',
+    photoUris: [],
     description: 'Found in backyard garden. Very tame, likely someone\'s pet.',
     latitude: -33.8800,
     longitude: 151.2150,
     locationName: 'Surry Hills',
     lastSeenDate: '2026-02-18',
     reward: '',
+    rewardPool: 0,
     contactName: 'Tom R.',
     contactPhone: '0445 678 901',
     createdAt: '2026-02-18T12:00:00Z',
     isOwner: false,
+    comments: [],
+    timeline: [
+      { id: 't5', type: 'created', description: 'Report created by Tom R.', createdAt: '2026-02-18T12:00:00Z' },
+    ],
   },
 ];
+
+function migrateReport(r: any): PetReport {
+  return {
+    ...r,
+    photoUris: r.photoUris || (r.photoUri ? [r.photoUri] : []),
+    comments: r.comments || [],
+    timeline: r.timeline || [{ id: `t-${r.id}`, type: 'created', description: 'Report created', createdAt: r.createdAt }],
+    rewardPool: r.rewardPool || 0,
+  };
+}
 
 interface PetContextValue {
   reports: PetReport[];
   myReports: PetReport[];
-  addReport: (report: Omit<PetReport, 'id' | 'createdAt'>) => Promise<void>;
+  addReport: (report: Omit<PetReport, 'id' | 'createdAt' | 'comments' | 'timeline' | 'rewardPool'>) => Promise<void>;
+  updateReport: (id: string, updates: Partial<PetReport>) => Promise<void>;
   updateReportStatus: (id: string, status: PetStatus) => Promise<void>;
   deleteReport: (id: string) => Promise<void>;
   getReport: (id: string) => PetReport | undefined;
+  addComment: (reportId: string, author: string, text: string) => Promise<void>;
+  addRewardContribution: (reportId: string, amount: number) => Promise<void>;
   profiles: PetProfile[];
   addProfile: (profile: Omit<PetProfile, 'id' | 'createdAt' | 'updatedAt'>) => Promise<PetProfile>;
   updateProfile: (id: string, updates: Partial<PetProfile>) => Promise<void>;
@@ -127,7 +167,8 @@ export function PetProvider({ children }: { children: ReactNode }) {
       ]);
 
       if (storedReports) {
-        setReports(JSON.parse(storedReports));
+        const parsed = JSON.parse(storedReports);
+        setReports(parsed.map(migrateReport));
       } else {
         setReports(SAMPLE_REPORTS);
         await AsyncStorage.setItem(REPORTS_KEY, JSON.stringify(SAMPLE_REPORTS));
@@ -160,19 +201,39 @@ export function PetProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addReport = useCallback(async (report: Omit<PetReport, 'id' | 'createdAt'>) => {
+  const addReport = useCallback(async (report: Omit<PetReport, 'id' | 'createdAt' | 'comments' | 'timeline' | 'rewardPool'>) => {
+    const id = Crypto.randomUUID();
+    const now = new Date().toISOString();
     const newReport: PetReport = {
       ...report,
-      id: Crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
+      id,
+      createdAt: now,
+      comments: [],
+      timeline: [{ id: Crypto.randomUUID(), type: 'created', description: `Report created by ${report.contactName}`, createdAt: now }],
+      rewardPool: 0,
     };
     const updated = [newReport, ...reports];
     setReports(updated);
     await saveReports(updated);
   }, [reports]);
 
+  const updateReport = useCallback(async (id: string, updates: Partial<PetReport>) => {
+    const updated = reports.map(r => r.id === id ? { ...r, ...updates } : r);
+    setReports(updated);
+    await saveReports(updated);
+  }, [reports]);
+
   const updateReportStatus = useCallback(async (id: string, status: PetStatus) => {
-    const updated = reports.map(r => r.id === id ? { ...r, status } : r);
+    const updated = reports.map(r => {
+      if (r.id !== id) return r;
+      const event: TimelineEvent = {
+        id: Crypto.randomUUID(),
+        type: 'status_change',
+        description: `Status changed to ${status}`,
+        createdAt: new Date().toISOString(),
+      };
+      return { ...r, status, timeline: [...(r.timeline || []), event] };
+    });
     setReports(updated);
     await saveReports(updated);
   }, [reports]);
@@ -185,6 +246,47 @@ export function PetProvider({ children }: { children: ReactNode }) {
 
   const getReport = useCallback((id: string) => {
     return reports.find(r => r.id === id);
+  }, [reports]);
+
+  const addComment = useCallback(async (reportId: string, author: string, text: string) => {
+    const now = new Date().toISOString();
+    const comment: Comment = { id: Crypto.randomUUID(), author, text, createdAt: now };
+    const timelineEvent: TimelineEvent = {
+      id: Crypto.randomUUID(),
+      type: 'comment',
+      description: `${author} commented: "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}"`,
+      createdAt: now,
+    };
+    const updated = reports.map(r => {
+      if (r.id !== reportId) return r;
+      return {
+        ...r,
+        comments: [...(r.comments || []), comment],
+        timeline: [...(r.timeline || []), timelineEvent],
+      };
+    });
+    setReports(updated);
+    await saveReports(updated);
+  }, [reports]);
+
+  const addRewardContribution = useCallback(async (reportId: string, amount: number) => {
+    const now = new Date().toISOString();
+    const timelineEvent: TimelineEvent = {
+      id: Crypto.randomUUID(),
+      type: 'sighting',
+      description: `$${amount} added to reward pool`,
+      createdAt: now,
+    };
+    const updated = reports.map(r => {
+      if (r.id !== reportId) return r;
+      return {
+        ...r,
+        rewardPool: (r.rewardPool || 0) + amount,
+        timeline: [...(r.timeline || []), timelineEvent],
+      };
+    });
+    setReports(updated);
+    await saveReports(updated);
   }, [reports]);
 
   const addProfile = useCallback(async (profile: Omit<PetProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -225,16 +327,19 @@ export function PetProvider({ children }: { children: ReactNode }) {
     reports,
     myReports,
     addReport,
+    updateReport,
     updateReportStatus,
     deleteReport,
     getReport,
+    addComment,
+    addRewardContribution,
     profiles,
     addProfile,
     updateProfile,
     deleteProfile,
     getProfile,
     isLoading,
-  }), [reports, myReports, addReport, updateReportStatus, deleteReport, getReport, profiles, addProfile, updateProfile, deleteProfile, getProfile, isLoading]);
+  }), [reports, myReports, addReport, updateReport, updateReportStatus, deleteReport, getReport, addComment, addRewardContribution, profiles, addProfile, updateProfile, deleteProfile, getProfile, isLoading]);
 
   return (
     <PetContext.Provider value={value}>

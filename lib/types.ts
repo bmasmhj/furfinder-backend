@@ -2,6 +2,20 @@ export type PetStatus = 'lost' | 'found' | 'reunited';
 export type PetSize = 'small' | 'medium' | 'large';
 export type PetType = 'dog' | 'cat' | 'bird' | 'rabbit' | 'other';
 
+export interface Comment {
+  id: string;
+  author: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  type: 'created' | 'status_change' | 'comment' | 'sighting' | 'photo_added';
+  description: string;
+  createdAt: string;
+}
+
 export interface PetReport {
   id: string;
   status: PetStatus;
@@ -12,16 +26,20 @@ export interface PetReport {
   color: string;
   markings: string;
   photoUri: string;
+  photoUris: string[];
   description: string;
   latitude: number;
   longitude: number;
   locationName: string;
   lastSeenDate: string;
   reward: string;
+  rewardPool: number;
   contactName: string;
   contactPhone: string;
   createdAt: string;
   isOwner: boolean;
+  comments: Comment[];
+  timeline: TimelineEvent[];
 }
 
 export interface PetProfile {
@@ -52,4 +70,23 @@ export interface PetMatch {
   type: 'report' | 'profile';
   confidence: number;
   reason: string;
+}
+
+export interface VetShelter {
+  id: string;
+  name: string;
+  type: 'vet' | 'shelter' | 'rescue';
+  address: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
+  hours: string;
+}
+
+export interface SafetyTip {
+  id: string;
+  title: string;
+  content: string;
+  icon: string;
+  category: 'lost' | 'found' | 'prevention' | 'general';
 }

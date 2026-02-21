@@ -45,6 +45,10 @@ function RootLayoutNav() {
         name="scan-post"
         options={{ headerShown: false, presentation: 'modal' }}
       />
+      <Stack.Screen
+        name="safety-tips"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

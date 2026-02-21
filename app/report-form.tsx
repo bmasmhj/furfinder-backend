@@ -34,7 +34,7 @@ export default function ReportFormScreen() {
 
   const prefillProfile = fromProfileId ? getProfile(fromProfileId) : undefined;
 
-  const [photoUri, setPhotoUri] = useState(prefillProfile?.photoUris[0] || '');
+  const [photoUris, setPhotoUris] = useState<string[]>(prefillProfile?.photoUris || []);
   const [petType, setPetType] = useState<PetType>(prefillProfile?.petType || 'dog');
   const [petName, setPetName] = useState(prefillProfile?.petName || '');
   const [breed, setBreed] = useState(prefillProfile?.breed || '');
@@ -52,6 +52,10 @@ export default function ReportFormScreen() {
   const [isSaving, setIsSaving] = useState(false);
 
   const pickImage = async () => {
+    if (photoUris.length >= 5) {
+      Alert.alert('Limit reached', 'You can add up to 5 photos.');
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
@@ -60,11 +64,15 @@ export default function ReportFormScreen() {
     });
 
     if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
+      setPhotoUris(prev => [...prev, result.assets[0].uri].slice(0, 5));
     }
   };
 
   const takePhoto = async () => {
+    if (photoUris.length >= 5) {
+      Alert.alert('Limit reached', 'You can add up to 5 photos.');
+      return;
+    }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission needed', 'Camera access is needed to take pet photos.');
@@ -78,8 +86,12 @@ export default function ReportFormScreen() {
     });
 
     if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
+      setPhotoUris(prev => [...prev, result.assets[0].uri].slice(0, 5));
     }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotoUris(prev => prev.filter((_, i) => i !== index));
   };
 
   const detectLocation = async () => {
@@ -139,7 +151,8 @@ export default function ReportFormScreen() {
         size,
         color: color.trim(),
         markings: markings.trim(),
-        photoUri,
+        photoUri: photoUris[0] || '',
+        photoUris,
         description: description.trim(),
         latitude,
         longitude,
@@ -177,13 +190,23 @@ export default function ReportFormScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.photoSection}>
-          {photoUri ? (
-            <Pressable onPress={pickImage} style={styles.photoPreview}>
-              <Image source={{ uri: photoUri }} style={styles.photoImage} contentFit="cover" />
-              <View style={styles.photoOverlay}>
-                <Ionicons name="camera" size={24} color="#fff" />
-              </View>
-            </Pressable>
+          {photoUris.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
+              {photoUris.map((uri, index) => (
+                <View key={`${uri}-${index}`} style={styles.photoThumbWrap}>
+                  <Image source={{ uri }} style={styles.photoThumb} contentFit="cover" />
+                  <Pressable onPress={() => removePhoto(index)} style={styles.photoRemoveBtn}>
+                    <Ionicons name="close" size={14} color="#fff" />
+                  </Pressable>
+                </View>
+              ))}
+              {photoUris.length < 5 && (
+                <Pressable onPress={pickImage} style={styles.photoAddBtn}>
+                  <Ionicons name="add" size={28} color={Colors.primary} />
+                  <Text style={styles.photoAddBadge}>{photoUris.length}/5</Text>
+                </Pressable>
+              )}
+            </ScrollView>
           ) : (
             <View style={styles.photoButtons}>
               <Pressable onPress={takePhoto} style={styles.photoBtn}>
@@ -394,26 +417,49 @@ const styles = StyleSheet.create({
   photoSection: {
     marginBottom: 8,
   },
-  photoPreview: {
-    height: 200,
+  photoRow: {
+    gap: 10,
+    paddingVertical: 4,
+  },
+  photoThumbWrap: {
+    width: 80,
+    height: 80,
     borderRadius: 16,
     overflow: 'hidden',
     position: 'relative',
   },
-  photoImage: {
-    width: '100%',
-    height: '100%',
+  photoThumb: {
+    width: 80,
+    height: 80,
+    borderRadius: 16,
   },
-  photoOverlay: {
+  photoRemoveBtn: {
     position: 'absolute',
-    bottom: 12,
-    right: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    top: 4,
+    right: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  photoAddBtn: {
+    width: 80,
+    height: 80,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surface,
+  },
+  photoAddBadge: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   photoButtons: {
     flexDirection: 'row',

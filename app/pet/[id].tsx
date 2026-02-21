@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, ScrollView, Pressable, Linking, Platform, Alert } from 'react-native';
+import { useState, useRef } from 'react';
+import { StyleSheet, Text, View, ScrollView, Pressable, Linking, Platform, Alert, Share, TextInput, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -8,14 +9,34 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
+import { Comment, TimelineEvent } from '@/lib/types';
 import { getStatusColor, getStatusBg, getStatusLabel, getPetTypeIcon, getSizeLabel, formatDate } from '@/lib/helpers';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+function getTimelineColor(type: TimelineEvent['type']): string {
+  switch (type) {
+    case 'created': return Colors.primary;
+    case 'status_change': return Colors.secondary;
+    case 'comment': return Colors.accent;
+    case 'sighting': return '#6366F1';
+    case 'photo_added': return Colors.success;
+    default: return Colors.textLight;
+  }
+}
 
 export default function PetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { getReport, updateReportStatus } = usePets();
+  const { getReport, updateReportStatus, addComment, addRewardContribution } = usePets();
   const report = getReport(id);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [commentText, setCommentText] = useState('');
+  const [authorName, setAuthorName] = useState('');
+  const [contributionAmount, setContributionAmount] = useState('');
+  const [showContributeInput, setShowContributeInput] = useState(false);
 
   if (!report) {
     return (
@@ -30,6 +51,10 @@ export default function PetDetailScreen() {
       </View>
     );
   }
+
+  const photos = report.photoUris && report.photoUris.length > 0
+    ? report.photoUris
+    : report.photoUri ? [report.photoUri] : [];
 
   const statusColor = getStatusColor(report.status);
 
@@ -67,6 +92,35 @@ export default function PetDetailScreen() {
     );
   };
 
+  const handleShare = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    const shareText = `Help find ${report.petName}! ${getStatusLabel(report.status)} ${report.petType} - ${report.breed}, ${report.color}. Last seen near ${report.locationName}. Contact: ${report.contactPhone}`;
+    try {
+      await Share.share({ message: shareText });
+    } catch (_e) {}
+  };
+
+  const handlePostComment = async () => {
+    if (!commentText.trim() || !authorName.trim()) return;
+    await addComment(report.id, authorName.trim(), commentText.trim());
+    setCommentText('');
+  };
+
+  const handleContribute = async () => {
+    const amount = parseFloat(contributionAmount);
+    if (isNaN(amount) || amount <= 0) return;
+    await addRewardContribution(report.id, amount);
+    setContributionAmount('');
+    setShowContributeInput(false);
+  };
+
+  const onPhotoScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+    setActivePhotoIndex(index);
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -74,8 +128,34 @@ export default function PetDetailScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + (Platform.OS === 'web' ? 34 : 0) + 100 }}
       >
         <View style={styles.imageSection}>
-          {report.photoUri ? (
-            <Image source={{ uri: report.photoUri }} style={styles.heroImage} contentFit="cover" />
+          {photos.length > 0 ? (
+            <>
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={onPhotoScroll}
+                scrollEventThrottle={16}
+                style={styles.photoGallery}
+              >
+                {photos.map((uri, index) => (
+                  <Image key={index} source={{ uri }} style={styles.heroImage} contentFit="cover" />
+                ))}
+              </ScrollView>
+              {photos.length > 1 && (
+                <View style={styles.dotContainer}>
+                  {photos.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.dot,
+                        index === activePhotoIndex && styles.dotActive,
+                      ]}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
           ) : (
             <LinearGradient
               colors={report.status === 'lost' ? ['#FEE2E2', '#FECACA'] : ['#CCFBF1', '#99F6E4']}
@@ -94,6 +174,13 @@ export default function PetDetailScreen() {
             style={[styles.backBtn, { top: insets.top + webTopPadding + 12 }]}
           >
             <Ionicons name="chevron-back" size={24} color={Colors.text} />
+          </Pressable>
+
+          <Pressable
+            onPress={handleShare}
+            style={[styles.shareBtn, { top: insets.top + webTopPadding + 12 }]}
+          >
+            <Ionicons name="share-outline" size={22} color={Colors.text} />
           </Pressable>
 
           <View style={[styles.statusOverlay, { backgroundColor: statusColor }]}>
@@ -116,6 +203,39 @@ export default function PetDetailScreen() {
               </View>
             )}
           </View>
+
+          {report.status === 'lost' && (
+            <View style={styles.rewardPoolCard}>
+              <View style={styles.rewardPoolHeader}>
+                <Ionicons name="wallet-outline" size={22} color={Colors.accent} />
+                <Text style={styles.rewardPoolTitle}>Reward Pool</Text>
+              </View>
+              <Text style={styles.rewardPoolAmount}>${report.rewardPool?.toFixed(2) ?? '0.00'}</Text>
+              {showContributeInput ? (
+                <View style={styles.contributeInputRow}>
+                  <TextInput
+                    style={styles.contributeInput}
+                    placeholder="Amount ($)"
+                    placeholderTextColor={Colors.textLight}
+                    keyboardType="numeric"
+                    value={contributionAmount}
+                    onChangeText={setContributionAmount}
+                  />
+                  <Pressable onPress={handleContribute} style={styles.contributeSubmitBtn}>
+                    <Ionicons name="checkmark" size={20} color="#fff" />
+                  </Pressable>
+                  <Pressable onPress={() => { setShowContributeInput(false); setContributionAmount(''); }} style={styles.contributeCancelBtn}>
+                    <Ionicons name="close" size={20} color={Colors.textSecondary} />
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable onPress={() => setShowContributeInput(true)} style={styles.contributeBtn}>
+                  <Ionicons name="add-circle-outline" size={18} color="#fff" />
+                  <Text style={styles.contributeBtnText}>Contribute</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
 
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
@@ -188,6 +308,81 @@ export default function PetDetailScreen() {
             </View>
           </View>
 
+          {report.timeline && report.timeline.length > 0 && (
+            <Animated.View entering={FadeInUp.duration(400).delay(100)} style={styles.section}>
+              <Text style={styles.sectionTitle}>Timeline</Text>
+              <View style={styles.timelineContainer}>
+                {report.timeline.map((event, index) => {
+                  const color = getTimelineColor(event.type);
+                  const isLast = index === report.timeline.length - 1;
+                  return (
+                    <View key={event.id} style={styles.timelineItem}>
+                      <View style={styles.timelineLeft}>
+                        <View style={[styles.timelineDot, { backgroundColor: color }]} />
+                        {!isLast && <View style={[styles.timelineLine, { backgroundColor: color + '40' }]} />}
+                      </View>
+                      <View style={styles.timelineContent}>
+                        <Text style={styles.timelineDescription}>{event.description}</Text>
+                        <Text style={styles.timelineDate}>{formatDate(event.createdAt)}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </Animated.View>
+          )}
+
+          <Animated.View entering={FadeInUp.duration(400).delay(200)} style={styles.section}>
+            <Text style={styles.sectionTitle}>Community Tips</Text>
+            {report.comments && report.comments.length > 0 ? (
+              <View style={styles.commentsContainer}>
+                {report.comments.map((comment) => (
+                  <View key={comment.id} style={styles.commentItem}>
+                    <View style={styles.commentHeader}>
+                      <Ionicons name="person-circle-outline" size={28} color={Colors.primary} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.commentAuthor}>{comment.author}</Text>
+                        <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.commentText}>{comment.text}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.noCommentsText}>No tips yet. Be the first to share!</Text>
+            )}
+            <View style={styles.addCommentContainer}>
+              <TextInput
+                style={styles.authorInput}
+                placeholder="Your name"
+                placeholderTextColor={Colors.textLight}
+                value={authorName}
+                onChangeText={setAuthorName}
+              />
+              <View style={styles.commentInputRow}>
+                <TextInput
+                  style={styles.commentInput}
+                  placeholder="Share a tip or sighting..."
+                  placeholderTextColor={Colors.textLight}
+                  value={commentText}
+                  onChangeText={setCommentText}
+                  multiline
+                />
+                <Pressable
+                  onPress={handlePostComment}
+                  style={[
+                    styles.postBtn,
+                    (!commentText.trim() || !authorName.trim()) && styles.postBtnDisabled,
+                  ]}
+                  disabled={!commentText.trim() || !authorName.trim()}
+                >
+                  <Text style={styles.postBtnText}>Post</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Animated.View>
+
           {report.status !== 'reunited' && (
             <Pressable
               onPress={() => {
@@ -243,9 +438,13 @@ const styles = StyleSheet.create({
     height: 300,
     position: 'relative',
   },
-  heroImage: {
+  photoGallery: {
     width: '100%',
     height: '100%',
+  },
+  heroImage: {
+    width: SCREEN_WIDTH,
+    height: 300,
   },
   heroPlaceholder: {
     width: '100%',
@@ -253,9 +452,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  dotContainer: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  dotActive: {
+    backgroundColor: '#fff',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
   backBtn: {
     position: 'absolute',
     left: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  shareBtn: {
+    position: 'absolute',
+    right: 16,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -317,6 +553,76 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
     color: '#D97706',
+  },
+  rewardPoolCard: {
+    backgroundColor: '#FFF7ED',
+    borderRadius: 14,
+    padding: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+  },
+  rewardPoolHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rewardPoolTitle: {
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#92400E',
+  },
+  rewardPoolAmount: {
+    fontSize: 28,
+    fontFamily: 'Poppins_700Bold',
+    color: '#D97706',
+  },
+  contributeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.accent,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  contributeBtnText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#fff',
+  },
+  contributeInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  contributeInput: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+  },
+  contributeSubmitBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contributeCancelBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.surfaceElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   detailsGrid: {
     flexDirection: 'row',
@@ -417,6 +723,132 @@ const styles = StyleSheet.create({
   },
   contactBtnText: {
     fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#fff',
+  },
+  timelineContainer: {
+    paddingLeft: 4,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    minHeight: 50,
+  },
+  timelineLeft: {
+    width: 24,
+    alignItems: 'center',
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    marginTop: 4,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingLeft: 12,
+    paddingBottom: 16,
+  },
+  timelineDescription: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.text,
+    lineHeight: 20,
+  },
+  timelineDate: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textLight,
+    marginTop: 2,
+  },
+  commentsContainer: {
+    gap: 12,
+  },
+  commentItem: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 14,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  commentAuthor: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.text,
+  },
+  commentDate: {
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textLight,
+  },
+  commentText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    paddingLeft: 38,
+  },
+  noCommentsText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textLight,
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
+  addCommentContainer: {
+    marginTop: 8,
+    gap: 8,
+  },
+  authorInput: {
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    maxHeight: 80,
+  },
+  postBtn: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  postBtnDisabled: {
+    opacity: 0.5,
+  },
+  postBtnText: {
+    fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
     color: '#fff',
   },
