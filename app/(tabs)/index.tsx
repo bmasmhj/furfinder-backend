@@ -12,7 +12,7 @@ import EmptyState from '@/components/EmptyState';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { reports, isLoading } = usePets();
+  const { reports, isLoading, unreadCount } = usePets();
   const [filter, setFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -41,9 +41,22 @@ export default function HomeScreen() {
         style={[styles.headerGradient, { paddingTop: insets.top + webTopPadding + 16 }]}
       >
         <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.greeting}>PetReunite</Text>
-            <Text style={styles.subtitle}>Help pets find their way home</Text>
+          <View style={styles.titleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.greeting}>PetReunite</Text>
+              <Text style={styles.subtitle}>Help pets find their way home</Text>
+            </View>
+            <Pressable
+              style={styles.bellBtn}
+              onPress={() => router.push('/notifications')}
+            >
+              <Ionicons name="notifications-outline" size={22} color="#fff" />
+              {unreadCount > 0 && (
+                <View style={styles.bellBadge}>
+                  <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </Pressable>
           </View>
           <View style={styles.statsRow}>
             <View style={styles.statBubble}>
@@ -115,6 +128,38 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     gap: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bellBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  bellBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
   },
   greeting: {
     fontSize: 28,
