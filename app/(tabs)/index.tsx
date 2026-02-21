@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
-import { StyleSheet, Text, View, FlatList, RefreshControl, Platform } from 'react-native';
+import { StyleSheet, Text, View, FlatList, RefreshControl, Platform, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
 import PetCard from '@/components/PetCard';
@@ -53,6 +54,13 @@ export default function HomeScreen() {
               <Ionicons name="checkmark-circle" size={14} color={Colors.found} />
               <Text style={styles.statText}>{foundCount} Found</Text>
             </View>
+            <Pressable
+              style={styles.scanBubble}
+              onPress={() => router.push('/scan-post')}
+            >
+              <Feather name="search" size={14} color="#F97316" />
+              <Text style={styles.scanBubbleText}>Scan Post</Text>
+            </Pressable>
           </View>
         </View>
       </LinearGradient>
@@ -126,6 +134,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Poppins_500Medium',
     color: Colors.text,
+  },
+  scanBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FDBA74',
+  },
+  scanBubbleText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    color: '#F97316',
   },
   listContent: {
     paddingTop: 4,

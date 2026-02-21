@@ -41,6 +41,10 @@ function RootLayoutNav() {
         name="matches"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="scan-post"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
     </Stack>
   );
 }
