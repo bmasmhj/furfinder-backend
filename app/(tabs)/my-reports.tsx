@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
+import { useSubscription } from '@/lib/subscription-context';
 import { PetReport, PetProfile, PetStatus } from '@/lib/types';
 import { getStatusColor, getStatusBg, getStatusLabel, getPetTypeIcon, formatDate, getSizeLabel } from '@/lib/helpers';
 import EmptyState from '@/components/EmptyState';
@@ -169,6 +170,7 @@ function MyReportItem({ report, index }: { report: PetReport; index: number }) {
 export default function MyPetsScreen() {
   const insets = useSafeAreaInsets();
   const { myReports, profiles } = usePets();
+  const { isPremium } = useSubscription();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const [activeTab, setActiveTab] = useState<'pets' | 'reports'>('pets');
 
@@ -183,7 +185,15 @@ export default function MyPetsScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + webTopPadding + 20 }]}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>My Pets</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={styles.title}>My Pets</Text>
+            {isPremium && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, gap: 4 }}>
+                <Ionicons name="diamond" size={12} color="#F59E0B" />
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#D97706' }}>PRO</Text>
+              </View>
+            )}
+          </View>
           <Pressable onPress={handleAddPet} style={styles.addBtn}>
             <Ionicons name="add" size={24} color="#fff" />
           </Pressable>
