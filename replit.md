@@ -25,6 +25,7 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 13. **Safety Tips Guide**: Comprehensive pet safety guide with tips for lost/found situations, prevention, emergency contacts
 14. **Vet & Shelter Directory**: Map markers and web listing of nearby vets, shelters, and rescue organizations
 15. **Reward Pool**: Community reward pooling for lost pets with contribution system
+16. **Area Alerts**: In-app notifications when a lost/found pet is reported near registered pet profiles (matched by suburb, pet type, and 10km proximity radius)
 
 ## Project Structure
 - `app/(tabs)/` - Tab screens: index (home), map, report, my-reports (renamed to "My Pets")
@@ -75,3 +76,5 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-21: Added Safety Tips Guide screen with 4 categories of pet safety advice
 - 2026-02-21: Added vet/shelter/rescue markers on map with toggle and legend
 - 2026-02-21: Added Nearby Services directory on web map fallback
+- 2026-02-21: Added area-based notification alerts for lost/found pets near registered profiles
+- 2026-02-21: Added notifications screen with bell icon badge on home header
