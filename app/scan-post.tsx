@@ -139,6 +139,10 @@ export default function ScanPostScreen() {
               <Text style={styles.headerSubtitle}>
                 Paste a Facebook post or any online listing about a lost/found pet to find matches
               </Text>
+              <View style={styles.aiNotice}>
+                <Ionicons name="information-circle" size={13} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.aiNoticeText}>AI suggestions only — results are not guaranteed</Text>
+              </View>
             </View>
           </LinearGradient>
 
@@ -756,5 +760,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
     color: Colors.primary,
+  },
+  aiNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  aiNoticeText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    color: 'rgba(255,255,255,0.9)',
   },
 });

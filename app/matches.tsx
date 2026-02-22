@@ -217,6 +217,12 @@ export default function MatchesScreen() {
           ListHeaderComponent={
             <View style={styles.resultHeader}>
               <Text style={styles.resultCount}>{matches.length} potential match{matches.length !== 1 ? 'es' : ''}</Text>
+              <View style={styles.aiDisclaimer}>
+                <Ionicons name="information-circle-outline" size={14} color="#6366F1" />
+                <Text style={styles.aiDisclaimerText}>
+                  AI suggestions only — not guaranteed. Always verify through direct contact and physical identification.
+                </Text>
+              </View>
             </View>
           }
         />
@@ -435,5 +441,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     color: Colors.textSecondary,
     lineHeight: 20,
+  },
+  aiDisclaimer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    backgroundColor: '#EEF2FF',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  aiDisclaimerText: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: 'Poppins_400Regular',
+    color: '#4338CA',
+    lineHeight: 16,
   },
 });
