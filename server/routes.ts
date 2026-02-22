@@ -17,6 +17,7 @@ interface PetReport {
   color: string;
   markings: string;
   photoUri: string;
+  photoUris?: string[];
   description: string;
   latitude: number;
   longitude: number;
@@ -58,6 +59,36 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * c;
 }
 
+const RADIUS_KM = 5;
+const MAX_VISION_CANDIDATES = 15;
+
+function getReportPhotos(report: PetReport): string[] {
+  const photos: string[] = [];
+  if (report.photoUris && report.photoUris.length > 0) {
+    photos.push(...report.photoUris);
+  } else if (report.photoUri) {
+    photos.push(report.photoUri);
+  }
+  return photos.filter(p => p && (p.startsWith('data:') || p.startsWith('http')));
+}
+
+function getProfilePhotos(profile: PetProfile): string[] {
+  return (profile.photoUris || []).filter(p => p && (p.startsWith('data:') || p.startsWith('http')));
+}
+
+function buildImageContent(photoUri: string): OpenAI.Chat.Completions.ChatCompletionContentPartImage {
+  if (photoUri.startsWith('data:')) {
+    return {
+      type: "image_url",
+      image_url: { url: photoUri, detail: "low" },
+    };
+  }
+  return {
+    type: "image_url",
+    image_url: { url: photoUri, detail: "low" },
+  };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/match", async (req: Request, res: Response) => {
     try {
@@ -71,31 +102,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Report is required" });
       }
 
-      const candidates: { type: string; id: string; summary: string }[] = [];
-
       const oppositeStatus = report.status === 'lost' ? 'found' : 'lost';
-      const matchingReports = (reports || []).filter(
-        r => r.id !== report.id && r.status === oppositeStatus && r.petType === report.petType
-      );
+
+      const matchingReports = (reports || []).filter(r => {
+        if (r.id === report.id) return false;
+        if (r.status !== oppositeStatus) return false;
+        if (r.petType !== report.petType) return false;
+        if (r.latitude && r.longitude && report.latitude && report.longitude) {
+          const dist = getDistance(report.latitude, report.longitude, r.latitude, r.longitude);
+          if (dist > RADIUS_KM) return false;
+        }
+        return true;
+      });
+
+      const matchingProfiles = (profiles || []).filter(p => p.petType === report.petType);
+
+      interface Candidate {
+        type: string;
+        id: string;
+        summary: string;
+        photos: string[];
+        distance?: number;
+      }
+
+      const candidates: Candidate[] = [];
 
       for (const r of matchingReports) {
         const dist = getDistance(report.latitude, report.longitude, r.latitude, r.longitude);
         candidates.push({
           type: 'report',
           id: r.id,
-          summary: `[Report] ${r.status.toUpperCase()} ${r.petType} named "${r.petName}", breed: ${r.breed}, size: ${r.size}, color: ${r.color}, markings: "${r.markings}", location: ${r.locationName}, distance: ${dist.toFixed(1)}km away, date: ${r.lastSeenDate}, description: "${r.description}"`,
+          summary: `[Report] ${r.status.toUpperCase()} ${r.petType} named "${r.petName}", breed: ${r.breed}, size: ${r.size}, color: ${r.color}, markings: "${r.markings}", location: ${r.locationName}, distance: ${dist.toFixed(1)}km, date: ${r.lastSeenDate}, description: "${r.description}"`,
+          photos: getReportPhotos(r),
+          distance: dist,
         });
       }
-
-      const matchingProfiles = (profiles || []).filter(
-        p => p.petType === report.petType
-      );
 
       for (const p of matchingProfiles) {
         candidates.push({
           type: 'profile',
           id: p.id,
           summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || 'none'}`,
+          photos: getProfilePhotos(p),
         });
       }
 
@@ -103,38 +151,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ matches: [] });
       }
 
+      candidates.sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999));
+      const visionCandidates = candidates.slice(0, MAX_VISION_CANDIDATES);
+
+      const targetPhotos = getReportPhotos(report);
+      const hasPhotos = targetPhotos.length > 0 || visionCandidates.some(c => c.photos.length > 0);
+
       const targetSummary = `${report.status.toUpperCase()} ${report.petType} named "${report.petName}", breed: ${report.breed}, size: ${report.size}, color: ${report.color}, markings: "${report.markings}", location: ${report.locationName}, date: ${report.lastSeenDate}, description: "${report.description}"`;
 
-      const candidateList = candidates.map((c, i) => `${i + 1}. (${c.type}:${c.id}) ${c.summary}`).join('\n');
+      const candidateList = visionCandidates.map((c, i) =>
+        `${i + 1}. (${c.type}:${c.id}) ${c.summary} | Has ${c.photos.length} photo(s)`
+      ).join('\n');
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-5.2",
-        messages: [
-          {
-            role: "system",
-            content: `You are an AI assistant that matches lost and found pet reports. Given a target pet report and a list of candidates (other reports or registered pet profiles), analyze each candidate and determine how likely it is to be the same pet.
+      const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [];
+
+      if (hasPhotos) {
+        userContent.push({
+          type: "text",
+          text: `TARGET PET (the pet we are trying to match):\n${targetSummary}\n\nTarget pet photo(s):`,
+        });
+
+        for (const photo of targetPhotos.slice(0, 3)) {
+          userContent.push(buildImageContent(photo));
+        }
+
+        for (let i = 0; i < visionCandidates.length; i++) {
+          const c = visionCandidates[i];
+          if (c.photos.length > 0) {
+            userContent.push({
+              type: "text",
+              text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\nCandidate ${i + 1} photo:`,
+            });
+            userContent.push(buildImageContent(c.photos[0]));
+          } else {
+            userContent.push({
+              type: "text",
+              text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\n(No photo available)`,
+            });
+          }
+        }
+      } else {
+        userContent.push({
+          type: "text",
+          text: `Target pet:\n${targetSummary}\n\nCandidates:\n${candidateList}`,
+        });
+      }
+
+      const systemPrompt = hasPhotos
+        ? `You are an expert AI pet identification system. You analyse BOTH photos and text descriptions to match lost and found pets.
+
+VISUAL ANALYSIS (most important when photos are available):
+- Compare physical features: face shape, ear shape/position, coat pattern, markings, body build
+- Look for unique identifiers: spots, patches, scars, collar, eye color
+- Assess breed consistency from visual appearance
+- Note any distinctive features visible in photos
+
+TEXT ANALYSIS:
+- Breed similarity (exact match is strongest)
+- Color and markings described
+- Size match
+- Geographic proximity (distance in km — closer is better, within 5km radius)
+- Description details overlap
+
+SCORING GUIDE:
+- 80-100: Photos show very likely the same animal + text details match well
+- 60-79: Photos show similar-looking animal + most text details align
+- 40-59: Some visual resemblance or strong text match but limited photo evidence
+- 30-39: Possible but uncertain match
+- Below 30: Unlikely match, do not include
+
+Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
+- "id": the candidate's id
+- "type": "report" or "profile"
+- "confidence": 0-100
+- "reason": 2-3 sentence explanation mentioning BOTH visual and text similarities/differences
+
+Only include candidates with confidence >= 30. Return at most 10 matches.
+Return ONLY valid JSON, no markdown formatting.`
+        : `You are an AI assistant that matches lost and found pet reports. Given a target pet report and a list of candidates, analyze each candidate and determine how likely it is to be the same pet.
 
 Consider these factors:
 - Breed similarity (exact match is strongest signal)
 - Color and markings similarity
 - Size match
-- Geographic proximity (closer is better)
+- Geographic proximity (closer is better, candidates are within 5km radius)
 - Date proximity (for reports)
 - Description details
 
-Return a JSON array of matches sorted by confidence (highest first). Each match should have:
+Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": the candidate's id
-- "type": "report" or "profile"  
-- "confidence": a number from 0-100
-- "reason": a brief 1-2 sentence explanation of why this could be a match
+- "type": "report" or "profile"
+- "confidence": 0-100
+- "reason": 1-2 sentence explanation
 
 Only include candidates with confidence >= 30. Return at most 10 matches.
-Return ONLY valid JSON, no markdown formatting.`
-          },
-          {
-            role: "user",
-            content: `Target pet:\n${targetSummary}\n\nCandidates:\n${candidateList}`
-          }
+Return ONLY valid JSON, no markdown formatting.`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-5.2",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
         ],
         response_format: { type: "json_object" },
         max_completion_tokens: 8192,
@@ -258,7 +375,14 @@ Return ONLY valid JSON, no markdown.`
         });
       }
 
-      const allCandidates: { type: string; id: string; summary: string }[] = [];
+      interface ScanCandidate {
+        type: string;
+        id: string;
+        summary: string;
+        photos: string[];
+      }
+
+      const allCandidates: ScanCandidate[] = [];
 
       const filteredReports = (reports || []).filter(r => {
         if (extracted.petType !== 'unknown' && r.petType !== extracted.petType) return false;
@@ -272,6 +396,7 @@ Return ONLY valid JSON, no markdown.`
           type: 'report',
           id: r.id,
           summary: `[App Report] ${r.status.toUpperCase()} ${r.petType} named "${r.petName}", breed: ${r.breed}, size: ${r.size}, color: ${r.color}, markings: "${r.markings}", location: ${r.locationName}, date: ${r.lastSeenDate}, description: "${r.description}"`,
+          photos: getReportPhotos(r),
         });
       }
 
@@ -285,6 +410,7 @@ Return ONLY valid JSON, no markdown.`
           type: 'profile',
           id: p.id,
           summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || 'none'}`,
+          photos: getProfilePhotos(p),
         });
       }
 
@@ -292,21 +418,71 @@ Return ONLY valid JSON, no markdown.`
         return res.json({ extracted, matches: [] });
       }
 
+      const scanCandidates = allCandidates.slice(0, MAX_VISION_CANDIDATES);
+      const hasPhotos = scanCandidates.some(c => c.photos.length > 0);
+
       const postSummary = `${extracted.status?.toUpperCase() || 'UNKNOWN'} ${extracted.petType || 'pet'} named "${extracted.petName || 'unknown'}", breed: ${extracted.breed || 'unknown'}, size: ${extracted.size || 'unknown'}, color: ${extracted.color || 'unknown'}, markings: "${extracted.markings || 'none'}", location: ${extracted.locationName || 'unknown'}, description: "${extracted.description || ''}"`;
 
-      const candidateList = allCandidates.map((c, i) => `${i + 1}. (${c.type}:${c.id}) ${c.summary}`).join('\n');
+      const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [];
 
-      const matchResult = await openai.chat.completions.create({
-        model: "gpt-5.2",
-        messages: [
-          {
-            role: "system",
-            content: `You are an AI that matches pets from online social media posts with existing pet reports and registered profiles in a lost & found pets app.
+      if (hasPhotos) {
+        userContent.push({
+          type: "text",
+          text: `PET FROM ONLINE POST:\n${postSummary}\n\nAPP DATABASE CANDIDATES WITH PHOTOS:`,
+        });
 
-Given extracted details from an online post and a list of candidates from the app database, determine which candidates could potentially be the same pet.
+        for (let i = 0; i < scanCandidates.length; i++) {
+          const c = scanCandidates[i];
+          if (c.photos.length > 0) {
+            userContent.push({
+              type: "text",
+              text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\nPhoto:`,
+            });
+            userContent.push(buildImageContent(c.photos[0]));
+          } else {
+            userContent.push({
+              type: "text",
+              text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\n(No photo)`,
+            });
+          }
+        }
+      } else {
+        const candidateList = scanCandidates.map((c, i) =>
+          `${i + 1}. (${c.type}:${c.id}) ${c.summary}`
+        ).join('\n');
+
+        userContent.push({
+          type: "text",
+          text: `Online post pet info:\n${postSummary}\n\nApp database candidates:\n${candidateList}`,
+        });
+      }
+
+      const scanSystemPrompt = hasPhotos
+        ? `You are an expert AI pet identification system. Match pets from online social media posts with existing reports and registered profiles in a lost & found app.
+
+When photos are available, use VISUAL ANALYSIS as the primary matching method:
+- Compare coat patterns, markings, face shape, ear position, body build
+- Look for unique identifiers visible in photos
+- Cross-reference visual assessment with text descriptions
+
+Also consider text factors:
+- Breed, color, markings similarity
+- Size match
+- Geographic proximity
+- Description overlap
+
+Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
+- "id": candidate id
+- "type": "report" or "profile"
+- "confidence": 0-100
+- "reason": 2-3 sentence explanation
+
+Only include candidates with confidence >= 25. Return at most 10.
+Return ONLY valid JSON, no markdown.`
+        : `You are an AI that matches pets from online social media posts with existing pet reports and registered profiles.
 
 Consider these factors:
-- Breed similarity (exact match is strongest signal)
+- Breed similarity (exact match is strongest)
 - Color and markings similarity
 - Size match
 - Geographic proximity based on location names
@@ -318,13 +494,14 @@ Return a JSON object with "matches" array sorted by confidence (highest first). 
 - "confidence": 0-100
 - "reason": 1-2 sentence explanation
 
-Only include candidates with confidence >= 25. Return at most 10 matches.
-Return ONLY valid JSON, no markdown.`
-          },
-          {
-            role: "user",
-            content: `Online post pet info:\n${postSummary}\n\nApp database candidates:\n${candidateList}`
-          }
+Only include candidates with confidence >= 25. Return at most 10.
+Return ONLY valid JSON, no markdown.`;
+
+      const matchResult = await openai.chat.completions.create({
+        model: "gpt-5.2",
+        messages: [
+          { role: "system", content: scanSystemPrompt },
+          { role: "user", content: userContent },
         ],
         response_format: { type: "json_object" },
         max_completion_tokens: 8192,
