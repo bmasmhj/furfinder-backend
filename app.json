@@ -15,15 +15,18 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.petreunite",
+      "bundleIdentifier": "com.petreunite.app",
+      "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "We need access to your camera to take photos of pets.",
-        "NSPhotoLibraryUsageDescription": "We need access to your photo library to upload pet photos.",
-        "NSLocationWhenInUseUsageDescription": "We need your location to show nearby lost and found pets."
+        "NSCameraUsageDescription": "PetReunite needs access to your camera to take photos of lost or found pets.",
+        "NSPhotoLibraryUsageDescription": "PetReunite needs access to your photo library to upload pet photos for reports and profiles.",
+        "NSLocationWhenInUseUsageDescription": "PetReunite needs your location to show nearby lost and found pets and to accurately pin reports on the map.",
+        "CFBundleAllowMixedLocalizations": true
       }
     },
     "android": {
-      "package": "com.petreunite",
+      "package": "com.petreunite.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#FAFAFA",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
