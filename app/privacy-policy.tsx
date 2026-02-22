@@ -77,7 +77,7 @@ This disclosure is provided in accordance with the Australian Privacy Act 1988, 
 
 • Withdraw Consent: Revoke your consent to data collection at any time through Settings. This will delete all your stored data.
 
-• Complaint: Lodge a complaint about our handling of your personal information. You may also complain to the Office of the Australian Information Commissioner (OAIC) at oaic.gov.au.`,
+• Complaint: Lodge a complaint about our handling of your personal information. If you are not satisfied with our response, you have the right to refer your complaint to the Office of the Australian Information Commissioner (OAIC) via their website.`,
   },
   {
     title: '7. Location Data',
@@ -113,9 +113,7 @@ This disclosure is provided in accordance with the Australian Privacy Act 1988, 
     title: '11. Contact Us',
     content: `If you have questions about this Privacy Policy or wish to exercise your rights, please contact us through the app's Settings screen.
 
-For complaints about privacy handling, you may also contact the Office of the Australian Information Commissioner (OAIC):
-• Website: oaic.gov.au
-• Phone: 1300 363 992`,
+If you are not satisfied with how we handle your complaint, you have the right to refer the matter to the Office of the Australian Information Commissioner (OAIC).`,
   },
 ];
 
