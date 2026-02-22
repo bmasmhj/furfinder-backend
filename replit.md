@@ -63,10 +63,14 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 
 ## AI Integration
 - Uses Replit AI Integrations for OpenAI access (no separate API key needed, billed to credits)
-- Model: gpt-5.2 for matching analysis
+- Model: gpt-5.2 for matching analysis (supports text + image inputs for vision)
 - Endpoint: POST /api/match - accepts target report + all reports/profiles, returns ranked matches with confidence scores
 - Endpoint: POST /api/scan-post - accepts pasted text or URL from online posts, extracts pet info, then matches against app data
-- Pre-filters candidates by pet type and opposite status before sending to AI
+- Pre-filters candidates by pet type, opposite status, AND 5km GPS radius before sending to AI
+- Vision-based matching: compares actual pet photos (face shape, markings, coat patterns) when photos are available
+- GPS distance filtering: uses Haversine formula to calculate km distance, filters to 5km radius
+- Max 15 candidates sent for vision analysis to keep API calls efficient
+- Photos must be data URIs or HTTP URLs for vision API; local file:// paths are filtered out gracefully
 
 ## Recent Changes
 - 2026-02-21: Added "Scan Online Post" feature to match Facebook/social media posts against app data
@@ -99,3 +103,7 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-22: Added Settings screen with data management, consent info, delete all data, revoke consent
 - 2026-02-22: Added AI disclaimer notices on matches screen and scan post screen
 - 2026-02-22: Added settings gear icon to home screen header
+- 2026-02-22: Upgraded AI matching to use OpenAI Vision (gpt-5.2) for visual photo comparison
+- 2026-02-22: Added GPS distance pre-filtering (5km radius) to narrow candidate pool before AI analysis
+- 2026-02-22: Vision matching compares face shape, markings, coat patterns alongside text analysis
+- 2026-02-22: Updated scan-post endpoint with same vision + photo comparison capabilities
