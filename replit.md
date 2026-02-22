@@ -107,3 +107,5 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-22: Added GPS distance pre-filtering (5km radius) to narrow candidate pool before AI analysis
 - 2026-02-22: Vision matching compares face shape, markings, coat patterns alongside text analysis
 - 2026-02-22: Updated scan-post endpoint with same vision + photo comparison capabilities
+- 2026-02-22: Expanded vet/shelter/rescue directory from 8 Sydney entries to 89 Australia-wide entries
+- 2026-02-22: Directory now covers all 8 states/territories: NSW(20), VIC(15), QLD(13), WA(12), SA(10), TAS(7), NT(6), ACT(6)
