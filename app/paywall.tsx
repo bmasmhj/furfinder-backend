@@ -120,7 +120,7 @@ export default function PaywallScreen() {
                 style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
                 onPress={() => setSelectedPlan('monthly')}
               >
-                <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceSelected]}>$2.99</Text>
+                <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceSelected]}>$4.99</Text>
                 <Text style={[styles.planPeriod, selectedPlan === 'monthly' && styles.planPeriodSelected]}>per month</Text>
               </Pressable>
               <Pressable
@@ -128,11 +128,11 @@ export default function PaywallScreen() {
                 onPress={() => setSelectedPlan('yearly')}
               >
                 <View style={styles.saveBadge}>
-                  <Text style={styles.saveBadgeText}>SAVE 30%</Text>
+                  <Text style={styles.saveBadgeText}>SAVE 50%</Text>
                 </View>
-                <Text style={[styles.planPrice, selectedPlan === 'yearly' && styles.planPriceSelected]}>$24.99</Text>
+                <Text style={[styles.planPrice, selectedPlan === 'yearly' && styles.planPriceSelected]}>$29.99</Text>
                 <Text style={[styles.planPeriod, selectedPlan === 'yearly' && styles.planPeriodSelected]}>per year</Text>
-                <Text style={[styles.planBreakdown, selectedPlan === 'yearly' && styles.planBreakdownSelected]}>~$2.08/month</Text>
+                <Text style={[styles.planBreakdown, selectedPlan === 'yearly' && styles.planBreakdownSelected]}>~$2.50/month</Text>
               </Pressable>
             </View>
           </Animated.View>
@@ -180,7 +180,7 @@ export default function PaywallScreen() {
                   <>
                     <Ionicons name="diamond" size={20} color="#fff" />
                     <Text style={styles.purchaseBtnText}>
-                      {selectedPlan === 'yearly' ? 'Get Premium — $24.99/year' : 'Get Premium — $2.99/month'}
+                      {selectedPlan === 'yearly' ? 'Get Premium — $29.99/year' : 'Get Premium — $4.99/month'}
                     </Text>
                   </>
                 )}

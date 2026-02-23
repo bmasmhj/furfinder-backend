@@ -30,7 +30,7 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 ## Subscription / Monetization
 - **RevenueCat** SDK (`react-native-purchases`) for in-app subscriptions
 - **Free Tier**: 1 report, 1 profile, 1 photo per report, standard alerts
-- **Premium ($2.99/month or $24.99/year)**: Unlimited reports/profiles, AI matching, scan posts, multi-photo (up to 5), priority alerts
+- **Premium ($4.99/month or $29.99/year)**: Unlimited reports/profiles, AI matching, scan posts, multi-photo (up to 5), priority alerts
 - Subscription context: `lib/subscription-context.tsx` - manages premium state with AsyncStorage persistence
 - Paywall screen: `app/paywall.tsx` - plan selection, purchase, restore flow
 - Feature gating via `useSubscription()` hook: `canUseAIMatching()`, `canUseScanPost()`, `canUseMultiPhoto()`, `canAddReport()`, `canAddProfile()`
