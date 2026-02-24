@@ -156,6 +156,25 @@ export default function MyPetDetailScreen() {
             </View>
           </View>
 
+          {profile.biometricPhotoUris && profile.biometricPhotoUris.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.biometricHeaderRow}>
+                <MaterialCommunityIcons name="fingerprint" size={20} color={Colors.secondary} />
+                <Text style={styles.sectionTitle}>Biometric ID Scans</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.biometricRow}>
+                {profile.biometricPhotoUris.map((uri, index) => (
+                  <View key={index} style={styles.biometricThumb}>
+                    <Image source={{ uri }} style={styles.biometricImage} contentFit="cover" />
+                    <View style={styles.biometricBadge}>
+                      <MaterialCommunityIcons name="fingerprint" size={10} color="#fff" />
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           {!!profile.microchipNumber && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Microchip Number</Text>
@@ -358,6 +377,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
     color: Colors.text,
+  },
+  biometricHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  biometricRow: {
+    gap: 10,
+  },
+  biometricThumb: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+  },
+  biometricImage: {
+    width: '100%',
+    height: '100%',
+  },
+  biometricBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: Colors.secondary,
+    borderRadius: 8,
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionText: {
     fontSize: 14,
