@@ -7,6 +7,7 @@ import {
   Pressable,
   Platform,
   Alert,
+  Linking,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -181,6 +182,70 @@ export default function SettingsScreen() {
               <Ionicons name="document-text" size={18} color="#EA580C" />
             </View>
             <Text style={styles.menuItemText}>Terms of Use</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+        </Pressable>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>Feedback & Support</Text>
+        </View>
+
+        <Pressable
+          style={styles.menuItem}
+          onPress={() => {
+            const subject = encodeURIComponent('PetReunite App Feedback');
+            const body = encodeURIComponent('Hi PetReunite Team,\n\nI would like to share the following feedback:\n\n');
+            Linking.openURL(`mailto:petreunite.feedback@gmail.com?subject=${subject}&body=${body}`);
+          }}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIcon, { backgroundColor: '#F0FDF4' }]}>
+              <Ionicons name="mail" size={18} color={Colors.reunited} />
+            </View>
+            <View>
+              <Text style={styles.menuItemText}>Send Feedback</Text>
+              <Text style={styles.menuItemSubtext}>petreunite.feedback@gmail.com</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+        </Pressable>
+
+        <Pressable
+          style={styles.menuItem}
+          onPress={() => {
+            const subject = encodeURIComponent('PetReunite Bug Report');
+            const body = encodeURIComponent('Hi PetReunite Team,\n\nI found a bug:\n\nWhat I was doing:\n\nWhat happened:\n\nWhat I expected:\n\nDevice/Platform:\n\n');
+            Linking.openURL(`mailto:petreunite.feedback@gmail.com?subject=${subject}&body=${body}`);
+          }}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
+              <Ionicons name="bug" size={18} color="#D97706" />
+            </View>
+            <View>
+              <Text style={styles.menuItemText}>Report a Bug</Text>
+              <Text style={styles.menuItemSubtext}>Help us improve the app</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+        </Pressable>
+
+        <Pressable
+          style={styles.menuItem}
+          onPress={() => {
+            const subject = encodeURIComponent('PetReunite Feature Suggestion');
+            const body = encodeURIComponent('Hi PetReunite Team,\n\nI have a feature suggestion:\n\n');
+            Linking.openURL(`mailto:petreunite.feedback@gmail.com?subject=${subject}&body=${body}`);
+          }}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIcon, { backgroundColor: '#EEF2FF' }]}>
+              <Ionicons name="bulb" size={18} color="#6366F1" />
+            </View>
+            <View>
+              <Text style={styles.menuItemText}>Suggest a Feature</Text>
+              <Text style={styles.menuItemSubtext}>We love hearing your ideas</Text>
+            </View>
           </View>
           <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
         </Pressable>
