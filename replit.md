@@ -18,7 +18,8 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 6. Combined "My Pets" tab with sub-tabs for registered pets and active reports
 7. **AI Matching**: Uses OpenAI (via Replit AI Integrations) to find potential matches between lost/found reports and registered profiles based on breed, color, markings, size, location, and descriptions
 8. **Scan Online Posts**: Paste text from Facebook, Instagram, Nextdoor, or any online lost/found pet post - AI extracts pet details and matches against app data
-9. **Photo Gallery**: Swipeable multi-photo gallery on pet detail view with dot indicators
+9. **Biometric ID Scanning**: Pet owners register close-up photos of nose, eyes, and face for enhanced AI matching. Strangers can use "Quick Snap" to photograph a spotted pet and match against biometric scans + regular photos
+10. **Photo Gallery**: Swipeable multi-photo gallery on pet detail view with dot indicators
 10. **Social Sharing**: Share pet reports via native Share API with pet details
 11. **Community Comments**: "Community Tips" section on each report for public comments
 12. **Timeline**: Visual timeline tracking all report events (created, status changes, comments, sightings)
@@ -45,9 +46,10 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - `app/pet/[id].tsx` - Pet report detail view (includes "Find AI Matches" button)
 - `app/matches.tsx` - AI matches results screen
 - `app/scan-post.tsx` - Scan online posts screen (paste text/URL, AI extracts pet info and matches)
+- `app/quick-snap.tsx` - Quick Snap screen (photograph a spotted pet for biometric AI matching)
 - `app/safety-tips.tsx` - Pet safety guide with tips for lost/found situations
 - `lib/pet-context.tsx` - State management for reports + profiles
-- `lib/types.ts` - TypeScript types (PetReport, PetProfile, PetMatch, VetShelter)
+- `lib/types.ts` - TypeScript types (PetReport, PetProfile with biometricPhotoUris, PetMatch, VetShelter)
 - `lib/helpers.ts` - Utility functions
 - `lib/query-client.ts` - API client with getApiUrl(), apiRequest()
 - `lib/vet-shelters.ts` - Vet, shelter, and rescue organization data
@@ -109,3 +111,9 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-22: Updated scan-post endpoint with same vision + photo comparison capabilities
 - 2026-02-22: Expanded vet/shelter/rescue directory from 8 Sydney entries to 89 Australia-wide entries
 - 2026-02-22: Directory now covers all 8 states/territories: NSW(20), VIC(15), QLD(13), WA(12), SA(10), TAS(7), NT(6), ACT(6)
+- 2026-02-24: Added Biometric ID Scanning — owners can register close-up photos (nose, eyes, face) on pet profiles
+- 2026-02-24: Added Quick Snap screen for strangers to photograph spotted pets and match via AI biometric analysis
+- 2026-02-24: Added Quick Snap button to home screen header (teal bubble with camera-iris icon)
+- 2026-02-24: Updated AI matching prompts (match + scan-post + new quick-snap endpoint) to prioritize biometric features
+- 2026-02-24: Biometric photos included in candidate matching — nose print patterns, iris details, facial structure
+- 2026-02-24: New endpoint POST /api/quick-snap-match for photo-based pet identification
