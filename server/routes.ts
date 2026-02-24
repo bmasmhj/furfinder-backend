@@ -39,6 +39,7 @@ interface PetProfile {
   color: string;
   markings: string;
   photoUris: string[];
+  biometricPhotoUris?: string[];
   microchipNumber: string;
   medicalNotes: string;
   suburb: string;
@@ -74,6 +75,10 @@ function getReportPhotos(report: PetReport): string[] {
 
 function getProfilePhotos(profile: PetProfile): string[] {
   return (profile.photoUris || []).filter(p => p && (p.startsWith('data:') || p.startsWith('http')));
+}
+
+function getProfileBiometricPhotos(profile: PetProfile): string[] {
+  return (profile.biometricPhotoUris || []).filter(p => p && (p.startsWith('data:') || p.startsWith('http')));
 }
 
 function buildImageContent(photoUri: string): OpenAI.Chat.Completions.ChatCompletionContentPartImage {
@@ -139,11 +144,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       for (const p of matchingProfiles) {
+        const profilePhotos = getProfilePhotos(p);
+        const biometricPhotos = getProfileBiometricPhotos(p);
+        const allPhotos = [...profilePhotos, ...biometricPhotos];
         candidates.push({
           type: 'profile',
           id: p.id,
-          summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || 'none'}`,
-          photos: getProfilePhotos(p),
+          summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || 'none'}${biometricPhotos.length > 0 ? `, has ${biometricPhotos.length} biometric ID scan(s) (close-up nose/eyes/face)` : ''}`,
+          photos: allPhotos,
         });
       }
 
@@ -205,6 +213,7 @@ VISUAL ANALYSIS (most important when photos are available):
 - Look for unique identifiers: spots, patches, scars, collar, eye color
 - Assess breed consistency from visual appearance
 - Note any distinctive features visible in photos
+- BIOMETRIC ID SCANS: Some profiles include close-up photos of nose prints, eye patterns, and facial features. These are extremely high-value for matching — nose print patterns and iris details are unique to each animal. Prioritize comparing biometric close-ups when available.
 
 TEXT ANALYSIS:
 - Breed similarity (exact match is strongest)
@@ -406,11 +415,13 @@ Return ONLY valid JSON, no markdown.`
       });
 
       for (const p of filteredProfiles) {
+        const profilePhotos = getProfilePhotos(p);
+        const biometricPhotos = getProfileBiometricPhotos(p);
         allCandidates.push({
           type: 'profile',
           id: p.id,
-          summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || 'none'}`,
-          photos: getProfilePhotos(p),
+          summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || 'none'}${biometricPhotos.length > 0 ? `, has ${biometricPhotos.length} biometric ID scan(s)` : ''}`,
+          photos: [...profilePhotos, ...biometricPhotos],
         });
       }
 
@@ -524,6 +535,157 @@ Return ONLY valid JSON, no markdown.`;
     } catch (error) {
       console.error("Scan post error:", error);
       return res.status(500).json({ error: "Failed to analyze the post" });
+    }
+  });
+
+  app.post("/api/quick-snap-match", async (req: Request, res: Response) => {
+    try {
+      const { photoUri, petType, reports, profiles } = req.body as {
+        photoUri: string;
+        petType?: string;
+        reports: PetReport[];
+        profiles: PetProfile[];
+      };
+
+      if (!photoUri) {
+        return res.status(400).json({ error: "A photo is required" });
+      }
+
+      const validPhoto = photoUri.startsWith('data:') || photoUri.startsWith('http');
+      if (!validPhoto) {
+        return res.status(400).json({ error: "Invalid photo format" });
+      }
+
+      const lostReports = (reports || []).filter(r => {
+        if (r.status !== 'lost') return false;
+        if (petType && r.petType !== petType) return false;
+        return true;
+      });
+
+      const allProfiles = (profiles || []).filter(p => {
+        if (petType && p.petType !== petType) return false;
+        return true;
+      });
+
+      interface SnapCandidate {
+        type: string;
+        id: string;
+        summary: string;
+        photos: string[];
+      }
+
+      const candidates: SnapCandidate[] = [];
+
+      for (const r of lostReports) {
+        candidates.push({
+          type: 'report',
+          id: r.id,
+          summary: `[Lost Report] ${r.petType} named "${r.petName}", breed: ${r.breed}, size: ${r.size}, color: ${r.color}, markings: "${r.markings}", location: ${r.locationName}, date: ${r.lastSeenDate}`,
+          photos: getReportPhotos(r),
+        });
+      }
+
+      for (const p of allProfiles) {
+        const profilePhotos = getProfilePhotos(p);
+        const biometricPhotos = getProfileBiometricPhotos(p);
+        candidates.push({
+          type: 'profile',
+          id: p.id,
+          summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, owner: ${p.ownerName}${biometricPhotos.length > 0 ? `, has ${biometricPhotos.length} biometric ID scan(s) (close-up nose/eyes/face)` : ''}`,
+          photos: [...profilePhotos, ...biometricPhotos],
+        });
+      }
+
+      if (candidates.length === 0) {
+        return res.json({ matches: [] });
+      }
+
+      const visionCandidates = candidates.slice(0, MAX_VISION_CANDIDATES);
+
+      const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [];
+
+      userContent.push({
+        type: "text",
+        text: `QUICK SNAP PHOTO — A photo taken by someone who spotted a pet and wants to identify it:\n`,
+      });
+      userContent.push(buildImageContent(photoUri));
+
+      for (let i = 0; i < visionCandidates.length; i++) {
+        const c = visionCandidates[i];
+        if (c.photos.length > 0) {
+          userContent.push({
+            type: "text",
+            text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\nCandidate photo(s):`,
+          });
+          for (const photo of c.photos.slice(0, 3)) {
+            userContent.push(buildImageContent(photo));
+          }
+        } else {
+          userContent.push({
+            type: "text",
+            text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\n(No photo available)`,
+          });
+        }
+      }
+
+      const snapSystemPrompt = `You are an expert AI pet identification system specializing in visual biometric matching. A person has spotted a pet and taken a quick photo. Your job is to identify if this pet matches any lost pet reports or registered pet profiles.
+
+VISUAL BIOMETRIC ANALYSIS (highest priority):
+- Compare the snapped photo against ALL candidate photos, especially biometric ID scans
+- NOSE PRINT MATCHING: Compare nose texture patterns, nostril shape, bridge width — these are unique like fingerprints
+- EYE MATCHING: Compare iris color, eye shape, eye spacing, pupil characteristics
+- FACIAL STRUCTURE: Compare head shape, ear position/shape, muzzle length, forehead markings
+- COAT MATCHING: Compare coat color patterns, spot locations, stripe patterns, patches
+- Look for unique identifiers: scars, markings, collar details, ear notches
+
+TEXT COMPARISON (secondary):
+- Breed consistency
+- Color and size match
+- Markings described
+
+SCORING:
+- 80-100: Strong visual match — biometric features align (nose pattern, eye color, facial structure match)
+- 60-79: Good visual similarity — multiple features match but some uncertainty
+- 40-59: Moderate resemblance — same breed/color but limited distinguishing match
+- 30-39: Possible but uncertain
+- Below 30: Do not include
+
+Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
+- "id": candidate id
+- "type": "report" or "profile"
+- "confidence": 0-100
+- "reason": 2-3 sentence explanation focusing on VISUAL similarities found, mentioning specific biometric features compared
+
+Only include confidence >= 30. Return at most 10 matches.
+Return ONLY valid JSON, no markdown.`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-5.2",
+        messages: [
+          { role: "system", content: snapSystemPrompt },
+          { role: "user", content: userContent },
+        ],
+        response_format: { type: "json_object" },
+        max_completion_tokens: 8192,
+      });
+
+      const content = completion.choices[0]?.message?.content || '{"matches":[]}';
+      let parsed;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        parsed = { matches: [] };
+      }
+
+      const matches = (parsed.matches || parsed.results || [])
+        .filter((m: any) => m.confidence >= 30)
+        .sort((a: any, b: any) => b.confidence - a.confidence)
+        .slice(0, 10);
+
+      return res.json({ matches });
+    } catch (error) {
+      console.error("Quick snap match error:", error);
+      return res.status(500).json({ error: "Failed to process snap match" });
     }
   });
 

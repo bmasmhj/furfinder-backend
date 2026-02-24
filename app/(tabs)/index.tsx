@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, FlatList, RefreshControl, Platform, Pressable }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
@@ -90,6 +90,13 @@ export default function HomeScreen() {
               <Feather name="search" size={14} color="#F97316" />
               <Text style={styles.scanBubbleText}>Scan Post</Text>
               {!canUseScanPost() && <Ionicons name="diamond" size={10} color="#F59E0B" style={{ marginLeft: 2 }} />}
+            </Pressable>
+            <Pressable
+              style={styles.snapBubble}
+              onPress={() => router.push('/quick-snap')}
+            >
+              <MaterialCommunityIcons name="camera-iris" size={14} color={Colors.secondary} />
+              <Text style={styles.snapBubbleText}>Quick Snap</Text>
             </Pressable>
           </View>
           <View style={styles.statsRow}>
@@ -230,6 +237,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Poppins_500Medium',
     color: '#F97316',
+  },
+  snapBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+  },
+  snapBubbleText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    color: Colors.secondary,
   },
   tipsBubble: {
     flexDirection: 'row',
