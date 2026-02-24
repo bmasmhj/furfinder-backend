@@ -123,3 +123,9 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-24: Added Happy Tail story detail screen with photo gallery, pet details grid, reunion message card, community messages
 - 2026-02-24: Added social sharing buttons: Facebook (deep link), Instagram, TikTok, and "Share to Any App" via native Share API
 - 2026-02-24: Extended PetReport with reunionMessage, reunionDate, likes, likedByMe fields; added markReunited() and toggleLike() to pet-context
+- 2026-02-24: Added Feedback & Support section to Settings with Send Feedback, Report a Bug, Suggest a Feature (mailto: petreunite.feedback@gmail.com)
+- 2026-02-24: Added printable flyer generator screen (/flyer) — auto-generates shareable lost/found flyers from pet reports with photos, details, contact info
+- 2026-02-24: Added "Generate Flyer" button on pet detail screen for non-reunited reports
+- 2026-02-24: Added How It Works screen (/how-it-works) — 7-step guide with coral hero, success tips, CTA to Report tab
+- 2026-02-24: Added FAQ screen (/faq) — 17 questions across 6 categories with accordion UI, category filters, scam awareness section
+- 2026-02-24: Added Resources section to Settings with links to How It Works, FAQ, and Safety Tips
