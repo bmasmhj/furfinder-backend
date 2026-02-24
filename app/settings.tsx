@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,9 +8,10 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
 import { useConsent } from '@/lib/consent-context';
 import { usePets } from '@/lib/pet-context';
@@ -18,7 +19,19 @@ import { usePets } from '@/lib/pet-context';
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { consentDate, revokeConsent } = useConsent();
-  const { reports, profiles, deleteReport, deleteProfile } = usePets();
+  const { reports, profiles, deleteReport, deleteProfile, searchRadiusKm, setSearchRadiusKm } = usePets();
+  const [localRadius, setLocalRadius] = useState(searchRadiusKm);
+
+  const handleRadiusChange = useCallback((value: number) => {
+    const rounded = Math.round(value);
+    setLocalRadius(rounded);
+  }, []);
+
+  const handleRadiusComplete = useCallback((value: number) => {
+    const rounded = Math.round(value);
+    setLocalRadius(rounded);
+    setSearchRadiusKm(rounded);
+  }, [setSearchRadiusKm]);
   const [isDeleting, setIsDeleting] = useState(false);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const webBottomPadding = Platform.OS === 'web' ? 34 : 0;
@@ -103,6 +116,51 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + webBottomPadding + 40 }}
       >
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>Search & Alerts</Text>
+        </View>
+
+        <View style={styles.radiusCard}>
+          <View style={styles.radiusHeader}>
+            <View style={styles.radiusIconRow}>
+              <View style={[styles.menuIcon, { backgroundColor: '#F0FDFA' }]}>
+                <MaterialCommunityIcons name="map-marker-radius" size={20} color={Colors.secondary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.radiusTitle}>Distance Radius</Text>
+                <Text style={styles.radiusHint}>
+                  The larger the distance, the more pets you'll see in matches and alerts.
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.sliderRow}>
+            <Text style={styles.sliderLabel}>Distance</Text>
+            <Text style={styles.sliderValue}>{localRadius} km</Text>
+          </View>
+
+          <Slider
+            style={styles.slider}
+            minimumValue={1}
+            maximumValue={100}
+            step={1}
+            value={searchRadiusKm}
+            onValueChange={handleRadiusChange}
+            onSlidingComplete={handleRadiusComplete}
+            minimumTrackTintColor={Colors.secondary}
+            maximumTrackTintColor={Colors.border}
+            thumbTintColor={Colors.secondary}
+          />
+
+          <View style={styles.sliderMarks}>
+            <Text style={styles.sliderMark}>1 km</Text>
+            <Text style={styles.sliderMark}>25 km</Text>
+            <Text style={styles.sliderMark}>50 km</Text>
+            <Text style={styles.sliderMark}>100 km</Text>
+          </View>
+        </View>
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionHeaderText}>Legal</Text>
         </View>
@@ -331,5 +389,63 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     color: Colors.textLight,
     lineHeight: 18,
+  },
+  radiusCard: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 16,
+    gap: 12,
+  },
+  radiusHeader: {
+    gap: 8,
+  },
+  radiusIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  radiusTitle: {
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.text,
+  },
+  radiusHint: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textSecondary,
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  sliderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sliderLabel: {
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.text,
+  },
+  sliderValue: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    color: Colors.secondary,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  sliderMarks: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: -4,
+  },
+  sliderMark: {
+    fontSize: 10,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textLight,
   },
 });

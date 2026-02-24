@@ -15,7 +15,7 @@ import { apiRequest } from '@/lib/query-client';
 export default function MatchesScreen() {
   const { reportId } = useLocalSearchParams<{ reportId: string }>();
   const insets = useSafeAreaInsets();
-  const { getReport, reports, profiles } = usePets();
+  const { getReport, reports, profiles, searchRadiusKm } = usePets();
   const [matches, setMatches] = useState<PetMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,6 +38,7 @@ export default function MatchesScreen() {
         report,
         reports,
         profiles,
+        radiusKm: searchRadiusKm,
       });
       const data = await res.json();
       setMatches(data.matches || []);

@@ -97,11 +97,13 @@ function buildImageContent(photoUri: string): OpenAI.Chat.Completions.ChatComple
 export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/match", async (req: Request, res: Response) => {
     try {
-      const { report, reports, profiles } = req.body as {
+      const { report, reports, profiles, radiusKm } = req.body as {
         report: PetReport;
         reports: PetReport[];
         profiles: PetProfile[];
+        radiusKm?: number;
       };
+      const searchRadius = radiusKm && radiusKm > 0 ? radiusKm : RADIUS_KM;
 
       if (!report) {
         return res.status(400).json({ error: "Report is required" });
@@ -115,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (r.petType !== report.petType) return false;
         if (r.latitude && r.longitude && report.latitude && report.longitude) {
           const dist = getDistance(report.latitude, report.longitude, r.latitude, r.longitude);
-          if (dist > RADIUS_KM) return false;
+          if (dist > searchRadius) return false;
         }
         return true;
       });
@@ -219,7 +221,7 @@ TEXT ANALYSIS:
 - Breed similarity (exact match is strongest)
 - Color and markings described
 - Size match
-- Geographic proximity (distance in km — closer is better, within 5km radius)
+- Geographic proximity (distance in km — closer is better, within ${searchRadius}km radius)
 - Description details overlap
 
 SCORING GUIDE:
@@ -243,7 +245,7 @@ Consider these factors:
 - Breed similarity (exact match is strongest signal)
 - Color and markings similarity
 - Size match
-- Geographic proximity (closer is better, candidates are within 5km radius)
+- Geographic proximity (closer is better, candidates are within ${searchRadius}km radius)
 - Date proximity (for reports)
 - Description details
 

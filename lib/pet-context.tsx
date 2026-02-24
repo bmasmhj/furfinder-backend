@@ -6,6 +6,7 @@ import { PetReport, PetStatus, PetProfile, Comment, TimelineEvent, PetNotificati
 const REPORTS_KEY = '@pet_reports';
 const PROFILES_KEY = '@pet_profiles';
 const NOTIFICATIONS_KEY = '@pet_notifications';
+const SEARCH_RADIUS_KEY = '@search_radius_km';
 
 const SAMPLE_REPORTS: PetReport[] = [
   {
@@ -139,7 +140,7 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-const NEARBY_RADIUS_KM = 10;
+const DEFAULT_SEARCH_RADIUS_KM = 10;
 
 interface PetContextValue {
   reports: PetReport[];
@@ -161,6 +162,8 @@ interface PetContextValue {
   markNotificationRead: (id: string) => Promise<void>;
   markAllNotificationsRead: () => Promise<void>;
   clearNotifications: () => Promise<void>;
+  searchRadiusKm: number;
+  setSearchRadiusKm: (radius: number) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -170,6 +173,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
   const [reports, setReports] = useState<PetReport[]>([]);
   const [profiles, setProfiles] = useState<PetProfile[]>([]);
   const [notifications, setNotifications] = useState<PetNotification[]>([]);
+  const [searchRadiusKm, setSearchRadiusKmState] = useState(DEFAULT_SEARCH_RADIUS_KM);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -178,11 +182,19 @@ export function PetProvider({ children }: { children: ReactNode }) {
 
   const loadData = async () => {
     try {
-      const [storedReports, storedProfiles, storedNotifications] = await Promise.all([
+      const [storedReports, storedProfiles, storedNotifications, storedRadius] = await Promise.all([
         AsyncStorage.getItem(REPORTS_KEY),
         AsyncStorage.getItem(PROFILES_KEY),
         AsyncStorage.getItem(NOTIFICATIONS_KEY),
+        AsyncStorage.getItem(SEARCH_RADIUS_KEY),
       ]);
+
+      if (storedRadius) {
+        const parsed = parseInt(storedRadius, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 100) {
+          setSearchRadiusKmState(parsed);
+        }
+      }
 
       if (storedReports) {
         const parsed = JSON.parse(storedReports);
@@ -231,6 +243,16 @@ export function PetProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setSearchRadiusKm = useCallback(async (radius: number) => {
+    const clamped = Math.max(1, Math.min(100, Math.round(radius)));
+    setSearchRadiusKmState(clamped);
+    try {
+      await AsyncStorage.setItem(SEARCH_RADIUS_KEY, String(clamped));
+    } catch (e) {
+      console.error('Failed to save search radius', e);
+    }
+  }, []);
+
   const generateNearbyAlerts = useCallback((newReport: PetReport, currentProfiles: PetProfile[], currentReports: PetReport[]) => {
     const newNotifications: PetNotification[] = [];
     const now = new Date().toISOString();
@@ -270,7 +292,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
           report.latitude, report.longitude
         );
 
-        if (distance <= NEARBY_RADIUS_KM) {
+        if (distance <= searchRadiusKm) {
           newNotifications.push({
             id: Crypto.randomUUID(),
             type: 'match_found',
@@ -295,7 +317,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
           report.latitude, report.longitude
         );
 
-        if (distance <= NEARBY_RADIUS_KM) {
+        if (distance <= searchRadiusKm) {
           newNotifications.push({
             id: Crypto.randomUUID(),
             type: 'found_nearby',
@@ -310,7 +332,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
     }
 
     return newNotifications;
-  }, []);
+  }, [searchRadiusKm]);
 
   const addReport = useCallback(async (report: Omit<PetReport, 'id' | 'createdAt' | 'comments' | 'timeline' | 'rewardPool'>) => {
     const id = Crypto.randomUUID();
@@ -480,8 +502,10 @@ export function PetProvider({ children }: { children: ReactNode }) {
     markNotificationRead,
     markAllNotificationsRead,
     clearNotifications,
+    searchRadiusKm,
+    setSearchRadiusKm,
     isLoading,
-  }), [reports, myReports, addReport, updateReport, updateReportStatus, deleteReport, getReport, addComment, addRewardContribution, profiles, addProfile, updateProfile, deleteProfile, getProfile, notifications, unreadCount, markNotificationRead, markAllNotificationsRead, clearNotifications, isLoading]);
+  }), [reports, myReports, addReport, updateReport, updateReportStatus, deleteReport, getReport, addComment, addRewardContribution, profiles, addProfile, updateProfile, deleteProfile, getProfile, notifications, unreadCount, markNotificationRead, markAllNotificationsRead, clearNotifications, searchRadiusKm, setSearchRadiusKm, isLoading]);
 
   return (
     <PetContext.Provider value={value}>
