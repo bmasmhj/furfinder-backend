@@ -35,6 +35,7 @@ export default function RegisterPetScreen() {
   const existingProfile = editId ? getProfile(editId) : undefined;
 
   const [photoUris, setPhotoUris] = useState<string[]>(existingProfile?.photoUris || []);
+  const [biometricPhotoUris, setBiometricPhotoUris] = useState<string[]>(existingProfile?.biometricPhotoUris || []);
   const [petType, setPetType] = useState<PetType>(existingProfile?.petType || 'dog');
   const [petName, setPetName] = useState(existingProfile?.petName || '');
   const [breed, setBreed] = useState(existingProfile?.breed || '');
@@ -80,6 +81,38 @@ export default function RegisterPetScreen() {
     setPhotoUris(prev => prev.filter((_, i) => i !== index));
   };
 
+  const addBiometricPhoto = async (source: 'camera' | 'gallery') => {
+    if (source === 'camera') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Camera access is needed to take biometric scans.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.9,
+      });
+      if (!result.canceled) {
+        setBiometricPhotoUris(prev => [...prev, result.assets[0].uri]);
+      }
+    } else {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.9,
+      });
+      if (!result.canceled) {
+        setBiometricPhotoUris(prev => [...prev, result.assets[0].uri]);
+      }
+    }
+  };
+
+  const removeBiometricPhoto = (index: number) => {
+    setBiometricPhotoUris(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     if (!petName.trim()) {
       Alert.alert('Missing info', 'Please enter your pet\'s name.');
@@ -117,6 +150,7 @@ export default function RegisterPetScreen() {
           color: color.trim(),
           markings: markings.trim(),
           photoUris,
+          biometricPhotoUris,
           microchipNumber: microchipNumber.trim(),
           medicalNotes: medicalNotes.trim(),
           suburb: suburb.trim(),
@@ -132,6 +166,7 @@ export default function RegisterPetScreen() {
           color: color.trim(),
           markings: markings.trim(),
           photoUris,
+          biometricPhotoUris,
           microchipNumber: microchipNumber.trim(),
           medicalNotes: medicalNotes.trim(),
           suburb: suburb.trim(),
@@ -267,6 +302,51 @@ export default function RegisterPetScreen() {
           placeholder="Any distinctive markings or features"
           placeholderTextColor={Colors.textLight}
         />
+
+        <View style={styles.divider} />
+
+        <View style={styles.biometricSection}>
+          <View style={styles.biometricHeader}>
+            <MaterialCommunityIcons name="fingerprint" size={22} color={Colors.secondary} />
+            <Text style={styles.sectionLabel}>Biometric ID Scans</Text>
+          </View>
+          <Text style={styles.biometricHint}>
+            Take close-up photos of your pet's unique features for better AI matching. Focus on nose, eyes, and face from different angles.
+          </Text>
+          <View style={styles.biometricGuide}>
+            {[
+              { icon: 'nose' as const, label: 'Nose close-up' },
+              { icon: 'eye-outline' as const, label: 'Eyes close-up' },
+              { icon: 'emoticon-outline' as const, label: 'Face front' },
+            ].map((guide, idx) => (
+              <View key={idx} style={styles.guideItem}>
+                <MaterialCommunityIcons name={guide.icon} size={16} color={Colors.textSecondary} />
+                <Text style={styles.guideText}>{guide.label}</Text>
+              </View>
+            ))}
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photosRow}>
+            {biometricPhotoUris.map((uri, index) => (
+              <View key={index} style={styles.bioPhotoThumb}>
+                <Image source={{ uri }} style={styles.photoThumbImage} contentFit="cover" />
+                <Pressable onPress={() => removeBiometricPhoto(index)} style={styles.removePhotoBtn}>
+                  <Ionicons name="close-circle" size={22} color={Colors.danger} />
+                </Pressable>
+                <View style={styles.bioLabel}>
+                  <MaterialCommunityIcons name="fingerprint" size={10} color="#fff" />
+                </View>
+              </View>
+            ))}
+            <View style={styles.addPhotoButtons}>
+              <Pressable onPress={() => addBiometricPhoto('camera')} style={styles.addBioPhotoBtn}>
+                <MaterialCommunityIcons name="camera-iris" size={22} color={Colors.secondary} />
+              </Pressable>
+              <Pressable onPress={() => addBiometricPhoto('gallery')} style={styles.addBioPhotoBtn}>
+                <Ionicons name="images" size={22} color={Colors.secondary} />
+              </Pressable>
+            </View>
+          </ScrollView>
+        </View>
 
         <View style={styles.divider} />
 
@@ -420,6 +500,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.surface,
+  },
+  biometricSection: {
+    gap: 8,
+  },
+  biometricHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  biometricHint: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textSecondary,
+    lineHeight: 18,
+  },
+  biometricGuide: {
+    flexDirection: 'row',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  guideItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.surfaceElevated,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+  },
+  guideText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_500Medium',
+    color: Colors.textSecondary,
+  },
+  bioPhotoThumb: {
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+  },
+  bioLabel: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: Colors.secondary,
+    borderRadius: 8,
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addBioPhotoBtn: {
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.secondary,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.foundBg,
   },
   sectionLabel: {
     fontSize: 14,

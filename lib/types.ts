@@ -51,6 +51,7 @@ export interface PetProfile {
   color: string;
   markings: string;
   photoUris: string[];
+  biometricPhotoUris: string[];
   microchipNumber: string;
   medicalNotes: string;
   suburb: string;
