@@ -1391,6 +1391,40 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
+  app.delete("/api/account", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+
+      await pool.query('DELETE FROM comments WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM report_likes WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM notifications WHERE user_id = $1', [userId]);
+      await pool.query('DELETE FROM content_reports WHERE reporter_id = $1', [userId]);
+      await pool.query('DELETE FROM blocked_users WHERE blocker_id = $1 OR blocked_id = $1', [userId]);
+      await pool.query('DELETE FROM referral_shares WHERE user_id = $1', [userId]);
+
+      const profileIds = await pool.query('SELECT id FROM pet_profiles WHERE user_id = $1', [userId]);
+      for (const p of profileIds.rows) {
+        await pool.query('DELETE FROM biometric_scans WHERE profile_id = $1', [p.id]);
+      }
+      await pool.query('DELETE FROM pet_profiles WHERE user_id = $1', [userId]);
+
+      const reportIds = await pool.query('SELECT id FROM pet_reports WHERE user_id = $1', [userId]);
+      for (const r of reportIds.rows) {
+        await pool.query('DELETE FROM timeline_events WHERE report_id = $1', [r.id]);
+        await pool.query('DELETE FROM comments WHERE report_id = $1', [r.id]);
+        await pool.query('DELETE FROM report_likes WHERE report_id = $1', [r.id]);
+      }
+      await pool.query('DELETE FROM pet_reports WHERE user_id = $1', [userId]);
+
+      await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+
+      return res.json({ message: "Account and all associated data deleted successfully" });
+    } catch (err) {
+      console.error("Delete account error:", err);
+      return res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

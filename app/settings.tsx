@@ -16,11 +16,15 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
 import { useConsent } from '@/lib/consent-context';
 import { usePets } from '@/lib/pet-context';
+import { useAuth } from '@/lib/auth-context';
+import { getApiUrl } from '@/lib/query-client';
+import { fetch } from 'expo/fetch';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { consentDate, revokeConsent } = useConsent();
   const { reports, profiles, deleteReport, deleteProfile, searchRadiusKm, setSearchRadiusKm } = usePets();
+  const { token, logout } = useAuth();
   const [localRadius, setLocalRadius] = useState(searchRadiusKm);
 
   const handleRadiusChange = useCallback((value: number) => {
@@ -36,6 +40,50 @@ export default function SettingsScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const webBottomPadding = Platform.OS === 'web' ? 34 : 0;
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and ALL associated data (reports, profiles, comments, notifications). This cannot be undone.\n\nAre you absolutely sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete My Account',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Final Confirmation',
+              'Last chance — your account and all data will be permanently deleted.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, Delete Everything',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const baseUrl = getApiUrl();
+                      const res = await fetch(new URL('/api/account', baseUrl).toString(), {
+                        method: 'DELETE',
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      if (res.ok) {
+                        Alert.alert('Account Deleted', 'Your account and all data have been permanently removed.');
+                        logout();
+                      } else {
+                        Alert.alert('Error', 'Failed to delete account. Please try again.');
+                      }
+                    } catch {
+                      Alert.alert('Error', 'Something went wrong. Please try again.');
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  };
 
   const handleDeleteAllData = () => {
     Alert.alert(
@@ -365,6 +413,26 @@ export default function SettingsScreen() {
               </Text>
               <Text style={styles.menuItemSubtext}>
                 Remove all reports and profiles
+              </Text>
+            </View>
+          </View>
+        </Pressable>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>Account</Text>
+        </View>
+
+        <Pressable style={styles.menuItem} onPress={handleDeleteAccount}>
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIcon, { backgroundColor: '#FEF2F2' }]}>
+              <Ionicons name="person-remove" size={18} color={Colors.danger} />
+            </View>
+            <View>
+              <Text style={[styles.menuItemText, { color: Colors.danger }]}>
+                Delete My Account
+              </Text>
+              <Text style={styles.menuItemSubtext}>
+                Permanently delete account and all data
               </Text>
             </View>
           </View>

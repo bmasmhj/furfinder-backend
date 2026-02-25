@@ -191,6 +191,15 @@ function configureExpoAndLanding(app: express.Application) {
     res.status(200).send(termsOfUseHtml);
   });
 
+  const deleteAccountHtml = fs.readFileSync(
+    path.resolve(process.cwd(), "server", "templates", "delete-account.html"),
+    "utf-8"
+  );
+  app.get("/delete-account", (_req: Request, res: Response) => {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.status(200).send(deleteAccountHtml);
+  });
+
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) {
       return next();
