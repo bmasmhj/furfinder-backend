@@ -27,6 +27,7 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 14. **Vet & Shelter Directory**: Map markers and web listing of nearby vets, shelters, and rescue organizations
 15. **Reward Pool**: Community reward pooling for lost pets with contribution system
 16. **Area Alerts**: In-app notifications when a lost/found pet is reported near registered pet profiles (matched by suburb, pet type, and 10km proximity radius)
+17. **Boost Report**: Pay $0.99 to pin a lost/found report to the top of the home feed for 7 days for maximum visibility
 
 ## Subscription / Monetization
 - **RevenueCat** SDK (`react-native-purchases`) for in-app subscriptions
@@ -129,3 +130,8 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-24: Added How It Works screen (/how-it-works) — 7-step guide with coral hero, success tips, CTA to Report tab
 - 2026-02-24: Added FAQ screen (/faq) — 17 questions across 6 categories with accordion UI, category filters, scam awareness section
 - 2026-02-24: Added Resources section to Settings with links to How It Works, FAQ, and Safety Tips
+- 2026-02-25: Added Boost Report feature — pay $0.99 to pin a report to the top of the home feed for 7 days
+- 2026-02-25: Boosted reports show amber "BOOSTED" banner on cards and gold border with glow effect
+- 2026-02-25: Home feed sorts boosted (non-expired) reports to the top across all filters
+- 2026-02-25: Boost button on pet detail screen with confirmation dialog, active state shows days remaining
+- 2026-02-25: Extended PetReport with isBoosted, boostedAt, boostExpiresAt fields; added boostReport() to pet-context

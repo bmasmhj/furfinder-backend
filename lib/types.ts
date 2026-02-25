@@ -44,6 +44,9 @@ export interface PetReport {
   reunionDate?: string;
   likes?: number;
   likedByMe?: boolean;
+  isBoosted?: boolean;
+  boostedAt?: string;
+  boostExpiresAt?: string;
 }
 
 export interface PetProfile {

@@ -16,6 +16,7 @@ interface PetCardProps {
 export default function PetCard({ report, index }: PetCardProps) {
   const statusColor = getStatusColor(report.status);
   const statusBg = getStatusBg(report.status);
+  const isActiveBoosted = !!(report.isBoosted && report.boostExpiresAt && new Date(report.boostExpiresAt).getTime() > Date.now());
 
   const handlePress = () => {
     if (Platform.OS !== 'web') {
@@ -30,9 +31,16 @@ export default function PetCard({ report, index }: PetCardProps) {
         onPress={handlePress}
         style={({ pressed }) => [
           styles.card,
+          isActiveBoosted && styles.cardBoosted,
           pressed && styles.cardPressed,
         ]}
       >
+        {isActiveBoosted && (
+          <View style={styles.boostBanner}>
+            <Ionicons name="rocket" size={13} color="#fff" />
+            <Text style={styles.boostBannerText}>BOOSTED</Text>
+          </View>
+        )}
         <View style={styles.imageContainer}>
           {report.photoUri ? (
             <Image
@@ -98,9 +106,31 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  cardBoosted: {
+    borderWidth: 2,
+    borderColor: '#F59E0B',
+    shadowColor: '#F59E0B',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
   cardPressed: {
     opacity: 0.95,
     transform: [{ scale: 0.98 }],
+  },
+  boostBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#F59E0B',
+    paddingVertical: 5,
+  },
+  boostBannerText: {
+    fontSize: 11,
+    fontFamily: 'Poppins_700Bold',
+    color: '#fff',
+    letterSpacing: 1,
   },
   imageContainer: {
     height: 180,

@@ -19,8 +19,15 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const filteredReports = useMemo(() => {
-    if (filter === 'all') return reports;
-    return reports.filter(r => r.status === filter);
+    const base = filter === 'all' ? reports : reports.filter(r => r.status === filter);
+    const now = Date.now();
+    return [...base].sort((a, b) => {
+      const aBoosted = a.isBoosted && a.boostExpiresAt && new Date(a.boostExpiresAt).getTime() > now;
+      const bBoosted = b.isBoosted && b.boostExpiresAt && new Date(b.boostExpiresAt).getTime() > now;
+      if (aBoosted && !bBoosted) return -1;
+      if (!aBoosted && bBoosted) return 1;
+      return 0;
+    });
   }, [reports, filter]);
 
   const lostCount = useMemo(() => reports.filter(r => r.status === 'lost').length, [reports]);

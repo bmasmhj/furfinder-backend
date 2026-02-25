@@ -29,7 +29,7 @@ function getTimelineColor(type: TimelineEvent['type']): string {
 export default function PetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { getReport, updateReportStatus, markReunited, addComment, addRewardContribution } = usePets();
+  const { getReport, updateReportStatus, markReunited, addComment, addRewardContribution, boostReport } = usePets();
   const { canUseAIMatching } = useSubscription();
   const report = getReport(id);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
@@ -74,6 +74,39 @@ export default function PetDetailScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     Linking.openURL(`sms:${report.contactPhone}`);
+  };
+
+  const isActiveBoosted = !!(report.isBoosted && report.boostExpiresAt && new Date(report.boostExpiresAt).getTime() > Date.now());
+
+  const boostDaysRemaining = isActiveBoosted && report.boostExpiresAt
+    ? Math.max(0, Math.ceil((new Date(report.boostExpiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
+    : 0;
+
+  const handleBoost = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    if (isActiveBoosted) {
+      Alert.alert('Already Boosted', `This report is boosted for ${boostDaysRemaining} more day${boostDaysRemaining !== 1 ? 's' : ''}. It appears at the top of the feed for maximum visibility.`);
+      return;
+    }
+    Alert.alert(
+      'Boost This Report',
+      `For just $0.99, your report will be pinned to the top of the home feed for 7 days so more people can see it.\n\nThis gives ${report.petName} the best chance of being found!`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Boost for $0.99',
+          onPress: async () => {
+            await boostReport(report.id);
+            if (Platform.OS !== 'web') {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+            Alert.alert('Report Boosted!', `${report.petName}'s report is now pinned to the top of the feed for 7 days. More eyes mean a better chance of reunion!`);
+          },
+        },
+      ]
+    );
   };
 
   const handleReunited = () => {
@@ -414,6 +447,21 @@ export default function PetDetailScreen() {
             >
               <Ionicons name="document-text-outline" size={20} color={Colors.primary} />
               <Text style={styles.flyerBtnText}>Generate Flyer</Text>
+            </Pressable>
+          )}
+
+          {report.status !== 'reunited' && (
+            <Pressable
+              onPress={handleBoost}
+              style={({ pressed }) => [
+                isActiveBoosted ? styles.boostBtnActive : styles.boostBtn,
+                pressed && { opacity: 0.9 },
+              ]}
+            >
+              <Ionicons name="rocket" size={20} color={isActiveBoosted ? '#fff' : '#F59E0B'} />
+              <Text style={isActiveBoosted ? styles.boostBtnActiveText : styles.boostBtnText}>
+                {isActiveBoosted ? `Boosted · ${boostDaysRemaining}d left` : 'Boost Report · $0.99'}
+              </Text>
             </Pressable>
           )}
 
@@ -938,6 +986,38 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
     color: Colors.primary,
+  },
+  boostBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FFFBEB',
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
+    marginTop: 8,
+  },
+  boostBtnText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#D97706',
+  },
+  boostBtnActive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#F59E0B',
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 8,
+  },
+  boostBtnActiveText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#fff',
   },
   reunitedBtn: {
     flexDirection: 'row',

@@ -155,6 +155,7 @@ interface PetContextValue {
   getReport: (id: string) => PetReport | undefined;
   addComment: (reportId: string, author: string, text: string) => Promise<void>;
   addRewardContribution: (reportId: string, amount: number) => Promise<void>;
+  boostReport: (id: string) => Promise<void>;
   profiles: PetProfile[];
   addProfile: (profile: Omit<PetProfile, 'id' | 'createdAt' | 'updatedAt'>) => Promise<PetProfile>;
   updateProfile: (id: string, updates: Partial<PetProfile>) => Promise<void>;
@@ -470,6 +471,29 @@ export function PetProvider({ children }: { children: ReactNode }) {
     await saveReports(updated);
   }, [reports]);
 
+  const boostReport = useCallback(async (id: string) => {
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const timelineEvent: TimelineEvent = {
+      id: Crypto.randomUUID(),
+      type: 'status_change',
+      description: 'Report boosted to priority listing for 7 days',
+      createdAt: now,
+    };
+    const updated = reports.map(r => {
+      if (r.id !== id) return r;
+      return {
+        ...r,
+        isBoosted: true,
+        boostedAt: now,
+        boostExpiresAt: expiresAt,
+        timeline: [...(r.timeline || []), timelineEvent],
+      };
+    });
+    setReports(updated);
+    await saveReports(updated);
+  }, [reports]);
+
   const addProfile = useCallback(async (profile: Omit<PetProfile, 'id' | 'createdAt' | 'updatedAt'>) => {
     const now = new Date().toISOString();
     const newProfile: PetProfile = {
@@ -540,6 +564,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
     getReport,
     addComment,
     addRewardContribution,
+    boostReport,
     profiles,
     addProfile,
     updateProfile,
@@ -553,7 +578,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
     searchRadiusKm,
     setSearchRadiusKm,
     isLoading,
-  }), [reports, myReports, reunitedReports, addReport, updateReport, updateReportStatus, markReunited, toggleLike, deleteReport, getReport, addComment, addRewardContribution, profiles, addProfile, updateProfile, deleteProfile, getProfile, notifications, unreadCount, markNotificationRead, markAllNotificationsRead, clearNotifications, searchRadiusKm, setSearchRadiusKm, isLoading]);
+  }), [reports, myReports, reunitedReports, addReport, updateReport, updateReportStatus, markReunited, toggleLike, deleteReport, getReport, addComment, addRewardContribution, boostReport, profiles, addProfile, updateProfile, deleteProfile, getProfile, notifications, unreadCount, markNotificationRead, markAllNotificationsRead, clearNotifications, searchRadiusKm, setSearchRadiusKm, isLoading]);
 
   return (
     <PetContext.Provider value={value}>
