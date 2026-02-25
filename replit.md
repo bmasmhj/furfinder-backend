@@ -6,7 +6,9 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 ## Architecture
 - **Frontend**: Expo Router (file-based routing), React Native, React Query
 - **Backend**: Express + TypeScript on port 5000
-- **State**: React Context with AsyncStorage persistence (pet-context.tsx)
+- **Database**: PostgreSQL (cloud) with pg driver — all reports, profiles, comments shared across users
+- **Auth**: JWT-based authentication (bcryptjs password hashing, 30-day token expiry)
+- **State**: React Context backed by cloud API (pet-context.tsx), AsyncStorage for local prefs only (search radius)
 - **Styling**: Coral (#FF6B4A) + Teal (#2CBCB6) color scheme, Poppins font family
 
 ## Key Features
@@ -49,14 +51,18 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - `app/scan-post.tsx` - Scan online posts screen (paste text/URL, AI extracts pet info and matches)
 - `app/quick-snap.tsx` - Quick Snap screen (photograph a spotted pet for biometric AI matching)
 - `app/safety-tips.tsx` - Pet safety guide with tips for lost/found situations
-- `lib/pet-context.tsx` - State management for reports + profiles
+- `lib/pet-context.tsx` - State management for reports + profiles (cloud API backed)
+- `lib/auth-context.tsx` - Auth state management (JWT token, login/register/logout)
 - `lib/types.ts` - TypeScript types (PetReport, PetProfile with biometricPhotoUris, PetMatch, VetShelter)
 - `lib/helpers.ts` - Utility functions
 - `lib/query-client.ts` - API client with getApiUrl(), apiRequest()
 - `lib/vet-shelters.ts` - Vet, shelter, and rescue organization data
 - `constants/colors.ts` - App color constants
 - `components/` - Shared components (MapViewNative, EmptyState, ErrorBoundary)
-- `server/routes.ts` - Backend API routes (POST /api/match for AI matching)
+- `server/routes.ts` - Backend API routes (CRUD + AI matching)
+- `server/auth.ts` - JWT auth middleware, register/login/getMe handlers
+- `server/db.ts` - PostgreSQL connection pool
+- `server/schema.sql` - Database schema (users, pet_reports, pet_profiles, comments, timeline_events, notifications, report_likes)
 - `server/replit_integrations/` - OpenAI AI Integrations (chat, image, audio, batch modules)
 
 ## Data Types
@@ -135,3 +141,11 @@ A comprehensive lost and found pets mobile app built with Expo + React Native (f
 - 2026-02-25: Home feed sorts boosted (non-expired) reports to the top across all filters
 - 2026-02-25: Boost button on pet detail screen with confirmation dialog, active state shows days remaining
 - 2026-02-25: Extended PetReport with isBoosted, boostedAt, boostExpiresAt fields; added boostReport() to pet-context
+- 2026-02-25: Added cloud PostgreSQL database with full schema (7 tables: users, pet_reports, comments, timeline_events, pet_profiles, notifications, report_likes)
+- 2026-02-25: Added JWT-based authentication system (bcryptjs hashing, 30-day token expiry)
+- 2026-02-25: Added login and registration screens with email/password auth and 4-checkbox consent (privacy, terms, AI, data storage)
+- 2026-02-25: Rewrote pet-context.tsx to use cloud API instead of AsyncStorage — all data now shared across users
+- 2026-02-25: Added comprehensive CRUD API routes for reports, profiles, comments, likes, boost, reunite, notifications
+- 2026-02-25: Updated privacy policy, terms of use, and consent screen for cloud data storage (Australian Privacy Act 1988)
+- 2026-02-25: Pet detail screen now fetches full report with comments/timeline from API
+- 2026-02-25: Home feed pull-to-refresh now syncs from cloud API

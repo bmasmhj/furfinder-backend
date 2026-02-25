@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -9,6 +10,7 @@ import { queryClient } from "@/lib/query-client";
 import { PetProvider } from "@/lib/pet-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
 import { ConsentProvider } from "@/lib/consent-context";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import {
   useFonts,
   Poppins_400Regular,
@@ -20,8 +22,20 @@ import {
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAFAFA' }}>
+        <ActivityIndicator size="large" color="#FF6B4A" />
+      </View>
+    );
+  }
+
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="register" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="consent"
@@ -75,6 +89,26 @@ function RootLayoutNav() {
         name="settings"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="quick-snap"
+        options={{ headerShown: false, presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="faq"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="flyer"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="how-it-works"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="happy-tail/[id]"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
@@ -98,17 +132,19 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ConsentProvider>
-          <SubscriptionProvider>
-            <PetProvider>
-              <GestureHandlerRootView>
-                <KeyboardProvider>
-                  <RootLayoutNav />
-                </KeyboardProvider>
-              </GestureHandlerRootView>
-            </PetProvider>
-          </SubscriptionProvider>
-        </ConsentProvider>
+        <AuthProvider>
+          <ConsentProvider>
+            <SubscriptionProvider>
+              <PetProvider>
+                <GestureHandlerRootView>
+                  <KeyboardProvider>
+                    <RootLayoutNav />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </PetProvider>
+            </SubscriptionProvider>
+          </ConsentProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

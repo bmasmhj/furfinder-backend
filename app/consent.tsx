@@ -20,11 +20,12 @@ export default function ConsentScreen() {
   const [privacyChecked, setPrivacyChecked] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [aiChecked, setAiChecked] = useState(false);
+  const [dataStorageChecked, setDataStorageChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const webBottomPadding = Platform.OS === 'web' ? 34 : 0;
 
-  const allChecked = privacyChecked && termsChecked && aiChecked;
+  const allChecked = privacyChecked && termsChecked && aiChecked && dataStorageChecked;
 
   const handleAccept = async () => {
     if (!allChecked || isSubmitting) return;
@@ -135,12 +136,24 @@ export default function ConsentScreen() {
                 I understand that AI matching provides suggestions only and is not guaranteed to be accurate
               </Text>
             </Pressable>
+
+            <Pressable
+              style={styles.checkboxRow}
+              onPress={() => setDataStorageChecked(!dataStorageChecked)}
+            >
+              <View style={[styles.checkbox, dataStorageChecked && styles.checkboxChecked]}>
+                {dataStorageChecked && <Ionicons name="checkmark" size={14} color="#fff" />}
+              </View>
+              <Text style={styles.checkboxLabel}>
+                I consent to my data being stored securely on our servers in accordance with the Australian Privacy Act 1988
+              </Text>
+            </Pressable>
           </View>
 
           <View style={styles.noticeCard}>
             <Ionicons name="shield-checkmark-outline" size={18} color="#059669" />
             <Text style={styles.noticeText}>
-              Your data is stored locally on your device. You can delete it at any time from Settings. We comply with the Australian Privacy Act 1988.
+              Your data is stored securely on our cloud servers with encryption. You can delete it at any time from Settings. We comply with the Australian Privacy Act 1988.
             </Text>
           </View>
         </View>

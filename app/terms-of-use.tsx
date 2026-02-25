@@ -39,7 +39,9 @@ These terms are governed by the laws of Australia, including the Australian Cons
     content: `• You are responsible for the information you submit through the App
 • You may delete your reports, profiles, and personal data at any time through the App's Settings
 • We reserve the right to remove content that violates these terms
-• Data is stored locally on your device; we recommend keeping your device secure`,
+• Data is stored securely on our cloud servers to enable community-wide access to reports and facilitate pet reunification
+• You are responsible for maintaining the security of your account credentials
+• By creating an account, you consent to your data being stored on our servers in accordance with our Privacy Policy`,
   },
   {
     title: '5. AI Matching Disclaimer',
@@ -95,7 +97,7 @@ These terms are governed by the laws of Australia, including the Australian Cons
     title: '11. Termination',
     content: `• You may stop using the App at any time by deleting it from your device
 • We may suspend or terminate access to the App if you violate these terms
-• Upon termination, your locally stored data remains on your device unless you delete it`,
+• Upon termination, your data stored on our servers will be retained unless you request deletion through the App's Settings before uninstalling`,
   },
   {
     title: '12. Changes to Terms',

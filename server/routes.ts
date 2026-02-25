@@ -1,6 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import OpenAI from "openai";
+import pool from "./db";
+import { authMiddleware, optionalAuth, registerUser, loginUser, getMe } from "./auth";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -91,6 +93,62 @@ function buildImageContent(photoUri: string): OpenAI.Chat.Completions.ChatComple
   return {
     type: "image_url",
     image_url: { url: photoUri, detail: "low" },
+  };
+}
+
+function mapReportRow(row: any, isOwner: boolean, likedByMe: boolean): any {
+  return {
+    id: row.id,
+    status: row.status,
+    petType: row.pet_type,
+    petName: row.pet_name,
+    breed: row.breed,
+    size: row.size,
+    color: row.color,
+    markings: row.markings,
+    photoUri: row.photo_uri,
+    photoUris: typeof row.photo_uris === 'string' ? JSON.parse(row.photo_uris) : (row.photo_uris || []),
+    description: row.description,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    locationName: row.location_name,
+    lastSeenDate: row.last_seen_date,
+    reward: row.reward,
+    rewardPool: row.reward_pool || 0,
+    contactName: row.contact_name,
+    contactPhone: row.contact_phone,
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+    isOwner,
+    comments: [],
+    timeline: [],
+    reunionMessage: row.reunion_message || undefined,
+    reunionDate: row.reunion_date ? (row.reunion_date instanceof Date ? row.reunion_date.toISOString() : row.reunion_date) : undefined,
+    likes: row.likes || 0,
+    likedByMe,
+    isBoosted: row.is_boosted || false,
+    boostedAt: row.boosted_at ? (row.boosted_at instanceof Date ? row.boosted_at.toISOString() : row.boosted_at) : undefined,
+    boostExpiresAt: row.boost_expires_at ? (row.boost_expires_at instanceof Date ? row.boost_expires_at.toISOString() : row.boost_expires_at) : undefined,
+  };
+}
+
+function mapProfileRow(row: any): any {
+  return {
+    id: row.id,
+    petType: row.pet_type,
+    petName: row.pet_name,
+    breed: row.breed,
+    size: row.size,
+    color: row.color,
+    markings: row.markings,
+    photoUris: typeof row.photo_uris === 'string' ? JSON.parse(row.photo_uris) : (row.photo_uris || []),
+    biometricPhotoUris: typeof row.biometric_photo_uris === 'string' ? JSON.parse(row.biometric_photo_uris) : (row.biometric_photo_uris || []),
+    microchipNumber: row.microchip_number,
+    medicalNotes: row.medical_notes,
+    suburb: row.suburb,
+    ownerName: row.owner_name,
+    ownerPhone: row.owner_phone,
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+    updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
   };
 }
 
@@ -688,6 +746,473 @@ Return ONLY valid JSON, no markdown.`;
     } catch (error) {
       console.error("Quick snap match error:", error);
       return res.status(500).json({ error: "Failed to process snap match" });
+    }
+  });
+
+  // ===== AUTH ROUTES =====
+  app.post("/api/auth/register", registerUser);
+  app.post("/api/auth/login", loginUser);
+  app.get("/api/auth/me", authMiddleware, getMe);
+
+  // ===== PET REPORTS CRUD =====
+  app.get("/api/reports", optionalAuth, async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        `SELECT r.*,
+          COALESCE((SELECT COUNT(*) FROM report_likes WHERE report_id = r.id), 0)::int AS likes
+        FROM pet_reports r
+        ORDER BY
+          CASE WHEN r.is_boosted = true AND r.boost_expires_at > NOW() THEN 0 ELSE 1 END,
+          r.created_at DESC`
+      );
+
+      const reports = result.rows.map((row: any) => {
+        const isOwner = req.user ? row.user_id === req.user.id : false;
+        return mapReportRow(row, isOwner, false);
+      });
+
+      if (req.user) {
+        const likedResult = await pool.query(
+          'SELECT report_id FROM report_likes WHERE user_id = $1',
+          [req.user.id]
+        );
+        const likedIds = new Set(likedResult.rows.map((r: any) => r.report_id));
+        reports.forEach((r: any) => { r.likedByMe = likedIds.has(r.id); });
+      }
+
+      return res.json(reports);
+    } catch (err) {
+      console.error("Get reports error:", err);
+      return res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
+  app.get("/api/reports/:id", optionalAuth, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const result = await pool.query(
+        `SELECT r.*,
+          COALESCE((SELECT COUNT(*) FROM report_likes WHERE report_id = r.id), 0)::int AS likes
+        FROM pet_reports r WHERE r.id = $1`,
+        [id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+      const row = result.rows[0];
+      const isOwner = req.user ? row.user_id === req.user.id : false;
+
+      let likedByMe = false;
+      if (req.user) {
+        const likeCheck = await pool.query(
+          'SELECT id FROM report_likes WHERE report_id = $1 AND user_id = $2',
+          [id, req.user.id]
+        );
+        likedByMe = likeCheck.rows.length > 0;
+      }
+
+      const commentsResult = await pool.query(
+        'SELECT * FROM comments WHERE report_id = $1 ORDER BY created_at ASC',
+        [id]
+      );
+      const timelineResult = await pool.query(
+        'SELECT * FROM timeline_events WHERE report_id = $1 ORDER BY created_at ASC',
+        [id]
+      );
+
+      const report = mapReportRow(row, isOwner, likedByMe);
+      report.comments = commentsResult.rows.map((c: any) => ({
+        id: c.id,
+        author: c.author,
+        text: c.text,
+        createdAt: c.created_at.toISOString(),
+      }));
+      report.timeline = timelineResult.rows.map((t: any) => ({
+        id: t.id,
+        type: t.type,
+        description: t.description,
+        createdAt: t.created_at.toISOString(),
+      }));
+
+      return res.json(report);
+    } catch (err) {
+      console.error("Get report error:", err);
+      return res.status(500).json({ message: "Failed to fetch report" });
+    }
+  });
+
+  app.post("/api/reports", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const b = req.body;
+      const result = await pool.query(
+        `INSERT INTO pet_reports (user_id, status, pet_type, pet_name, breed, size, color, markings, photo_uri, photo_uris, description, latitude, longitude, location_name, last_seen_date, reward, contact_name, contact_phone)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+         RETURNING *`,
+        [req.user!.id, b.status, b.petType, b.petName, b.breed || '', b.size || 'medium', b.color || '', b.markings || '', b.photoUri || '', JSON.stringify(b.photoUris || []), b.description || '', b.latitude || 0, b.longitude || 0, b.locationName || '', b.lastSeenDate || '', b.reward || '', b.contactName || '', b.contactPhone || '']
+      );
+
+      const reportId = result.rows[0].id;
+      await pool.query(
+        `INSERT INTO timeline_events (report_id, type, description) VALUES ($1, 'created', $2)`,
+        [reportId, `Report created by ${b.contactName || req.user!.displayName}`]
+      );
+
+      return res.status(201).json(mapReportRow(result.rows[0], true, false));
+    } catch (err) {
+      console.error("Create report error:", err);
+      return res.status(500).json({ message: "Failed to create report" });
+    }
+  });
+
+  app.put("/api/reports/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const existing = await pool.query('SELECT user_id FROM pet_reports WHERE id = $1', [id]);
+      if (existing.rows.length === 0) return res.status(404).json({ message: "Report not found" });
+      if (existing.rows[0].user_id !== req.user!.id) return res.status(403).json({ message: "Not authorised" });
+
+      const b = req.body;
+      const fields: string[] = [];
+      const values: any[] = [];
+      let idx = 1;
+
+      const updatable: Record<string, string> = {
+        status: 'status', petName: 'pet_name', breed: 'breed', size: 'size',
+        color: 'color', markings: 'markings', photoUri: 'photo_uri',
+        description: 'description', latitude: 'latitude', longitude: 'longitude',
+        locationName: 'location_name', lastSeenDate: 'last_seen_date',
+        reward: 'reward', contactName: 'contact_name', contactPhone: 'contact_phone',
+        reunionMessage: 'reunion_message',
+      };
+
+      for (const [key, col] of Object.entries(updatable)) {
+        if (b[key] !== undefined) {
+          fields.push(`${col} = $${idx}`);
+          values.push(b[key]);
+          idx++;
+        }
+      }
+
+      if (b.photoUris !== undefined) {
+        fields.push(`photo_uris = $${idx}`);
+        values.push(JSON.stringify(b.photoUris));
+        idx++;
+      }
+
+      if (fields.length === 0) return res.status(400).json({ message: "No fields to update" });
+
+      values.push(id);
+      const result = await pool.query(
+        `UPDATE pet_reports SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+        values
+      );
+
+      return res.json(mapReportRow(result.rows[0], true, false));
+    } catch (err) {
+      console.error("Update report error:", err);
+      return res.status(500).json({ message: "Failed to update report" });
+    }
+  });
+
+  app.delete("/api/reports/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const existing = await pool.query('SELECT user_id FROM pet_reports WHERE id = $1', [id]);
+      if (existing.rows.length === 0) return res.status(404).json({ message: "Report not found" });
+      if (existing.rows[0].user_id !== req.user!.id) return res.status(403).json({ message: "Not authorised" });
+
+      await pool.query('DELETE FROM pet_reports WHERE id = $1', [id]);
+      return res.json({ message: "Report deleted" });
+    } catch (err) {
+      console.error("Delete report error:", err);
+      return res.status(500).json({ message: "Failed to delete report" });
+    }
+  });
+
+  app.post("/api/reports/:id/boost", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const existing = await pool.query('SELECT user_id FROM pet_reports WHERE id = $1', [id]);
+      if (existing.rows.length === 0) return res.status(404).json({ message: "Report not found" });
+      if (existing.rows[0].user_id !== req.user!.id) return res.status(403).json({ message: "Not authorised" });
+
+      const result = await pool.query(
+        `UPDATE pet_reports SET is_boosted = true, boosted_at = NOW(), boost_expires_at = NOW() + INTERVAL '7 days' WHERE id = $1 RETURNING *`,
+        [id]
+      );
+
+      await pool.query(
+        `INSERT INTO timeline_events (report_id, type, description) VALUES ($1, 'status_change', 'Report boosted to priority listing for 7 days')`,
+        [id]
+      );
+
+      return res.json(mapReportRow(result.rows[0], true, false));
+    } catch (err) {
+      console.error("Boost report error:", err);
+      return res.status(500).json({ message: "Failed to boost report" });
+    }
+  });
+
+  app.post("/api/reports/:id/reunite", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { message: reunionMsg } = req.body;
+      const existing = await pool.query('SELECT user_id, pet_name FROM pet_reports WHERE id = $1', [id]);
+      if (existing.rows.length === 0) return res.status(404).json({ message: "Report not found" });
+      if (existing.rows[0].user_id !== req.user!.id) return res.status(403).json({ message: "Not authorised" });
+
+      const msg = reunionMsg || `${existing.rows[0].pet_name} has been reunited with their owner!`;
+      const result = await pool.query(
+        `UPDATE pet_reports SET status = 'reunited', reunion_message = $1, reunion_date = NOW() WHERE id = $2 RETURNING *`,
+        [msg, id]
+      );
+
+      await pool.query(
+        `INSERT INTO timeline_events (report_id, type, description) VALUES ($1, 'status_change', 'Pet reunited with owner!')`,
+        [id]
+      );
+
+      return res.json(mapReportRow(result.rows[0], true, false));
+    } catch (err) {
+      console.error("Reunite error:", err);
+      return res.status(500).json({ message: "Failed to mark as reunited" });
+    }
+  });
+
+  app.post("/api/reports/:id/comments", optionalAuth, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { author, text } = req.body;
+      if (!text) return res.status(400).json({ message: "Comment text is required" });
+
+      const authorName = author || (req.user ? req.user.displayName : 'Anonymous');
+      const result = await pool.query(
+        'INSERT INTO comments (report_id, user_id, author, text) VALUES ($1, $2, $3, $4) RETURNING *',
+        [id, req.user?.id || null, authorName, text]
+      );
+
+      await pool.query(
+        `INSERT INTO timeline_events (report_id, type, description) VALUES ($1, 'comment', $2)`,
+        [id, `${authorName} commented: "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}"`]
+      );
+
+      const c = result.rows[0];
+      return res.status(201).json({ id: c.id, author: c.author, text: c.text, createdAt: c.created_at.toISOString() });
+    } catch (err) {
+      console.error("Add comment error:", err);
+      return res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+
+  app.post("/api/reports/:id/like", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const existing = await pool.query(
+        'SELECT id FROM report_likes WHERE report_id = $1 AND user_id = $2',
+        [id, req.user!.id]
+      );
+
+      if (existing.rows.length > 0) {
+        await pool.query('DELETE FROM report_likes WHERE report_id = $1 AND user_id = $2', [id, req.user!.id]);
+      } else {
+        await pool.query('INSERT INTO report_likes (report_id, user_id) VALUES ($1, $2)', [id, req.user!.id]);
+      }
+
+      const countResult = await pool.query('SELECT COUNT(*)::int AS count FROM report_likes WHERE report_id = $1', [id]);
+      return res.json({ likes: countResult.rows[0].count, likedByMe: existing.rows.length === 0 });
+    } catch (err) {
+      console.error("Like error:", err);
+      return res.status(500).json({ message: "Failed to toggle like" });
+    }
+  });
+
+  app.post("/api/reports/:id/reward", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { amount } = req.body;
+      if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+
+      const result = await pool.query(
+        'UPDATE pet_reports SET reward_pool = reward_pool + $1 WHERE id = $2 RETURNING *',
+        [amount, id]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ message: "Report not found" });
+
+      await pool.query(
+        `INSERT INTO timeline_events (report_id, type, description) VALUES ($1, 'sighting', $2)`,
+        [id, `$${amount} added to reward pool`]
+      );
+
+      return res.json({ rewardPool: result.rows[0].reward_pool });
+    } catch (err) {
+      console.error("Reward error:", err);
+      return res.status(500).json({ message: "Failed to add reward" });
+    }
+  });
+
+  // ===== PET PROFILES CRUD =====
+  app.get("/api/profiles", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        'SELECT * FROM pet_profiles WHERE user_id = $1 ORDER BY created_at DESC',
+        [req.user!.id]
+      );
+      return res.json(result.rows.map(mapProfileRow));
+    } catch (err) {
+      console.error("Get profiles error:", err);
+      return res.status(500).json({ message: "Failed to fetch profiles" });
+    }
+  });
+
+  app.get("/api/profiles/all", optionalAuth, async (_req: Request, res: Response) => {
+    try {
+      const result = await pool.query('SELECT * FROM pet_profiles ORDER BY created_at DESC');
+      return res.json(result.rows.map(mapProfileRow));
+    } catch (err) {
+      console.error("Get all profiles error:", err);
+      return res.status(500).json({ message: "Failed to fetch profiles" });
+    }
+  });
+
+  app.post("/api/profiles", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const b = req.body;
+      const result = await pool.query(
+        `INSERT INTO pet_profiles (user_id, pet_type, pet_name, breed, size, color, markings, photo_uris, biometric_photo_uris, microchip_number, medical_notes, suburb, owner_name, owner_phone)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+         RETURNING *`,
+        [req.user!.id, b.petType, b.petName, b.breed || '', b.size || 'medium', b.color || '', b.markings || '', JSON.stringify(b.photoUris || []), JSON.stringify(b.biometricPhotoUris || []), b.microchipNumber || '', b.medicalNotes || '', b.suburb || '', b.ownerName || '', b.ownerPhone || '']
+      );
+      return res.status(201).json(mapProfileRow(result.rows[0]));
+    } catch (err) {
+      console.error("Create profile error:", err);
+      return res.status(500).json({ message: "Failed to create profile" });
+    }
+  });
+
+  app.put("/api/profiles/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const existing = await pool.query('SELECT user_id FROM pet_profiles WHERE id = $1', [id]);
+      if (existing.rows.length === 0) return res.status(404).json({ message: "Profile not found" });
+      if (existing.rows[0].user_id !== req.user!.id) return res.status(403).json({ message: "Not authorised" });
+
+      const b = req.body;
+      const fields: string[] = [];
+      const values: any[] = [];
+      let idx = 1;
+
+      const updatable: Record<string, string> = {
+        petType: 'pet_type', petName: 'pet_name', breed: 'breed', size: 'size',
+        color: 'color', markings: 'markings', microchipNumber: 'microchip_number',
+        medicalNotes: 'medical_notes', suburb: 'suburb', ownerName: 'owner_name', ownerPhone: 'owner_phone',
+      };
+
+      for (const [key, col] of Object.entries(updatable)) {
+        if (b[key] !== undefined) {
+          fields.push(`${col} = $${idx}`);
+          values.push(b[key]);
+          idx++;
+        }
+      }
+
+      if (b.photoUris !== undefined) {
+        fields.push(`photo_uris = $${idx}`);
+        values.push(JSON.stringify(b.photoUris));
+        idx++;
+      }
+
+      if (b.biometricPhotoUris !== undefined) {
+        fields.push(`biometric_photo_uris = $${idx}`);
+        values.push(JSON.stringify(b.biometricPhotoUris));
+        idx++;
+      }
+
+      fields.push(`updated_at = NOW()`);
+
+      if (fields.length <= 1) return res.status(400).json({ message: "No fields to update" });
+
+      values.push(id);
+      const result = await pool.query(
+        `UPDATE pet_profiles SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+        values
+      );
+
+      return res.json(mapProfileRow(result.rows[0]));
+    } catch (err) {
+      console.error("Update profile error:", err);
+      return res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.delete("/api/profiles/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const existing = await pool.query('SELECT user_id FROM pet_profiles WHERE id = $1', [id]);
+      if (existing.rows.length === 0) return res.status(404).json({ message: "Profile not found" });
+      if (existing.rows[0].user_id !== req.user!.id) return res.status(403).json({ message: "Not authorised" });
+
+      await pool.query('DELETE FROM pet_profiles WHERE id = $1', [id]);
+      return res.json({ message: "Profile deleted" });
+    } catch (err) {
+      console.error("Delete profile error:", err);
+      return res.status(500).json({ message: "Failed to delete profile" });
+    }
+  });
+
+  // ===== NOTIFICATIONS =====
+  app.get("/api/notifications", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100',
+        [req.user!.id]
+      );
+      return res.json(result.rows.map((n: any) => ({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        message: n.message,
+        reportId: n.report_id,
+        profileId: n.profile_id,
+        read: n.read,
+        createdAt: n.created_at.toISOString(),
+      })));
+    } catch (err) {
+      console.error("Get notifications error:", err);
+      return res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.put("/api/notifications/:id/read", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      await pool.query(
+        'UPDATE notifications SET read = true WHERE id = $1 AND user_id = $2',
+        [req.params.id, req.user!.id]
+      );
+      return res.json({ message: "Marked as read" });
+    } catch (err) {
+      console.error("Mark read error:", err);
+      return res.status(500).json({ message: "Failed to mark as read" });
+    }
+  });
+
+  app.post("/api/notifications/read-all", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      await pool.query('UPDATE notifications SET read = true WHERE user_id = $1', [req.user!.id]);
+      return res.json({ message: "All marked as read" });
+    } catch (err) {
+      console.error("Mark all read error:", err);
+      return res.status(500).json({ message: "Failed to mark all as read" });
+    }
+  });
+
+  app.delete("/api/notifications", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      await pool.query('DELETE FROM notifications WHERE user_id = $1', [req.user!.id]);
+      return res.json({ message: "Notifications cleared" });
+    } catch (err) {
+      console.error("Clear notifications error:", err);
+      return res.status(500).json({ message: "Failed to clear notifications" });
     }
   });
 

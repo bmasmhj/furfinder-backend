@@ -1,22 +1,28 @@
 import { useState, useMemo } from 'react';
 import { StyleSheet, Text, View, FlatList, RefreshControl, Platform, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, Redirect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
+import { useAuth } from '@/lib/auth-context';
 import PetCard from '@/components/PetCard';
 import FilterBar from '@/components/FilterBar';
 import EmptyState from '@/components/EmptyState';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { reports, isLoading, unreadCount } = usePets();
+  const { isAuthenticated } = useAuth();
+  const { reports, isLoading, unreadCount, refreshReports } = usePets();
   const { isPremium, canUseScanPost } = useSubscription();
   const [filter, setFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
 
   const filteredReports = useMemo(() => {
     const base = filter === 'all' ? reports : reports.filter(r => r.status === filter);
@@ -35,7 +41,11 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      await refreshReports();
+    } catch (e) {
+      console.error('Refresh failed', e);
+    }
     setRefreshing(false);
   };
 

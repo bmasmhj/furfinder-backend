@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable, Linking, Platform, Alert, Share, TextInput, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { useState, useRef, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, Pressable, Linking, Platform, Alert, Share, TextInput, Dimensions, NativeSyntheticEvent, NativeScrollEvent, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -10,8 +10,11 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
-import { Comment, TimelineEvent } from '@/lib/types';
+import { useAuth } from '@/lib/auth-context';
+import { Comment, TimelineEvent, PetReport } from '@/lib/types';
 import { getStatusColor, getStatusBg, getStatusLabel, getPetTypeIcon, getSizeLabel, formatDate } from '@/lib/helpers';
+import { getApiUrl } from '@/lib/query-client';
+import { fetch } from 'expo/fetch';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -31,9 +34,12 @@ export default function PetDetailScreen() {
   const insets = useSafeAreaInsets();
   const { getReport, updateReportStatus, markReunited, addComment, addRewardContribution, boostReport } = usePets();
   const { canUseAIMatching } = useSubscription();
-  const report = getReport(id);
+  const { token } = useAuth();
+  const cachedReport = getReport(id);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
+  const [fullReport, setFullReport] = useState<PetReport | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(true);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [commentText, setCommentText] = useState('');
   const [authorName, setAuthorName] = useState('');
@@ -41,6 +47,35 @@ export default function PetDetailScreen() {
   const [showContributeInput, setShowContributeInput] = useState(false);
   const [showReunionInput, setShowReunionInput] = useState(false);
   const [reunionMessage, setReunionMessage] = useState('');
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const baseUrl = getApiUrl();
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(new URL(`/api/reports/${id}`, baseUrl).toString(), { headers });
+        if (res.ok) {
+          setFullReport(await res.json());
+        }
+      } catch (e) {
+        console.error('Failed to fetch report detail', e);
+      } finally {
+        setLoadingDetail(false);
+      }
+    };
+    fetchDetail();
+  }, [id, token]);
+
+  const report = fullReport || cachedReport;
+
+  if (!report && loadingDetail) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top + webTopPadding, alignItems: 'center', justifyContent: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   if (!report) {
     return (

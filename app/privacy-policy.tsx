@@ -35,11 +35,15 @@ We do not use your personal information for advertising, marketing, or any purpo
   },
   {
     title: '3. How We Store Your Data',
-    content: `• Local Storage: Your pet reports, profiles, and personal details are currently stored locally on your device using secure storage.
+    content: `• Cloud Storage: Your pet reports, profiles, and personal details are stored securely on our cloud servers using industry-standard encryption and security measures. This allows your data to be accessible across devices and visible to the community to help reunite lost pets.
+
+• Data Security: All data is transmitted via encrypted HTTPS connections and stored in a secured PostgreSQL database with access controls. Passwords are hashed using bcrypt and are never stored in plain text.
 
 • Data Transmission: When using AI features, pet descriptions (not personal contact details) are transmitted securely via encrypted HTTPS connections to our servers for processing.
 
-• Data Retention: Your data remains stored on your device until you delete it. You can delete individual reports, profiles, or all your data at any time through the app settings.`,
+• Data Retention: Your data remains stored on our servers until you delete it. You can delete individual reports, profiles, or all your data at any time through the app settings. Upon deletion, your data is permanently removed from our servers.
+
+• Backups: We may maintain encrypted backups for disaster recovery purposes. Backup data is subject to the same security measures and retention policies as live data.`,
   },
   {
     title: '4. Sharing Your Information',
@@ -93,7 +97,7 @@ This disclosure is provided in accordance with the Australian Privacy Act 1988, 
     title: '8. Photos',
     content: `• Photos you upload are used exclusively for identifying lost and found pets.
 
-• Photos are stored locally on your device and displayed within the app.
+• Photos are stored securely on our servers and displayed within the app.
 
 • By uploading a photo, you consent to it being visible to other app users.
 

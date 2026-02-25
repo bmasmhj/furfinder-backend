@@ -1,0 +1,111 @@
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  display_name VARCHAR(255) NOT NULL,
+  phone VARCHAR(50),
+  consent_privacy BOOLEAN NOT NULL DEFAULT FALSE,
+  consent_terms BOOLEAN NOT NULL DEFAULT FALSE,
+  consent_ai BOOLEAN NOT NULL DEFAULT FALSE,
+  consent_data_storage BOOLEAN NOT NULL DEFAULT FALSE,
+  consent_date TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS pet_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'lost',
+  pet_type VARCHAR(20) NOT NULL,
+  pet_name VARCHAR(255) NOT NULL,
+  breed VARCHAR(255) NOT NULL DEFAULT '',
+  size VARCHAR(20) NOT NULL DEFAULT 'medium',
+  color VARCHAR(255) NOT NULL DEFAULT '',
+  markings TEXT NOT NULL DEFAULT '',
+  photo_uri TEXT NOT NULL DEFAULT '',
+  photo_uris JSONB NOT NULL DEFAULT '[]',
+  description TEXT NOT NULL DEFAULT '',
+  latitude DOUBLE PRECISION NOT NULL DEFAULT 0,
+  longitude DOUBLE PRECISION NOT NULL DEFAULT 0,
+  location_name VARCHAR(500) NOT NULL DEFAULT '',
+  last_seen_date VARCHAR(50) NOT NULL DEFAULT '',
+  reward VARCHAR(100) NOT NULL DEFAULT '',
+  reward_pool DOUBLE PRECISION NOT NULL DEFAULT 0,
+  contact_name VARCHAR(255) NOT NULL DEFAULT '',
+  contact_phone VARCHAR(100) NOT NULL DEFAULT '',
+  reunion_message TEXT,
+  reunion_date TIMESTAMPTZ,
+  is_boosted BOOLEAN NOT NULL DEFAULT FALSE,
+  boosted_at TIMESTAMPTZ,
+  boost_expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  report_id UUID NOT NULL REFERENCES pet_reports(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  author VARCHAR(255) NOT NULL,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS timeline_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  report_id UUID NOT NULL REFERENCES pet_reports(id) ON DELETE CASCADE,
+  type VARCHAR(50) NOT NULL,
+  description TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS pet_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  pet_type VARCHAR(20) NOT NULL,
+  pet_name VARCHAR(255) NOT NULL,
+  breed VARCHAR(255) NOT NULL DEFAULT '',
+  size VARCHAR(20) NOT NULL DEFAULT 'medium',
+  color VARCHAR(255) NOT NULL DEFAULT '',
+  markings TEXT NOT NULL DEFAULT '',
+  photo_uris JSONB NOT NULL DEFAULT '[]',
+  biometric_photo_uris JSONB NOT NULL DEFAULT '[]',
+  microchip_number VARCHAR(100) NOT NULL DEFAULT '',
+  medical_notes TEXT NOT NULL DEFAULT '',
+  suburb VARCHAR(255) NOT NULL DEFAULT '',
+  owner_name VARCHAR(255) NOT NULL DEFAULT '',
+  owner_phone VARCHAR(100) NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(50) NOT NULL,
+  title VARCHAR(500) NOT NULL,
+  message TEXT NOT NULL,
+  report_id UUID,
+  profile_id UUID,
+  read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS report_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  report_id UUID NOT NULL REFERENCES pet_reports(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(report_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_pet_reports_user_id ON pet_reports(user_id);
+CREATE INDEX IF NOT EXISTS idx_pet_reports_status ON pet_reports(status);
+CREATE INDEX IF NOT EXISTS idx_pet_reports_location ON pet_reports(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_pet_reports_boosted ON pet_reports(is_boosted, boost_expires_at);
+CREATE INDEX IF NOT EXISTS idx_comments_report_id ON comments(report_id);
+CREATE INDEX IF NOT EXISTS idx_timeline_report_id ON timeline_events(report_id);
+CREATE INDEX IF NOT EXISTS idx_pet_profiles_user_id ON pet_profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_report_likes_report_id ON report_likes(report_id);
