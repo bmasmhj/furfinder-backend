@@ -176,6 +176,16 @@ export default function SettingsScreen() {
           <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
         </Pressable>
 
+        <Pressable style={styles.menuItem} onPress={() => router.push('/blocked-users')}>
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIcon, { backgroundColor: '#FEE2E2' }]}>
+              <Ionicons name="ban" size={18} color={Colors.danger} />
+            </View>
+            <Text style={styles.menuItemText}>Blocked Users</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+        </Pressable>
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionHeaderText}>Resources</Text>
         </View>

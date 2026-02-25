@@ -1216,6 +1216,80 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
+  // ===== BLOCK & REPORT ROUTES =====
+  app.post("/api/users/:id/block", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const blockedId = req.params.id;
+      if (blockedId === req.user!.id) {
+        return res.status(400).json({ message: "You cannot block yourself" });
+      }
+      try {
+        await pool.query(
+          'INSERT INTO blocked_users (blocker_id, blocked_id) VALUES ($1, $2)',
+          [req.user!.id, blockedId]
+        );
+      } catch (e: any) {
+        if (e.code === '23505') {
+          return res.json({ message: "User already blocked" });
+        }
+        throw e;
+      }
+      return res.json({ message: "User blocked" });
+    } catch (err) {
+      console.error("Block user error:", err);
+      return res.status(500).json({ message: "Failed to block user" });
+    }
+  });
+
+  app.delete("/api/users/:id/block", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      await pool.query(
+        'DELETE FROM blocked_users WHERE blocker_id = $1 AND blocked_id = $2',
+        [req.user!.id, req.params.id]
+      );
+      return res.json({ message: "User unblocked" });
+    } catch (err) {
+      console.error("Unblock user error:", err);
+      return res.status(500).json({ message: "Failed to unblock user" });
+    }
+  });
+
+  app.get("/api/users/blocked", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        `SELECT b.blocked_id, u.display_name, b.created_at
+         FROM blocked_users b JOIN users u ON u.id = b.blocked_id
+         WHERE b.blocker_id = $1 ORDER BY b.created_at DESC`,
+        [req.user!.id]
+      );
+      return res.json(result.rows.map((r: any) => ({
+        id: r.blocked_id,
+        displayName: r.display_name,
+        blockedAt: r.created_at.toISOString(),
+      })));
+    } catch (err) {
+      console.error("Get blocked users error:", err);
+      return res.status(500).json({ message: "Failed to fetch blocked users" });
+    }
+  });
+
+  app.post("/api/content-report", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { reportId, commentId, reason, details } = req.body;
+      if (!reason) return res.status(400).json({ message: "Reason is required" });
+      if (!reportId && !commentId) return res.status(400).json({ message: "Must specify a report or comment to flag" });
+
+      await pool.query(
+        'INSERT INTO content_reports (reporter_id, report_id, comment_id, reason, details) VALUES ($1, $2, $3, $4, $5)',
+        [req.user!.id, reportId || null, commentId || null, reason, details || null]
+      );
+      return res.json({ message: "Content reported. We will review it shortly." });
+    } catch (err) {
+      console.error("Content report error:", err);
+      return res.status(500).json({ message: "Failed to report content" });
+    }
+  });
+
   // ===== REFERRAL & AMBASSADOR ROUTES =====
   app.get("/api/referral", authMiddleware, async (req: Request, res: Response) => {
     try {

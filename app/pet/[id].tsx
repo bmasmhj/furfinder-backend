@@ -47,6 +47,7 @@ export default function PetDetailScreen() {
   const [showContributeInput, setShowContributeInput] = useState(false);
   const [showReunionInput, setShowReunionInput] = useState(false);
   const [reunionMessage, setReunionMessage] = useState('');
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -169,6 +170,69 @@ export default function PetDetailScreen() {
     } catch (_e) {}
   };
 
+  const handleBlockUser = async () => {
+    if (!token || !report.userId) return;
+    setShowMoreMenu(false);
+    Alert.alert(
+      'Block User',
+      `Are you sure you want to block ${report.contactName || 'this user'}? You won't see their reports anymore.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const baseUrl = getApiUrl();
+              await fetch(new URL(`/api/users/${report.userId}/block`, baseUrl).toString(), {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              Alert.alert('User Blocked', 'You will no longer see content from this user.');
+            } catch {
+              Alert.alert('Error', 'Failed to block user');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReportContent = async (reason: string) => {
+    if (!token) return;
+    setShowMoreMenu(false);
+    try {
+      const baseUrl = getApiUrl();
+      const res = await fetch(new URL('/api/content-report', baseUrl).toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reportId: report.id, reason }),
+      });
+      const result = await res.json();
+      Alert.alert('Content Reported', result.message || 'Thank you. We will review this content.');
+    } catch {
+      Alert.alert('Error', 'Failed to report content');
+    }
+  };
+
+  const showReportOptions = () => {
+    setShowMoreMenu(false);
+    Alert.alert(
+      'Report Content',
+      'Why are you reporting this?',
+      [
+        { text: 'Spam or scam', onPress: () => handleReportContent('spam') },
+        { text: 'Inappropriate content', onPress: () => handleReportContent('inappropriate') },
+        { text: 'False or misleading', onPress: () => handleReportContent('misleading') },
+        { text: 'Harassment or abuse', onPress: () => handleReportContent('harassment') },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
   const handlePostComment = async () => {
     if (!commentText.trim() || !authorName.trim()) return;
     await addComment(report.id, authorName.trim(), commentText.trim());
@@ -243,12 +307,16 @@ export default function PetDetailScreen() {
             <Ionicons name="chevron-back" size={24} color={Colors.text} />
           </Pressable>
 
-          <Pressable
-            onPress={handleShare}
-            style={[styles.shareBtn, { top: insets.top + webTopPadding + 12 }]}
-          >
-            <Ionicons name="share-outline" size={22} color={Colors.text} />
-          </Pressable>
+          <View style={[styles.topRightBtns, { top: insets.top + webTopPadding + 12 }]}>
+            <Pressable onPress={handleShare} style={styles.shareBtn}>
+              <Ionicons name="share-outline" size={22} color={Colors.text} />
+            </Pressable>
+            {token && report.userId && report.userId !== (undefined) && (
+              <Pressable onPress={() => setShowMoreMenu(true)} style={styles.moreBtn}>
+                <Ionicons name="ellipsis-vertical" size={20} color={Colors.text} />
+              </Pressable>
+            )}
+          </View>
 
           <View style={[styles.statusOverlay, { backgroundColor: statusColor }]}>
             <Text style={styles.statusOverlayText}>{getStatusLabel(report.status)}</Text>
@@ -548,6 +616,22 @@ export default function PetDetailScreen() {
           )}
         </Animated.View>
       </ScrollView>
+
+      {showMoreMenu && (
+        <Pressable style={styles.menuOverlay} onPress={() => setShowMoreMenu(false)}>
+          <View style={[styles.menuDropdown, { top: insets.top + webTopPadding + 60 }]}>
+            <Pressable style={styles.menuOption} onPress={showReportOptions}>
+              <Ionicons name="flag-outline" size={20} color={Colors.danger} />
+              <Text style={styles.menuOptionText}>Report Content</Text>
+            </Pressable>
+            <View style={styles.menuDivider} />
+            <Pressable style={styles.menuOption} onPress={handleBlockUser}>
+              <Ionicons name="ban-outline" size={20} color={Colors.danger} />
+              <Text style={styles.menuOptionText}>Block User</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -628,9 +712,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  shareBtn: {
+  topRightBtns: {
     position: 'absolute',
     right: 16,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  shareBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -642,6 +730,58 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  moreBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    zIndex: 100,
+  },
+  menuDropdown: {
+    position: 'absolute',
+    right: 16,
+    backgroundColor: '#FFF',
+    borderRadius: 14,
+    paddingVertical: 6,
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  menuOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  menuOptionText: {
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    color: Colors.danger,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginHorizontal: 14,
   },
   statusOverlay: {
     position: 'absolute',

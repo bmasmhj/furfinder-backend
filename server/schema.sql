@@ -132,6 +132,27 @@ CREATE TABLE IF NOT EXISTS social_shares (
   UNIQUE(user_id, platform, shared_date)
 );
 
+CREATE TABLE IF NOT EXISTS blocked_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  blocker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  blocked_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(blocker_id, blocked_id)
+);
+
+CREATE TABLE IF NOT EXISTS content_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  report_id UUID REFERENCES pet_reports(id) ON DELETE CASCADE,
+  comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  reason VARCHAR(100) NOT NULL,
+  details TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_referral_rewards_user ON referral_rewards(user_id);
 CREATE INDEX IF NOT EXISTS idx_social_shares_user ON social_shares(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code);
+CREATE INDEX IF NOT EXISTS idx_blocked_users_blocker ON blocked_users(blocker_id);
+CREATE INDEX IF NOT EXISTS idx_content_reports_reporter ON content_reports(reporter_id);

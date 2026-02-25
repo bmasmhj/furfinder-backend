@@ -113,6 +113,10 @@ function RootLayoutNav() {
         name="referral"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="blocked-users"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
