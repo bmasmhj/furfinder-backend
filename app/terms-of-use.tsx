@@ -85,7 +85,7 @@ These terms are governed by the laws of Australia, including the Australian Cons
   },
   {
     title: '10. Subscription & Premium Features',
-    content: `• Some features require a Premium subscription ($4.99/month or $29.99/year)
+    content: `• Some features require a Premium subscription ($4.99/month or $49.99/year)
 • Subscriptions are processed through the Apple App Store or Google Play Store
 • Subscription terms, billing, and cancellation are governed by the respective app store's policies
 • You may cancel your subscription at any time through your app store settings
