@@ -3,6 +3,7 @@ import { createServer, type Server } from "node:http";
 import OpenAI from "openai";
 import pool from "./db";
 import { authMiddleware, optionalAuth, registerUser, loginUser, getMe, awardPremiumDays } from "./auth";
+import { moderateContent } from "./moderation";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -985,10 +986,13 @@ Return ONLY valid JSON, no markdown.`;
       const { author, text } = req.body;
       if (!text) return res.status(400).json({ message: "Comment text is required" });
 
+      const moderation = moderateContent(text);
+      const cleanText = moderation.filteredText;
+
       const authorName = author || (req.user ? req.user.displayName : 'Anonymous');
       const result = await pool.query(
         'INSERT INTO comments (report_id, user_id, author, text) VALUES ($1, $2, $3, $4) RETURNING *',
-        [id, req.user?.id || null, authorName, text]
+        [id, req.user?.id || null, authorName, cleanText]
       );
 
       await pool.query(
