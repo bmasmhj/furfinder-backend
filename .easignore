@@ -1,0 +1,10 @@
+node_modules/
+.git/
+assets/store/
+attached_assets/
+static-build/
+server/
+.local/
+/tmp/
+*.log
+*.jks
