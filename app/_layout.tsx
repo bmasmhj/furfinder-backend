@@ -117,6 +117,10 @@ function RootLayoutNav() {
         name="blocked-users"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="suburb-directory"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

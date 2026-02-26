@@ -1078,6 +1078,60 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
+  app.get("/api/suburbs", optionalAuth, async (_req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        `SELECT suburb, COUNT(*)::int AS count, 
+         array_agg(DISTINCT pet_type) AS pet_types
+         FROM pet_profiles 
+         WHERE suburb IS NOT NULL AND suburb != ''
+         GROUP BY suburb 
+         ORDER BY count DESC, suburb ASC`
+      );
+      return res.json(result.rows.map((r: any) => ({
+        suburb: r.suburb,
+        count: r.count,
+        petTypes: r.pet_types || [],
+      })));
+    } catch (err) {
+      console.error("Get suburbs error:", err);
+      return res.status(500).json({ message: "Failed to fetch suburbs" });
+    }
+  });
+
+  app.get("/api/profiles/suburb/:suburb", optionalAuth, async (req: Request, res: Response) => {
+    try {
+      const { suburb } = req.params;
+      const result = await pool.query(
+        `SELECT pp.id, pp.pet_type, pp.pet_name, pp.breed, pp.size, pp.color, pp.markings,
+                pp.photo_uris, pp.suburb, pp.microchip_number, pp.created_at,
+                u.display_name as owner_display_name 
+         FROM pet_profiles pp 
+         JOIN users u ON pp.user_id = u.id 
+         WHERE LOWER(pp.suburb) = LOWER($1) 
+         ORDER BY pp.created_at DESC`,
+        [suburb]
+      );
+      return res.json(result.rows.map((row: any) => ({
+        id: row.id,
+        petType: row.pet_type,
+        petName: row.pet_name,
+        breed: row.breed,
+        size: row.size,
+        color: row.color,
+        markings: row.markings,
+        photoUris: typeof row.photo_uris === 'string' ? JSON.parse(row.photo_uris) : (row.photo_uris || []),
+        suburb: row.suburb,
+        hasChip: !!row.microchip_number,
+        ownerDisplayName: row.owner_display_name,
+        createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+      })));
+    } catch (err) {
+      console.error("Get profiles by suburb error:", err);
+      return res.status(500).json({ message: "Failed to fetch profiles" });
+    }
+  });
+
   app.post("/api/profiles", authMiddleware, async (req: Request, res: Response) => {
     try {
       const b = req.body;

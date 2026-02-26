@@ -32,6 +32,7 @@ The application is built with a React Native (Expo) frontend and an Express.js (
     -   Printable flyer generator from pet reports.
     -   "How It Works" guide and an FAQ section.
     -   Referral & Ambassador program for earning premium features.
+    -   Suburb Directory: Browse all registered pets by suburb. Users can search suburbs and view pet profiles in their neighbourhood. Privacy-safe — only shows public info (no phone, medical notes).
 
 **Backend:**
 -   **Framework:** Express + TypeScript running on port 5000.

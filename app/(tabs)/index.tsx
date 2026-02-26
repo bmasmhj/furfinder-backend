@@ -124,6 +124,13 @@ export default function HomeScreen() {
               <Ionicons name="shield-checkmark" size={14} color="#059669" />
               <Text style={styles.tipsBubbleText}>Safety Tips</Text>
             </Pressable>
+            <Pressable
+              style={styles.suburbBubble}
+              onPress={() => router.push('/suburb-directory')}
+            >
+              <Ionicons name="location" size={14} color="#7C3AED" />
+              <Text style={styles.suburbBubbleText}>Suburb Pets</Text>
+            </Pressable>
             {!isPremium && (
               <Pressable
                 style={styles.upgradeBubble}
@@ -302,6 +309,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Poppins_600SemiBold',
     color: '#D97706',
+  },
+  suburbBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#DDD6FE',
+  },
+  suburbBubbleText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    color: '#7C3AED',
   },
   listContent: {
     paddingTop: 4,
