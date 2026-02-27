@@ -4,10 +4,11 @@ assets/store
 attached_assets
 static-build
 *.log
-*.jks
 .local
-credentials.json
-petreunite.jks
-server/templates
+server
 references
 *.md
+.cache
+.npm
+.config
+tmp
