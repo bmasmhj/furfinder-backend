@@ -200,6 +200,15 @@ function configureExpoAndLanding(app: express.Application) {
     res.status(200).send(deleteAccountHtml);
   });
 
+  const appFeaturesHtml = fs.readFileSync(
+    path.resolve(process.cwd(), "server", "templates", "app-features.html"),
+    "utf-8"
+  );
+  app.get("/app-features", (_req: Request, res: Response) => {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.status(200).send(appFeaturesHtml);
+  });
+
   app.use("/store-assets", express.static(path.resolve(process.cwd(), "assets", "store")));
 
   app.use((req: Request, res: Response, next: NextFunction) => {
