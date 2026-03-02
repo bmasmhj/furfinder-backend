@@ -1,4 +1,4 @@
-The Fur Finder is Australia's dedicated lost and found pet platform, designed to reunite lost pets with their families faster than ever before.
+The Fur Finder is Australia's first AI-powered lost and found pet platform — the only app that uses advanced photo matching, biometric scanning, and smart GPS filtering to reunite lost pets with their families faster than ever before.
 
 HOW IT WORKS
 1. Report a lost or found pet with photos, location, and details
@@ -53,6 +53,13 @@ PRIVACY & SAFETY
 - Full account deletion available
 - Your data stored securely on Australian-compliant servers
 
-The Fur Finder is built for the Australian community. Whether you've lost a pet, found a stray, or want to be prepared, The Fur Finder gives you the tools and community to help bring pets home.
+WHY THE FUR FINDER?
+- Australia's only app with AI photo matching for lost pets
+- Biometric ID scanning — no other pet app offers this
+- Smart GPS filtering finds matches within 5km of your pet
+- Scan social media posts and instantly match them to reports
+- 89+ vet and shelter listings across every state and territory
 
-Download now and join thousands of Australians helping reunite pets with their families.
+The Fur Finder is built exclusively for the Australian community. Whether you've lost a pet, found a stray, or want to be prepared, The Fur Finder gives you the AI-powered tools and community support to help bring pets home.
+
+Download now and join Australians using AI to reunite pets with their families.

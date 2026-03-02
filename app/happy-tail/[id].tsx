@@ -50,7 +50,7 @@ export default function HappyTailDetailScreen() {
   };
 
   const getShareText = () => {
-    return `${report.petName} has been reunited!\n\n${report.reunionMessage || ''}\n\nLocation: ${report.locationName}\n\nShared from The Fur Finder - helping pets find their way home.`;
+    return `${report.petName} has been reunited!\n\n${report.reunionMessage || ''}\n\nLocation: ${report.locationName}\n\nShared from The Fur Finder — Australia's AI-powered pet recovery app.`;
   };
 
   const handleShareNative = async () => {

@@ -105,7 +105,7 @@ export default function PaywallScreen() {
             <View style={styles.heroIconBg}>
               <Ionicons name="diamond" size={36} color="#F59E0B" />
             </View>
-            <Text style={styles.heroTitle}>The Fur Finder Premium</Text>
+            <Text style={styles.heroTitle}>Unlock AI-Powered Recovery</Text>
             <Text style={styles.heroSubtitle}>
               Unlock powerful tools to find your pet faster
             </Text>

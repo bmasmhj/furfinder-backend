@@ -156,7 +156,7 @@ export default function FAQScreen() {
         <View style={styles.heroSection}>
           <Ionicons name="help-circle" size={48} color={Colors.primary} />
           <Text style={styles.heroTitle}>Frequently Asked Questions</Text>
-          <Text style={styles.heroSubtitle}>Find answers to common questions about The Fur Finder</Text>
+          <Text style={styles.heroSubtitle}>Find answers about Australia's AI-powered pet recovery app</Text>
         </View>
 
         <ScrollView

@@ -56,7 +56,7 @@ export default function FlyerScreen() {
       `📱 Phone: ${report.contactPhone}\n` +
       (report.reward ? `💰 Reward: $${report.reward}\n` : '') +
       `\nPlease share and help ${report.petName} get home!\n` +
-      `\nShared from The Fur Finder`;
+      `\nShared from The Fur Finder — AI-Powered Pet Recovery`;
     try {
       await Share.share({ message: flyerText });
     } catch (_e) {}

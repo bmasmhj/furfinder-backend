@@ -80,7 +80,7 @@ export default function ReferralScreen() {
     if (!data?.referralCode) return;
     try {
       await Share.share({
-        message: `Join The Fur Finder and help reunite lost pets with their families! Use my referral code: ${data.referralCode}\n\nDownload the app and enter the code when you sign up to get 3 free days of Premium!`,
+        message: `Join The Fur Finder — Australia's AI-powered lost & found pet app! Use my referral code: ${data.referralCode}\n\nDownload the app and enter the code when you sign up to get 3 free days of Premium!`,
       });
     } catch {}
   };

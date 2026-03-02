@@ -109,7 +109,7 @@ export default function HowItWorksScreen() {
           </View>
           <Text style={styles.heroTitle}>Helping Pets{'\n'}Find Their Way Home</Text>
           <Text style={styles.heroSubtitle}>
-            The Fur Finder uses AI-powered photo matching, community alerts, and an Australia-wide network of vets and shelters to reunite lost pets with their families.
+            Australia's first AI-powered pet recovery app. Smart photo matching, biometric scanning, and community alerts working together to reunite lost pets faster.
           </Text>
         </LinearGradient>
 
