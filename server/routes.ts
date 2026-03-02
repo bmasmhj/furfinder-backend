@@ -161,6 +161,10 @@ async function getOrgAnimalCandidates(petType: string, excludeOrgId?: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const path = require("path");
+  const express = require("express");
+  app.use("/store-assets", express.static(path.join(__dirname, "..", "assets", "store")));
+  app.use("/app-assets", express.static(path.join(__dirname, "..", "assets")));
   app.post("/api/match", async (req: Request, res: Response) => {
     try {
       const { report, reports, profiles, radiusKm } = req.body as {
