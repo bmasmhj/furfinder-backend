@@ -175,6 +175,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <h2>App Icon</h2>
     <p>Long-press and save this image:</p>
     <img src="/app-assets/icon-option5.png" alt="App Icon"/>
+    <h2>Feature Graphic - With Text</h2>
+    <p>Long-press and save this image:</p>
+    <img src="/store-assets/feature-graphic-text.png" alt="Feature Graphic Text"/>
     <h2>Feature Graphic - Detective Dog</h2>
     <p>Long-press and save this image:</p>
     <img src="/store-assets/feature-graphic-v5.png" alt="Feature Graphic"/>
