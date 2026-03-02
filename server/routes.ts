@@ -178,6 +178,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <h2>Feature Graphic - RECOMMENDED</h2>
     <p>Long-press and save this image:</p>
     <img src="/store-assets/feature-graphic-final2.png" alt="Feature Graphic Final"/>
+    <h2>Feature Graphic - Split Reunion</h2>
+    <p>Long-press and save this image:</p>
+    <img src="/store-assets/feature-graphic-split.png" alt="Feature Graphic Split"/>
     <h2>Feature Graphic - Detective Dog</h2>
     <p>Long-press and save this image:</p>
     <img src="/store-assets/feature-graphic-v5.png" alt="Feature Graphic"/>
