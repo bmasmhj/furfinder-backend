@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import OpenAI from "openai";
 import pool from "./db";
-import { authMiddleware, optionalAuth, registerUser, loginUser, getMe, awardPremiumDays } from "./auth";
+import { authMiddleware, optionalAuth, requireRole, registerUser, loginUser, getMe, awardPremiumDays } from "./auth";
 import { moderateContent } from "./moderation";
 
 const openai = new OpenAI({
@@ -147,6 +147,19 @@ function mapProfileRow(row: any): any {
   };
 }
 
+async function getOrgAnimalCandidates(petType: string, excludeOrgId?: string) {
+  const query = excludeOrgId
+    ? `SELECT oa.*, o.name AS org_name, o.type AS org_type, o.latitude AS org_latitude, o.longitude AS org_longitude FROM organisation_animals oa
+       JOIN organisations o ON o.id = oa.org_id
+       WHERE o.status = 'approved' AND oa.status = 'available' AND oa.pet_type = $1 AND o.id != $2`
+    : `SELECT oa.*, o.name AS org_name, o.type AS org_type, o.latitude AS org_latitude, o.longitude AS org_longitude FROM organisation_animals oa
+       JOIN organisations o ON o.id = oa.org_id
+       WHERE o.status = 'approved' AND oa.status = 'available' AND oa.pet_type = $1`;
+  const params = excludeOrgId ? [petType, excludeOrgId] : [petType];
+  const result = await pool.query(query, params);
+  return result.rows;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/match", async (req: Request, res: Response) => {
     try {
@@ -207,6 +220,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: p.id,
           summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || 'none'}${biometricPhotos.length > 0 ? `, has ${biometricPhotos.length} biometric ID scan(s) (close-up nose/eyes/face)` : ''}`,
           photos: allPhotos,
+        });
+      }
+
+      const orgAnimals = await getOrgAnimalCandidates(report.petType);
+      for (const oa of orgAnimals) {
+        const photos = Array.isArray(oa.photo_uris) ? oa.photo_uris : (typeof oa.photo_uris === 'string' ? JSON.parse(oa.photo_uris) : []);
+        const orgLabel = oa.org_type === 'vet' ? 'Vet Clinic' : oa.org_type === 'rescue' ? 'Rescue Group' : 'Shelter';
+        let dist: number | undefined;
+        if (oa.org_latitude && oa.org_longitude && report.latitude && report.longitude) {
+          dist = getDistance(report.latitude, report.longitude, oa.org_latitude, oa.org_longitude);
+        }
+        candidates.push({
+          type: 'org_animal',
+          id: oa.id,
+          summary: `[${orgLabel}: ${oa.org_name}] ${oa.pet_type} named "${oa.pet_name}", breed: ${oa.breed}, size: ${oa.size}, color: ${oa.color}, markings: "${oa.markings}", intake: ${oa.intake_type}, microchip: ${oa.microchip_number || 'none'}, desexed: ${oa.desexed ? 'yes' : 'no'}, description: "${oa.description}"`,
+          photos: photos.slice(0, 3),
+          distance: dist,
         });
       }
 
@@ -302,9 +332,11 @@ SCORING GUIDE:
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": the candidate's id
-- "type": "report" or "profile"
+- "type": "report", "profile", or "org_animal"
 - "confidence": 0-100
 - "reason": 2-3 sentence explanation citing SPECIFIC visual features compared (e.g., "White chest patch shape matches", "Nose pigmentation pattern consistent") and text alignment
+
+Note: "org_animal" candidates are animals currently in the care of verified partner organisations (vet clinics, shelters, rescue groups). They should be matched with the same rigour as other candidates.
 
 Only include candidates with confidence >= 30. Return at most 10 matches.
 Return ONLY valid JSON, no markdown formatting.`
@@ -321,9 +353,11 @@ Analyse these factors with rigorous attention to detail:
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": the candidate's id
-- "type": "report" or "profile"
+- "type": "report", "profile", or "org_animal"
 - "confidence": 0-100
 - "reason": 2-3 sentence explanation citing specific matching factors
+
+Note: "org_animal" candidates are animals currently in the care of verified partner organisations (vet clinics, shelters, rescue groups).
 
 Only include candidates with confidence >= 30. Return at most 10 matches.
 Return ONLY valid JSON, no markdown formatting.`;
@@ -499,6 +533,20 @@ Return ONLY valid JSON, no markdown.`
         });
       }
 
+      if (extracted.petType && extracted.petType !== 'unknown') {
+        const orgAnimals = await getOrgAnimalCandidates(extracted.petType);
+        for (const oa of orgAnimals) {
+          const photos = Array.isArray(oa.photo_uris) ? oa.photo_uris : (typeof oa.photo_uris === 'string' ? JSON.parse(oa.photo_uris) : []);
+          const orgLabel = oa.org_type === 'vet' ? 'Vet Clinic' : oa.org_type === 'rescue' ? 'Rescue Group' : 'Shelter';
+          allCandidates.push({
+            type: 'org_animal',
+            id: oa.id,
+            summary: `[${orgLabel}: ${oa.org_name}] ${oa.pet_type} named "${oa.pet_name}", breed: ${oa.breed}, size: ${oa.size}, color: ${oa.color}, markings: "${oa.markings}", intake: ${oa.intake_type}, microchip: ${oa.microchip_number || 'none'}, description: "${oa.description}"`,
+            photos: photos.slice(0, 3),
+          });
+        }
+      }
+
       if (allCandidates.length === 0) {
         return res.json({ extracted, matches: [] });
       }
@@ -576,9 +624,11 @@ SCORING:
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": candidate id
-- "type": "report" or "profile"
+- "type": "report", "profile", or "org_animal"
 - "confidence": 0-100
 - "reason": 2-3 sentence explanation citing specific visual features compared
+
+Note: "org_animal" candidates are animals in the care of verified partner organisations (vet clinics, shelters, rescue groups).
 
 Only include candidates with confidence >= 25. Return at most 10.
 Return ONLY valid JSON, no markdown.`
@@ -594,9 +644,11 @@ Analyse with rigorous attention:
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": candidate id
-- "type": "report" or "profile"
+- "type": "report", "profile", or "org_animal"
 - "confidence": 0-100
 - "reason": 2-3 sentence explanation citing specific matching factors
+
+Note: "org_animal" candidates are animals in the care of verified partner organisations (vet clinics, shelters, rescue groups).
 
 Only include candidates with confidence >= 25. Return at most 10.
 Return ONLY valid JSON, no markdown.`;
@@ -689,6 +741,18 @@ Return ONLY valid JSON, no markdown.`;
         });
       }
 
+      const orgAnimals = await getOrgAnimalCandidates(petType || 'dog');
+      for (const oa of orgAnimals) {
+        const photos = Array.isArray(oa.photo_uris) ? oa.photo_uris : (typeof oa.photo_uris === 'string' ? JSON.parse(oa.photo_uris) : []);
+        const orgLabel = oa.org_type === 'vet' ? 'Vet Clinic' : oa.org_type === 'rescue' ? 'Rescue Group' : 'Shelter';
+        candidates.push({
+          type: 'org_animal',
+          id: oa.id,
+          summary: `[${orgLabel}: ${oa.org_name}] ${oa.pet_type} named "${oa.pet_name}", breed: ${oa.breed}, size: ${oa.size}, color: ${oa.color}, markings: "${oa.markings}", intake: ${oa.intake_type}, microchip: ${oa.microchip_number || 'none'}, description: "${oa.description}"`,
+          photos: photos.slice(0, 3),
+        });
+      }
+
       if (candidates.length === 0) {
         return res.json({ matches: [] });
       }
@@ -771,9 +835,11 @@ SCORING (be precise — lives depend on accuracy):
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": candidate id
-- "type": "report" or "profile"
+- "type": "report", "profile", or "org_animal"
 - "confidence": 0-100
 - "reason": 2-3 sentence explanation citing SPECIFIC biometric and visual features compared (e.g., "Nose ridge pattern shows matching topology", "Distinctive white blaze on forehead matches in shape and position")
+
+Note: "org_animal" candidates are animals in the care of verified partner organisations (vet clinics, shelters, rescue groups).
 
 Only include confidence >= 30. Return at most 10 matches.
 Return ONLY valid JSON, no markdown.`;
@@ -1534,6 +1600,358 @@ Return ONLY valid JSON, no markdown.`;
     } catch (err) {
       console.error("Delete account error:", err);
       return res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
+  // ===== ORGANISATION ROUTES =====
+
+  app.post("/api/org/register", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { name, type, abn, address, phone, email, website, latitude, longitude, description, logoUri } = req.body;
+
+      if (!name || !type || !address || !phone || !email) {
+        return res.status(400).json({ message: "Name, type, address, phone, and email are required" });
+      }
+
+      if (!['vet', 'shelter', 'rescue'].includes(type)) {
+        return res.status(400).json({ message: "Type must be vet, shelter, or rescue" });
+      }
+
+      const existing = await pool.query('SELECT id FROM organisations WHERE user_id = $1', [userId]);
+      if (existing.rows.length > 0) {
+        return res.status(409).json({ message: "You already have a registered organisation" });
+      }
+
+      const result = await pool.query(
+        `INSERT INTO organisations (user_id, name, type, abn, address, phone, email, website, latitude, longitude, description, logo_uri)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         RETURNING *`,
+        [userId, name, type, abn || null, address, phone, email, website || null, latitude || 0, longitude || 0, description || null, logoUri || null]
+      );
+
+      await pool.query("UPDATE users SET role = 'org' WHERE id = $1", [userId]);
+
+      const org = result.rows[0];
+      return res.status(201).json({
+        id: org.id, userId: org.user_id, name: org.name, type: org.type, abn: org.abn,
+        address: org.address, phone: org.phone, email: org.email, website: org.website,
+        latitude: org.latitude, longitude: org.longitude, description: org.description,
+        logoUri: org.logo_uri, status: org.status, approvedAt: org.approved_at, createdAt: org.created_at,
+      });
+    } catch (err) {
+      console.error("Org register error:", err);
+      return res.status(500).json({ message: "Failed to register organisation" });
+    }
+  });
+
+  app.get("/api/org/me", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query('SELECT * FROM organisations WHERE user_id = $1', [req.user!.id]);
+      if (result.rows.length === 0) {
+        return res.json(null);
+      }
+      const org = result.rows[0];
+      const animalCount = await pool.query('SELECT COUNT(*)::int AS count FROM organisation_animals WHERE org_id = $1', [org.id]);
+      return res.json({
+        id: org.id, userId: org.user_id, name: org.name, type: org.type, abn: org.abn,
+        address: org.address, phone: org.phone, email: org.email, website: org.website,
+        latitude: org.latitude, longitude: org.longitude, description: org.description,
+        logoUri: org.logo_uri, status: org.status, approvedAt: org.approved_at, createdAt: org.created_at,
+        animalCount: animalCount.rows[0].count,
+      });
+    } catch (err) {
+      console.error("Get org error:", err);
+      return res.status(500).json({ message: "Failed to get organisation" });
+    }
+  });
+
+  app.put("/api/org/me", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const org = await pool.query('SELECT id FROM organisations WHERE user_id = $1', [userId]);
+      if (org.rows.length === 0) {
+        return res.status(404).json({ message: "No organisation found" });
+      }
+      const orgId = org.rows[0].id;
+      const { name, type, abn, address, phone, email, website, latitude, longitude, description, logoUri } = req.body;
+      if (type && !['vet', 'shelter', 'rescue'].includes(type)) {
+        return res.status(400).json({ message: "Type must be vet, shelter, or rescue" });
+      }
+      const result = await pool.query(
+        `UPDATE organisations SET name = COALESCE($1, name), type = COALESCE($2, type), abn = $3, address = COALESCE($4, address),
+         phone = COALESCE($5, phone), email = COALESCE($6, email), website = $7, latitude = COALESCE($8, latitude),
+         longitude = COALESCE($9, longitude), description = $10, logo_uri = $11
+         WHERE id = $12 RETURNING *`,
+        [name, type, abn || null, address, phone, email, website || null, latitude, longitude, description || null, logoUri || null, orgId]
+      );
+      const o = result.rows[0];
+      return res.json({
+        id: o.id, userId: o.user_id, name: o.name, type: o.type, abn: o.abn,
+        address: o.address, phone: o.phone, email: o.email, website: o.website,
+        latitude: o.latitude, longitude: o.longitude, description: o.description,
+        logoUri: o.logo_uri, status: o.status, approvedAt: o.approved_at, createdAt: o.created_at,
+      });
+    } catch (err) {
+      console.error("Update org error:", err);
+      return res.status(500).json({ message: "Failed to update organisation" });
+    }
+  });
+
+  app.get("/api/org/animals", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const org = await pool.query('SELECT id FROM organisations WHERE user_id = $1', [req.user!.id]);
+      if (org.rows.length === 0) {
+        return res.json([]);
+      }
+      const result = await pool.query(
+        'SELECT * FROM organisation_animals WHERE org_id = $1 ORDER BY created_at DESC',
+        [org.rows[0].id]
+      );
+      return res.json(result.rows.map((a: any) => ({
+        id: a.id, orgId: a.org_id, petType: a.pet_type, petName: a.pet_name, breed: a.breed,
+        size: a.size, color: a.color, markings: a.markings, photoUris: a.photo_uris || [],
+        description: a.description, intakeDate: a.intake_date, intakeType: a.intake_type,
+        microchipNumber: a.microchip_number, desexed: a.desexed, status: a.status,
+        createdAt: a.created_at, updatedAt: a.updated_at,
+      })));
+    } catch (err) {
+      console.error("Get org animals error:", err);
+      return res.status(500).json({ message: "Failed to get animals" });
+    }
+  });
+
+  app.get("/api/org/animals/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const org = await pool.query('SELECT id FROM organisations WHERE user_id = $1', [req.user!.id]);
+      if (org.rows.length === 0) {
+        return res.status(404).json({ message: "No organisation found" });
+      }
+      const result = await pool.query(
+        'SELECT * FROM organisation_animals WHERE id = $1 AND org_id = $2',
+        [req.params.id, org.rows[0].id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Animal not found" });
+      }
+      const a = result.rows[0];
+      return res.json({
+        id: a.id, orgId: a.org_id, petType: a.pet_type, petName: a.pet_name, breed: a.breed,
+        size: a.size, color: a.color, markings: a.markings, photoUris: a.photo_uris || [],
+        description: a.description, intakeDate: a.intake_date, intakeType: a.intake_type,
+        microchipNumber: a.microchip_number, desexed: a.desexed, status: a.status,
+        createdAt: a.created_at, updatedAt: a.updated_at,
+      });
+    } catch (err) {
+      console.error("Get org animal error:", err);
+      return res.status(500).json({ message: "Failed to get animal" });
+    }
+  });
+
+  app.post("/api/org/animals", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const org = await pool.query('SELECT id, status FROM organisations WHERE user_id = $1', [req.user!.id]);
+      if (org.rows.length === 0) {
+        return res.status(404).json({ message: "No organisation found" });
+      }
+      if (org.rows[0].status !== 'approved') {
+        return res.status(403).json({ message: "Organisation must be approved to add animals" });
+      }
+      const orgId = org.rows[0].id;
+      const { petType, petName, breed, size, color, markings, photoUris, description, intakeDate, intakeType, microchipNumber, desexed } = req.body;
+      if (!petType) {
+        return res.status(400).json({ message: "Pet type is required" });
+      }
+      if (!['dog', 'cat', 'bird', 'rabbit', 'other'].includes(petType)) {
+        return res.status(400).json({ message: "Invalid pet type" });
+      }
+      if (size && !['small', 'medium', 'large'].includes(size)) {
+        return res.status(400).json({ message: "Invalid size" });
+      }
+      if (intakeType && !['stray', 'surrendered', 'rescue', 'transferred'].includes(intakeType)) {
+        return res.status(400).json({ message: "Invalid intake type" });
+      }
+      const result = await pool.query(
+        `INSERT INTO organisation_animals (org_id, pet_type, pet_name, breed, size, color, markings, photo_uris, description, intake_date, intake_type, microchip_number, desexed)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+        [orgId, petType, petName || '', breed || '', size || 'medium', color || '', markings || '', JSON.stringify(photoUris || []), description || '', intakeDate || null, intakeType || 'stray', microchipNumber || null, desexed || false]
+      );
+      const a = result.rows[0];
+      return res.status(201).json({
+        id: a.id, orgId: a.org_id, petType: a.pet_type, petName: a.pet_name, breed: a.breed,
+        size: a.size, color: a.color, markings: a.markings, photoUris: a.photo_uris || [],
+        description: a.description, intakeDate: a.intake_date, intakeType: a.intake_type,
+        microchipNumber: a.microchip_number, desexed: a.desexed, status: a.status,
+        createdAt: a.created_at, updatedAt: a.updated_at,
+      });
+    } catch (err) {
+      console.error("Add org animal error:", err);
+      return res.status(500).json({ message: "Failed to add animal" });
+    }
+  });
+
+  app.put("/api/org/animals/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const animalId = req.params.id;
+      const org = await pool.query('SELECT id FROM organisations WHERE user_id = $1', [req.user!.id]);
+      if (org.rows.length === 0) {
+        return res.status(404).json({ message: "No organisation found" });
+      }
+      const animal = await pool.query('SELECT id FROM organisation_animals WHERE id = $1 AND org_id = $2', [animalId, org.rows[0].id]);
+      if (animal.rows.length === 0) {
+        return res.status(404).json({ message: "Animal not found" });
+      }
+      const { petType, petName, breed, size, color, markings, photoUris, description, intakeDate, intakeType, microchipNumber, desexed, status } = req.body;
+      if (petType && !['dog', 'cat', 'bird', 'rabbit', 'other'].includes(petType)) {
+        return res.status(400).json({ message: "Invalid pet type" });
+      }
+      if (size && !['small', 'medium', 'large'].includes(size)) {
+        return res.status(400).json({ message: "Invalid size" });
+      }
+      if (intakeType && !['stray', 'surrendered', 'rescue', 'transferred'].includes(intakeType)) {
+        return res.status(400).json({ message: "Invalid intake type" });
+      }
+      if (status && !['available', 'adopted', 'on_hold', 'fostered'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const result = await pool.query(
+        `UPDATE organisation_animals SET pet_type = COALESCE($1, pet_type), pet_name = COALESCE($2, pet_name),
+         breed = COALESCE($3, breed), size = COALESCE($4, size), color = COALESCE($5, color),
+         markings = COALESCE($6, markings), photo_uris = COALESCE($7, photo_uris),
+         description = COALESCE($8, description), intake_date = $9, intake_type = COALESCE($10, intake_type),
+         microchip_number = $11, desexed = COALESCE($12, desexed), status = COALESCE($13, status),
+         updated_at = NOW() WHERE id = $14 RETURNING *`,
+        [petType, petName, breed, size, color, markings, photoUris ? JSON.stringify(photoUris) : null, description, intakeDate || null, intakeType, microchipNumber || null, desexed, status, animalId]
+      );
+      const a = result.rows[0];
+      return res.json({
+        id: a.id, orgId: a.org_id, petType: a.pet_type, petName: a.pet_name, breed: a.breed,
+        size: a.size, color: a.color, markings: a.markings, photoUris: a.photo_uris || [],
+        description: a.description, intakeDate: a.intake_date, intakeType: a.intake_type,
+        microchipNumber: a.microchip_number, desexed: a.desexed, status: a.status,
+        createdAt: a.created_at, updatedAt: a.updated_at,
+      });
+    } catch (err) {
+      console.error("Update org animal error:", err);
+      return res.status(500).json({ message: "Failed to update animal" });
+    }
+  });
+
+  app.delete("/api/org/animals/:id", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const org = await pool.query('SELECT id FROM organisations WHERE user_id = $1', [req.user!.id]);
+      if (org.rows.length === 0) {
+        return res.status(404).json({ message: "No organisation found" });
+      }
+      const result = await pool.query('DELETE FROM organisation_animals WHERE id = $1 AND org_id = $2 RETURNING id', [req.params.id, org.rows[0].id]);
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Animal not found" });
+      }
+      return res.json({ message: "Animal deleted" });
+    } catch (err) {
+      console.error("Delete org animal error:", err);
+      return res.status(500).json({ message: "Failed to delete animal" });
+    }
+  });
+
+  app.get("/api/org/public", async (_req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        `SELECT o.*, COUNT(oa.id)::int AS animal_count
+         FROM organisations o
+         LEFT JOIN organisation_animals oa ON oa.org_id = o.id AND oa.status = 'available'
+         WHERE o.status = 'approved'
+         GROUP BY o.id
+         ORDER BY o.name`
+      );
+      return res.json(result.rows.map((o: any) => ({
+        id: o.id, userId: o.user_id, name: o.name, type: o.type, abn: o.abn,
+        address: o.address, phone: o.phone, email: o.email, website: o.website,
+        latitude: o.latitude, longitude: o.longitude, description: o.description,
+        logoUri: o.logo_uri, status: o.status, approvedAt: o.approved_at, createdAt: o.created_at,
+        animalCount: o.animal_count,
+      })));
+    } catch (err) {
+      console.error("Get public orgs error:", err);
+      return res.status(500).json({ message: "Failed to get organisations" });
+    }
+  });
+
+  app.get("/api/org/:id/animals", async (req: Request, res: Response) => {
+    try {
+      const org = await pool.query("SELECT id, name, type, status FROM organisations WHERE id = $1 AND status = 'approved'", [req.params.id]);
+      if (org.rows.length === 0) {
+        return res.status(404).json({ message: "Organisation not found" });
+      }
+      const result = await pool.query(
+        "SELECT * FROM organisation_animals WHERE org_id = $1 AND status = 'available' ORDER BY created_at DESC",
+        [req.params.id]
+      );
+      return res.json(result.rows.map((a: any) => ({
+        id: a.id, orgId: a.org_id, petType: a.pet_type, petName: a.pet_name, breed: a.breed,
+        size: a.size, color: a.color, markings: a.markings, photoUris: a.photo_uris || [],
+        description: a.description, intakeDate: a.intake_date, intakeType: a.intake_type,
+        microchipNumber: a.microchip_number, desexed: a.desexed, status: a.status,
+        createdAt: a.created_at, updatedAt: a.updated_at,
+        orgName: org.rows[0].name, orgType: org.rows[0].type,
+      })));
+    } catch (err) {
+      console.error("Get org animals public error:", err);
+      return res.status(500).json({ message: "Failed to get animals" });
+    }
+  });
+
+  // ===== ADMIN ROUTES =====
+
+  app.get("/api/admin/org/pending", authMiddleware, requireRole('admin'), async (_req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        `SELECT o.*, u.email AS registrant_email, u.display_name AS registrant_name
+         FROM organisations o JOIN users u ON u.id = o.user_id
+         WHERE o.status = 'pending' ORDER BY o.created_at`
+      );
+      return res.json(result.rows.map((o: any) => ({
+        id: o.id, userId: o.user_id, name: o.name, type: o.type, abn: o.abn,
+        address: o.address, phone: o.phone, email: o.email, website: o.website,
+        latitude: o.latitude, longitude: o.longitude, description: o.description,
+        logoUri: o.logo_uri, status: o.status, createdAt: o.created_at,
+        registrantEmail: o.registrant_email, registrantName: o.registrant_name,
+      })));
+    } catch (err) {
+      console.error("Get pending orgs error:", err);
+      return res.status(500).json({ message: "Failed to get pending organisations" });
+    }
+  });
+
+  app.post("/api/admin/org/:id/approve", authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        "UPDATE organisations SET status = 'approved', approved_at = NOW() WHERE id = $1 RETURNING *",
+        [req.params.id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Organisation not found" });
+      }
+      return res.json({ message: "Organisation approved", id: req.params.id });
+    } catch (err) {
+      console.error("Approve org error:", err);
+      return res.status(500).json({ message: "Failed to approve" });
+    }
+  });
+
+  app.post("/api/admin/org/:id/reject", authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        "UPDATE organisations SET status = 'rejected' WHERE id = $1 RETURNING *",
+        [req.params.id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Organisation not found" });
+      }
+      return res.json({ message: "Organisation rejected", id: req.params.id });
+    } catch (err) {
+      console.error("Reject org error:", err);
+      return res.status(500).json({ message: "Failed to reject" });
     }
   });
 

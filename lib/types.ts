@@ -75,9 +75,58 @@ export interface LocationCoords {
 
 export interface PetMatch {
   id: string;
-  type: 'report' | 'profile';
+  type: 'report' | 'profile' | 'org_animal';
   confidence: number;
   reason: string;
+  orgName?: string;
+  orgType?: string;
+}
+
+export type OrgType = 'vet' | 'shelter' | 'rescue';
+export type OrgStatus = 'pending' | 'approved' | 'rejected';
+export type AnimalStatus = 'available' | 'adopted' | 'on_hold' | 'fostered';
+export type IntakeType = 'stray' | 'surrendered' | 'rescue' | 'transferred';
+
+export interface Organisation {
+  id: string;
+  userId: string;
+  name: string;
+  type: OrgType;
+  abn?: string;
+  address: string;
+  phone: string;
+  email: string;
+  website?: string;
+  latitude: number;
+  longitude: number;
+  description?: string;
+  logoUri?: string;
+  status: OrgStatus;
+  approvedAt?: string;
+  createdAt: string;
+  animalCount?: number;
+}
+
+export interface OrganisationAnimal {
+  id: string;
+  orgId: string;
+  petType: PetType;
+  petName: string;
+  breed: string;
+  size: PetSize;
+  color: string;
+  markings: string;
+  photoUris: string[];
+  description: string;
+  intakeDate?: string;
+  intakeType: IntakeType;
+  microchipNumber?: string;
+  desexed: boolean;
+  status: AnimalStatus;
+  createdAt: string;
+  updatedAt: string;
+  orgName?: string;
+  orgType?: OrgType;
 }
 
 export interface VetShelter {

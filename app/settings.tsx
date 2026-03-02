@@ -20,11 +20,17 @@ import { useAuth } from '@/lib/auth-context';
 import { getApiUrl } from '@/lib/query-client';
 import { fetch } from 'expo/fetch';
 
+const ORG_TYPE_LABELS: Record<string, string> = {
+  vet: 'Vet Clinic',
+  shelter: 'Shelter',
+  rescue: 'Rescue Group',
+};
+
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { consentDate, revokeConsent } = useConsent();
   const { reports, profiles, deleteReport, deleteProfile, searchRadiusKm, setSearchRadiusKm } = usePets();
-  const { token, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const [localRadius, setLocalRadius] = useState(searchRadiusKm);
 
   const handleRadiusChange = useCallback((value: number) => {
@@ -233,6 +239,66 @@ export default function SettingsScreen() {
           </View>
           <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
         </Pressable>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>Partner Organisations</Text>
+        </View>
+
+        <Pressable style={styles.menuItem} onPress={() => router.push('/partners')} testID="partners-link">
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIcon, { backgroundColor: '#F0FDFA' }]}>
+              <Ionicons name="business" size={18} color={Colors.secondary} />
+            </View>
+            <View>
+              <Text style={styles.menuItemText}>Browse Partners</Text>
+              <Text style={styles.menuItemSubtext}>Vets, shelters & rescue groups</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+        </Pressable>
+
+        {user?.role === 'org' ? (
+          <Pressable style={styles.menuItem} onPress={() => router.push('/org-dashboard')} testID="org-dashboard-link">
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: '#EEF2FF' }]}>
+                <MaterialCommunityIcons name="view-dashboard" size={18} color="#6366F1" />
+              </View>
+              <View>
+                <Text style={styles.menuItemText}>Organisation Dashboard</Text>
+                <Text style={styles.menuItemSubtext}>Manage your listings</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+          </Pressable>
+        ) : user?.role !== 'admin' ? (
+          <Pressable style={styles.menuItem} onPress={() => router.push('/register-org')} testID="register-org-link">
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
+                <Ionicons name="add-circle" size={18} color="#D97706" />
+              </View>
+              <View>
+                <Text style={styles.menuItemText}>Register as Partner</Text>
+                <Text style={styles.menuItemSubtext}>For vets, shelters & rescue groups</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+          </Pressable>
+        ) : null}
+
+        {user?.role === 'admin' && (
+          <Pressable style={styles.menuItem} onPress={() => router.push('/admin')} testID="admin-link">
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: '#FEF2F2' }]}>
+                <Ionicons name="shield" size={18} color={Colors.primary} />
+              </View>
+              <View>
+                <Text style={styles.menuItemText}>Admin Panel</Text>
+                <Text style={styles.menuItemSubtext}>Approve pending organisations</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+          </Pressable>
+        )}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionHeaderText}>Resources</Text>

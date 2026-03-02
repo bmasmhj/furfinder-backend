@@ -16,6 +16,7 @@ export interface AuthUser {
   email: string;
   displayName: string;
   phone: string;
+  role: string;
 }
 
 declare global {
@@ -93,7 +94,7 @@ export async function registerUser(req: Request, res: Response) {
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, display_name, phone, consent_privacy, consent_terms, consent_ai, consent_data_storage, consent_date, referral_code, referred_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10)
-       RETURNING id, email, display_name, phone, referral_code`,
+       RETURNING id, email, display_name, phone, referral_code, role`,
       [email.toLowerCase(), passwordHash, displayName, phone || '', consentPrivacy, consentTerms, consentAi, consentDataStorage, newCode, referrerId]
     );
 
@@ -102,6 +103,7 @@ export async function registerUser(req: Request, res: Response) {
       email: result.rows[0].email,
       displayName: result.rows[0].display_name,
       phone: result.rows[0].phone,
+      role: result.rows[0].role || 'user',
     };
 
     if (referrerId) {
@@ -141,7 +143,7 @@ export async function loginUser(req: Request, res: Response) {
 
   try {
     const result = await pool.query(
-      'SELECT id, email, password_hash, display_name, phone FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, display_name, phone, role FROM users WHERE email = $1',
       [email.toLowerCase()]
     );
 
@@ -160,6 +162,7 @@ export async function loginUser(req: Request, res: Response) {
       email: row.email,
       displayName: row.display_name,
       phone: row.phone,
+      role: row.role || 'user',
     };
 
     const token = generateToken(user);
@@ -168,6 +171,18 @@ export async function loginUser(req: Request, res: Response) {
     console.error('Login error:', err);
     return res.status(500).json({ message: 'Failed to login' });
   }
+}
+
+export function requireRole(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+    next();
+  };
 }
 
 function generateReferralCode(): string {
@@ -200,7 +215,7 @@ export async function getMe(req: Request, res: Response) {
 
   try {
     const result = await pool.query(
-      'SELECT id, email, display_name, phone FROM users WHERE id = $1',
+      'SELECT id, email, display_name, phone, role FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -214,6 +229,7 @@ export async function getMe(req: Request, res: Response) {
       email: row.email,
       displayName: row.display_name,
       phone: row.phone,
+      role: row.role || 'user',
     });
   } catch (err) {
     console.error('Get me error:', err);

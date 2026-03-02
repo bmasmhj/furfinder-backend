@@ -156,3 +156,50 @@ CREATE INDEX IF NOT EXISTS idx_social_shares_user ON social_shares(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code);
 CREATE INDEX IF NOT EXISTS idx_blocked_users_blocker ON blocked_users(blocker_id);
 CREATE INDEX IF NOT EXISTS idx_content_reports_reporter ON content_reports(reporter_id);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'user';
+
+CREATE TABLE IF NOT EXISTS organisations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  type VARCHAR(20) NOT NULL,
+  abn VARCHAR(50),
+  address TEXT NOT NULL,
+  phone VARCHAR(50) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  website VARCHAR(500),
+  latitude DOUBLE PRECISION NOT NULL DEFAULT 0,
+  longitude DOUBLE PRECISION NOT NULL DEFAULT 0,
+  description TEXT,
+  logo_uri TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  approved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS organisation_animals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+  pet_type VARCHAR(20) NOT NULL,
+  pet_name VARCHAR(255) NOT NULL DEFAULT '',
+  breed VARCHAR(255) NOT NULL DEFAULT '',
+  size VARCHAR(20) NOT NULL DEFAULT 'medium',
+  color VARCHAR(255) NOT NULL DEFAULT '',
+  markings TEXT NOT NULL DEFAULT '',
+  photo_uris JSONB NOT NULL DEFAULT '[]',
+  description TEXT NOT NULL DEFAULT '',
+  intake_date DATE,
+  intake_type VARCHAR(30) NOT NULL DEFAULT 'stray',
+  microchip_number VARCHAR(100),
+  desexed BOOLEAN NOT NULL DEFAULT FALSE,
+  status VARCHAR(20) NOT NULL DEFAULT 'available',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_organisations_user_id ON organisations(user_id);
+CREATE INDEX IF NOT EXISTS idx_organisations_status ON organisations(status);
+CREATE INDEX IF NOT EXISTS idx_org_animals_org_id ON organisation_animals(org_id);
+CREATE INDEX IF NOT EXISTS idx_org_animals_status ON organisation_animals(status);
+CREATE INDEX IF NOT EXISTS idx_org_animals_pet_type ON organisation_animals(pet_type);

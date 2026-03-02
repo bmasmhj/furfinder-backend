@@ -12,6 +12,12 @@ import { PetMatch, PetReport, PetProfile } from '@/lib/types';
 import { getPetTypeIcon, getStatusColor, getStatusLabel } from '@/lib/helpers';
 import { apiRequest } from '@/lib/query-client';
 
+const ORG_TYPE_LABELS: Record<string, string> = {
+  vet: 'Vet Clinic',
+  shelter: 'Shelter',
+  rescue: 'Rescue Group',
+};
+
 export default function MatchesScreen() {
   const { reportId } = useLocalSearchParams<{ reportId: string }>();
   const insets = useSafeAreaInsets();
@@ -50,11 +56,12 @@ export default function MatchesScreen() {
     }
   };
 
-  const getMatchedItem = (match: PetMatch): PetReport | PetProfile | undefined => {
+  const getMatchedItem = (match: PetMatch): PetReport | PetProfile | null => {
+    if (match.type === 'org_animal') return null;
     if (match.type === 'report') {
-      return reports.find(r => r.id === match.id);
+      return reports.find(r => r.id === match.id) || null;
     }
-    return profiles.find(p => p.id === match.id);
+    return profiles.find(p => p.id === match.id) || null;
   };
 
   const getConfidenceColor = (confidence: number) => {
@@ -72,28 +79,35 @@ export default function MatchesScreen() {
   const handleMatchPress = (match: PetMatch) => {
     if (match.type === 'report') {
       router.push(`/pet/${match.id}`);
+    } else if (match.type === 'org_animal') {
+      // org animals don't have a dedicated detail page yet — no-op
     } else {
       router.push(`/my-pet/${match.id}`);
     }
   };
 
   const renderMatch = ({ item, index }: { item: PetMatch; index: number }) => {
+    const isOrgAnimal = item.type === 'org_animal';
     const matched = getMatchedItem(item);
-    if (!matched) return null;
+    if (!matched && !isOrgAnimal) return null;
 
     const isReport = item.type === 'report';
     const matchedReport = isReport ? (matched as PetReport) : null;
-    const matchedProfile = !isReport ? (matched as PetProfile) : null;
+    const matchedProfile = !isReport && !isOrgAnimal ? (matched as PetProfile) : null;
 
-    const name = isReport
-      ? (matchedReport!.petName === 'Unknown' ? `${matchedReport!.breed} ${matchedReport!.petType}` : matchedReport!.petName)
-      : matchedProfile!.petName;
+    const name = isOrgAnimal
+      ? (item.orgName || 'Partner Animal')
+      : isReport
+        ? (matchedReport!.petName === 'Unknown' ? `${matchedReport!.breed} ${matchedReport!.petType}` : matchedReport!.petName)
+        : matchedProfile!.petName;
 
-    const photoUri = isReport ? matchedReport!.photoUri : (matchedProfile!.photoUris?.[0] || '');
-    const petType = isReport ? matchedReport!.petType : matchedProfile!.petType;
-    const breed = isReport ? matchedReport!.breed : matchedProfile!.breed;
-    const color = isReport ? matchedReport!.color : matchedProfile!.color;
+    const photoUri = isOrgAnimal ? '' : isReport ? matchedReport!.photoUri : (matchedProfile!.photoUris?.[0] || '');
+    const petType = isOrgAnimal ? 'dog' : isReport ? matchedReport!.petType : matchedProfile!.petType;
+    const breed = isOrgAnimal ? '' : isReport ? matchedReport!.breed : matchedProfile!.breed;
+    const color = isOrgAnimal ? '' : isReport ? matchedReport!.color : matchedProfile!.color;
     const confidenceColor = getConfidenceColor(item.confidence);
+
+    const orgTypeLabel = isOrgAnimal && item.orgType ? (ORG_TYPE_LABELS[item.orgType] || 'Partner') : '';
 
     return (
       <Animated.View entering={FadeInUp.duration(400).delay(index * 80)}>
@@ -106,11 +120,19 @@ export default function MatchesScreen() {
               <Ionicons name="sparkles" size={12} color="#fff" />
               <Text style={styles.confidenceText}>{item.confidence}% {getConfidenceLabel(item.confidence)}</Text>
             </View>
-            <View style={[styles.typeBadge, { backgroundColor: isReport ? (matchedReport!.status === 'found' ? Colors.foundBg : Colors.lostBg) : '#F0F0FF' }]}>
-              <Text style={[styles.typeText, { color: isReport ? getStatusColor(matchedReport!.status) : '#6366F1' }]}>
-                {isReport ? getStatusLabel(matchedReport!.status) : 'REGISTERED'}
-              </Text>
-            </View>
+            {isOrgAnimal ? (
+              <View style={[styles.typeBadge, { backgroundColor: '#FEF3C7' }]}>
+                <Text style={[styles.typeText, { color: '#D97706' }]}>
+                  {orgTypeLabel || 'PARTNER ORG'}
+                </Text>
+              </View>
+            ) : (
+              <View style={[styles.typeBadge, { backgroundColor: isReport ? (matchedReport!.status === 'found' ? Colors.foundBg : Colors.lostBg) : '#F0F0FF' }]}>
+                <Text style={[styles.typeText, { color: isReport ? getStatusColor(matchedReport!.status) : '#6366F1' }]}>
+                  {isReport ? getStatusLabel(matchedReport!.status) : 'REGISTERED'}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.matchBody}>
@@ -123,18 +145,29 @@ export default function MatchesScreen() {
             )}
             <View style={styles.matchInfo}>
               <Text style={styles.matchName} numberOfLines={1}>{name}</Text>
-              <Text style={styles.matchBreed} numberOfLines={1}>{breed} · {color}</Text>
-              {isReport && matchedReport && (
+              {isOrgAnimal ? (
                 <View style={styles.matchLocation}>
-                  <Ionicons name="location" size={12} color={Colors.textLight} />
-                  <Text style={styles.matchLocationText} numberOfLines={1}>{matchedReport.locationName}</Text>
+                  <Ionicons name="business" size={12} color="#D97706" />
+                  <Text style={[styles.matchLocationText, { color: '#D97706' }]} numberOfLines={1}>
+                    {item.orgName || 'Verified Partner'}
+                  </Text>
                 </View>
-              )}
-              {!isReport && matchedProfile && (
-                <View style={styles.matchLocation}>
-                  <Ionicons name="home" size={12} color={Colors.textLight} />
-                  <Text style={styles.matchLocationText} numberOfLines={1}>{matchedProfile.suburb || 'No suburb'}</Text>
-                </View>
+              ) : (
+                <>
+                  <Text style={styles.matchBreed} numberOfLines={1}>{breed} · {color}</Text>
+                  {isReport && matchedReport && (
+                    <View style={styles.matchLocation}>
+                      <Ionicons name="location" size={12} color={Colors.textLight} />
+                      <Text style={styles.matchLocationText} numberOfLines={1}>{matchedReport.locationName}</Text>
+                    </View>
+                  )}
+                  {!isReport && matchedProfile && (
+                    <View style={styles.matchLocation}>
+                      <Ionicons name="home" size={12} color={Colors.textLight} />
+                      <Text style={styles.matchLocationText} numberOfLines={1}>{matchedProfile.suburb || 'No suburb'}</Text>
+                    </View>
+                  )}
+                </>
               )}
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />

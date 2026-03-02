@@ -33,11 +33,12 @@ The application is built with a React Native (Expo) frontend and an Express.js (
     -   "How It Works" guide and an FAQ section.
     -   Referral & Ambassador program for earning premium features.
     -   Suburb Directory: Browse all registered pets by suburb. Users can search suburbs and view pet profiles in their neighbourhood. Privacy-safe — only shows public info (no phone, medical notes).
+    -   Partner Organisations: Vets, shelters, and rescue groups can register, list animals in their care, and have those animals included in AI matching results. Self-registration with admin approval workflow.
 
 **Backend:**
 -   **Framework:** Express + TypeScript running on port 5000.
--   **Authentication:** JWT-based authentication with bcryptjs for password hashing and 30-day token expiry.
--   **API:** Provides comprehensive CRUD (Create, Read, Update, Delete) routes for reports, profiles, comments, likes, boosting, reuniting pets, and notifications.
+-   **Authentication:** JWT-based authentication with bcryptjs for password hashing and 30-day token expiry. Role-based access control (user/org/admin) with `requireRole()` middleware.
+-   **API:** Provides comprehensive CRUD routes for reports, profiles, comments, likes, boosting, reuniting pets, notifications, and partner organisations (registration, animal management, admin approval).
 
 **AI Integration:**
 -   Leverages Replit AI Integrations for OpenAI (gpt-5.2) for advanced matching.
