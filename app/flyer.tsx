@@ -56,7 +56,7 @@ export default function FlyerScreen() {
       `📱 Phone: ${report.contactPhone}\n` +
       (report.reward ? `💰 Reward: $${report.reward}\n` : '') +
       `\nPlease share and help ${report.petName} get home!\n` +
-      `\nShared from PetReunite`;
+      `\nShared from The Fur Finder`;
     try {
       await Share.share({ message: flyerText });
     } catch (_e) {}
@@ -189,7 +189,7 @@ export default function FlyerScreen() {
             </View>
 
             <View style={styles.flyerFooter}>
-              <Text style={styles.flyerFooterText}>Created with PetReunite</Text>
+              <Text style={styles.flyerFooterText}>Created with The Fur Finder</Text>
               <Text style={styles.flyerFooterSubtext}>Help pets find their way home</Text>
             </View>
           </View>

@@ -56,7 +56,7 @@ const categories = [
       'Animal Emergency: Contact your nearest 24hr vet',
       'Local Council Animal Services',
       'National Pet Register: 1300 734 738',
-      'PetReunite AI Matching: Use our app\'s AI feature!',
+      'The Fur Finder AI Matching: Use our app\'s AI feature!',
     ],
   },
 ];
@@ -129,7 +129,7 @@ export default function SafetyTipsScreen() {
               <Ionicons name="sparkles" size={24} color="#fff" />
             </View>
             <Text style={styles.ctaText}>
-              Use PetReunite's AI matching to quickly find potential matches for lost or found pets
+              Use The Fur Finder's AI matching to quickly find potential matches for lost or found pets
             </Text>
             <Pressable
               style={({ pressed }) => [styles.ctaButton, pressed && { opacity: 0.9 }]}

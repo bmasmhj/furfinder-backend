@@ -7,7 +7,7 @@ import Colors from '@/constants/colors';
 const SECTIONS = [
   {
     title: '1. Information We Collect',
-    content: `We collect the following types of personal information when you use PetReunite:
+    content: `We collect the following types of personal information when you use The Fur Finder:
 
 • Contact Details: Your name and phone number when you create a pet report or register a pet profile. This is used so other users can contact you about your lost or found pet.
 
@@ -57,7 +57,7 @@ We do not use your personal information for advertising, marketing, or any purpo
   },
   {
     title: '5. AI Usage Disclosure',
-    content: `PetReunite uses artificial intelligence (AI) in the following ways:
+    content: `The Fur Finder uses artificial intelligence (AI) in the following ways:
 
 • Pet Matching: Our AI analyses pet descriptions (breed, colour, size, markings, location) to suggest potential matches between lost reports, found reports, and registered profiles. Match results include a confidence score and reasoning.
 
@@ -107,7 +107,7 @@ This disclosure is provided in accordance with the Australian Privacy Act 1988, 
   },
   {
     title: '9. Children\'s Privacy',
-    content: `PetReunite is not directed at children under 16. We do not knowingly collect personal information from children. If you believe a child has provided personal information through the app, please contact us and we will delete it promptly.`,
+    content: `The Fur Finder is not directed at children under 16. We do not knowingly collect personal information from children. If you believe a child has provided personal information through the app, please contact us and we will delete it promptly.`,
   },
   {
     title: '10. Changes to This Policy',
@@ -148,7 +148,7 @@ export default function PrivacyPolicyScreen() {
           <Text style={styles.lastUpdated}>Last updated: February 2026 | Version 1.0</Text>
 
           <Text style={styles.intro}>
-            PetReunite ("we", "our", "us") is committed to protecting your personal information in accordance with the Australian Privacy Act 1988 and the Australian Privacy Principles (APPs). This policy explains how we collect, use, store, and protect your personal information.
+            The Fur Finder ("we", "our", "us") is committed to protecting your personal information in accordance with the Australian Privacy Act 1988 and the Australian Privacy Principles (APPs). This policy explains how we collect, use, store, and protect your personal information.
           </Text>
 
           {SECTIONS.map((section, idx) => (

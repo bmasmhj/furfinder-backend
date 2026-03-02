@@ -7,13 +7,13 @@ import Colors from '@/constants/colors';
 const SECTIONS = [
   {
     title: '1. Acceptance of Terms',
-    content: `By downloading, installing, or using PetReunite ("the App"), you agree to be bound by these Terms of Use. If you do not agree, please do not use the App.
+    content: `By downloading, installing, or using The Fur Finder ("the App"), you agree to be bound by these Terms of Use. If you do not agree, please do not use the App.
 
 These terms are governed by the laws of Australia, including the Australian Consumer Law.`,
   },
   {
     title: '2. Description of Service',
-    content: `PetReunite is a community-based mobile application that helps users report and find lost and found pets. The App provides:
+    content: `The Fur Finder is a community-based mobile application that helps users report and find lost and found pets. The App provides:
 
 • A platform to create lost and found pet reports with photos and locations
 • Pet profile registration for proactive identification
@@ -48,30 +48,30 @@ These terms are governed by the laws of Australia, including the Australian Cons
     content: `• The AI matching feature provides suggestions only and does not guarantee the identity of any pet
 • Match confidence scores are estimates based on textual analysis of pet descriptions
 • You should always verify any potential match through direct contact, physical identification, and where possible, microchip verification
-• PetReunite is not liable for any incorrect matches or outcomes resulting from AI suggestions
+• The Fur Finder is not liable for any incorrect matches or outcomes resulting from AI suggestions
 • AI processing is performed by third-party services (OpenAI) and is subject to their terms of service`,
   },
   {
     title: '6. Reward Pool',
     content: `• The reward pool feature allows users to indicate willingness to contribute toward a reward for finding a lost pet
 • Reward contributions displayed in the App are pledges of intent only
-• PetReunite does not process, collect, or guarantee any financial transactions
+• The Fur Finder does not process, collect, or guarantee any financial transactions
 • Any financial arrangements between users are made directly between the parties involved
-• PetReunite bears no responsibility for the fulfilment of reward pledges`,
+• The Fur Finder bears no responsibility for the fulfilment of reward pledges`,
   },
   {
     title: '7. Community Tips & Comments',
     content: `• Users may post tips and comments on pet reports to help the community
 • You are responsible for the content of your comments
 • Do not post personal attacks, spam, or misleading information
-• PetReunite reserves the right to remove comments that violate these terms
-• Tips and sightings are user-submitted and not verified by PetReunite`,
+• The Fur Finder reserves the right to remove comments that violate these terms
+• Tips and sightings are user-submitted and not verified by The Fur Finder`,
   },
   {
     title: '8. Limitation of Liability',
     content: `To the maximum extent permitted by Australian law:
 
-• PetReunite is provided "as is" without warranties of any kind
+• The Fur Finder is provided "as is" without warranties of any kind
 • We do not guarantee that the App will result in finding a lost pet
 • We are not liable for any loss, damage, or injury arising from the use of the App
 • We are not responsible for the actions of other users
@@ -80,9 +80,9 @@ These terms are governed by the laws of Australia, including the Australian Cons
   },
   {
     title: '9. Intellectual Property',
-    content: `• The App's design, code, and branding are the property of PetReunite
+    content: `• The App's design, code, and branding are the property of The Fur Finder
 • User-submitted content (photos, descriptions) remains the property of the user
-• By submitting content, you grant PetReunite a non-exclusive licence to display it within the App for the purpose of the lost and found pet service
+• By submitting content, you grant The Fur Finder a non-exclusive licence to display it within the App for the purpose of the lost and found pet service
 • You may revoke this licence by deleting your content from the App`,
   },
   {
@@ -137,7 +137,7 @@ export default function TermsOfUseScreen() {
           <Text style={styles.lastUpdated}>Last updated: February 2026 | Version 1.0</Text>
 
           <Text style={styles.intro}>
-            Welcome to PetReunite. Please read these Terms of Use carefully before using the App. These terms set out the rules and conditions for using our service.
+            Welcome to The Fur Finder. Please read these Terms of Use carefully before using the App. These terms set out the rules and conditions for using our service.
           </Text>
 
           {SECTIONS.map((section, idx) => (

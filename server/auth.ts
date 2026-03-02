@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.SESSION_SECRET || (() => {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('SESSION_SECRET environment variable is required in production');
   }
-  return 'petreunite-dev-secret';
+  return 'thefurfinder-dev-secret';
 })();
 const TOKEN_EXPIRY = '30d';
 

@@ -51,7 +51,7 @@ export default function ConsentScreen() {
             <Ionicons name="paw" size={48} color={Colors.primary} />
           </View>
 
-          <Text style={styles.title}>Welcome to PetReunite</Text>
+          <Text style={styles.title}>Welcome to The Fur Finder</Text>
           <Text style={styles.subtitle}>
             Before you start, please review and accept our policies to use the app.
           </Text>

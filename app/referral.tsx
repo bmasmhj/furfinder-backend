@@ -80,7 +80,7 @@ export default function ReferralScreen() {
     if (!data?.referralCode) return;
     try {
       await Share.share({
-        message: `Join PetReunite and help reunite lost pets with their families! Use my referral code: ${data.referralCode}\n\nDownload the app and enter the code when you sign up to get 3 free days of Premium!`,
+        message: `Join The Fur Finder and help reunite lost pets with their families! Use my referral code: ${data.referralCode}\n\nDownload the app and enter the code when you sign up to get 3 free days of Premium!`,
       });
     } catch {}
   };
@@ -275,7 +275,7 @@ export default function ReferralScreen() {
           <Feather name="trending-up" size={28} color="#FFF" />
           <Text style={styles.ambassadorTitle}>Share Our Story, Earn Rewards</Text>
           <Text style={styles.ambassadorSubtitle}>
-            Post about PetReunite on your social media stories. Log 20 shares in a month and get 1 free week of Premium!
+            Post about The Fur Finder on your social media stories. Log 20 shares in a month and get 1 free week of Premium!
           </Text>
         </LinearGradient>
 
@@ -306,7 +306,7 @@ export default function ReferralScreen() {
         <View style={styles.shareInstructions}>
           <Text style={styles.shareInstructionsTitle}>How to earn</Text>
           <Text style={styles.shareInstructionsText}>
-            1. Share a PetReunite promo story on Instagram, Facebook, or TikTok{'\n'}
+            1. Share a The Fur Finder promo story on Instagram, Facebook, or TikTok{'\n'}
             2. Come back here and tap the platform button to log it{'\n'}
             3. You can log one share per platform per day{'\n'}
             4. Reach 20 shares in a calendar month to earn your reward

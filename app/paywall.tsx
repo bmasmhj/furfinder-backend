@@ -78,7 +78,7 @@ export default function PaywallScreen() {
           </View>
           <Text style={styles.premiumActiveTitle}>You're Premium!</Text>
           <Text style={styles.premiumActiveSubtitle}>
-            You have access to all premium features. Thank you for supporting PetReunite!
+            You have access to all premium features. Thank you for supporting The Fur Finder!
           </Text>
           <Pressable style={styles.premiumActiveBtn} onPress={() => router.back()}>
             <Text style={styles.premiumActiveBtnText}>Continue</Text>
@@ -105,7 +105,7 @@ export default function PaywallScreen() {
             <View style={styles.heroIconBg}>
               <Ionicons name="diamond" size={36} color="#F59E0B" />
             </View>
-            <Text style={styles.heroTitle}>PetReunite Premium</Text>
+            <Text style={styles.heroTitle}>The Fur Finder Premium</Text>
             <Text style={styles.heroSubtitle}>
               Unlock powerful tools to find your pet faster
             </Text>

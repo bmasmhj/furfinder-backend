@@ -299,9 +299,9 @@ export default function SettingsScreen() {
         <Pressable
           style={styles.menuItem}
           onPress={() => {
-            const subject = encodeURIComponent('PetReunite App Feedback');
-            const body = encodeURIComponent('Hi PetReunite Team,\n\nI would like to share the following feedback:\n\n');
-            Linking.openURL(`mailto:petreunite.feedback@gmail.com?subject=${subject}&body=${body}`);
+            const subject = encodeURIComponent('The Fur Finder App Feedback');
+            const body = encodeURIComponent('Hi Fur Finder Team,\n\nI would like to share the following feedback:\n\n');
+            Linking.openURL(`mailto:jaspreetbhullar@thefurfinder.com?subject=${subject}&body=${body}`);
           }}
         >
           <View style={styles.menuItemLeft}>
@@ -310,7 +310,7 @@ export default function SettingsScreen() {
             </View>
             <View>
               <Text style={styles.menuItemText}>Send Feedback</Text>
-              <Text style={styles.menuItemSubtext}>petreunite.feedback@gmail.com</Text>
+              <Text style={styles.menuItemSubtext}>jaspreetbhullar@thefurfinder.com</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
@@ -319,9 +319,9 @@ export default function SettingsScreen() {
         <Pressable
           style={styles.menuItem}
           onPress={() => {
-            const subject = encodeURIComponent('PetReunite Bug Report');
-            const body = encodeURIComponent('Hi PetReunite Team,\n\nI found a bug:\n\nWhat I was doing:\n\nWhat happened:\n\nWhat I expected:\n\nDevice/Platform:\n\n');
-            Linking.openURL(`mailto:petreunite.feedback@gmail.com?subject=${subject}&body=${body}`);
+            const subject = encodeURIComponent('The Fur Finder Bug Report');
+            const body = encodeURIComponent('Hi Fur Finder Team,\n\nI found a bug:\n\nWhat I was doing:\n\nWhat happened:\n\nWhat I expected:\n\nDevice/Platform:\n\n');
+            Linking.openURL(`mailto:jaspreetbhullar@thefurfinder.com?subject=${subject}&body=${body}`);
           }}
         >
           <View style={styles.menuItemLeft}>
@@ -339,9 +339,9 @@ export default function SettingsScreen() {
         <Pressable
           style={styles.menuItem}
           onPress={() => {
-            const subject = encodeURIComponent('PetReunite Feature Suggestion');
-            const body = encodeURIComponent('Hi PetReunite Team,\n\nI have a feature suggestion:\n\n');
-            Linking.openURL(`mailto:petreunite.feedback@gmail.com?subject=${subject}&body=${body}`);
+            const subject = encodeURIComponent('The Fur Finder Feature Suggestion');
+            const body = encodeURIComponent('Hi Fur Finder Team,\n\nI have a feature suggestion:\n\n');
+            Linking.openURL(`mailto:jaspreetbhullar@thefurfinder.com?subject=${subject}&body=${body}`);
           }}
         >
           <View style={styles.menuItemLeft}>

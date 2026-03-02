@@ -25,7 +25,7 @@ const FAQ_DATA: FAQItem[] = [
   },
   {
     category: 'Getting Started',
-    question: 'Is PetReunite free to use?',
+    question: 'Is The Fur Finder free to use?',
     answer: 'Yes! Basic features are free, including reporting one lost or found pet, viewing the map, and accessing safety tips. Premium subscribers get unlimited reports, AI-powered photo matching, scan post feature, and multi-photo uploads.',
   },
   {
@@ -66,7 +66,7 @@ const FAQ_DATA: FAQItem[] = [
   {
     category: 'Safety & Security',
     question: 'What should I do immediately if my pet goes missing?',
-    answer: '1. Search your home thoroughly — check small spaces, cupboards, under furniture\n2. Walk your neighbourhood calling their name\n3. Report them on PetReunite immediately\n4. Contact local vets, shelters, and council\n5. Share the flyer on social media\n6. Put their bedding or a worn piece of your clothing outside\n7. Check the map for any found pet reports nearby\n8. Don\'t give up — pets can be found weeks or months later!',
+    answer: '1. Search your home thoroughly — check small spaces, cupboards, under furniture\n2. Walk your neighbourhood calling their name\n3. Report them on The Fur Finder immediately\n4. Contact local vets, shelters, and council\n5. Share the flyer on social media\n6. Put their bedding or a worn piece of your clothing outside\n7. Check the map for any found pet reports nearby\n8. Don\'t give up — pets can be found weeks or months later!',
   },
   {
     category: 'Features',
@@ -156,7 +156,7 @@ export default function FAQScreen() {
         <View style={styles.heroSection}>
           <Ionicons name="help-circle" size={48} color={Colors.primary} />
           <Text style={styles.heroTitle}>Frequently Asked Questions</Text>
-          <Text style={styles.heroSubtitle}>Find answers to common questions about PetReunite</Text>
+          <Text style={styles.heroSubtitle}>Find answers to common questions about The Fur Finder</Text>
         </View>
 
         <ScrollView

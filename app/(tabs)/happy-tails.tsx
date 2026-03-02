@@ -33,7 +33,7 @@ function StoryCard({ report, index }: { report: PetReport; index: number }) {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    const shareText = `${report.petName} has been reunited! ${report.reunionMessage || ''}\n\nShared from PetReunite - helping pets find their way home.`;
+    const shareText = `${report.petName} has been reunited! ${report.reunionMessage || ''}\n\nShared from The Fur Finder - helping pets find their way home.`;
     try {
       await Share.share({ message: shareText });
     } catch (_e) {}

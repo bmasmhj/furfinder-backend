@@ -62,7 +62,7 @@ export default function HomeScreen() {
         <View style={styles.headerContent}>
           <View style={styles.titleRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.greeting}>PetReunite</Text>
+              <Text style={styles.greeting}>The Fur Finder</Text>
               <Text style={styles.subtitle}>Help pets find their way home</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

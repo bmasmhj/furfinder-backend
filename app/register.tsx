@@ -168,7 +168,7 @@ export default function RegisterScreen() {
                 testID="register-referral"
               />
             </View>
-            <Text style={styles.referralHint}>Have a friend on PetReunite? Enter their code to get 3 free days of Premium!</Text>
+            <Text style={styles.referralHint}>Have a friend on The Fur Finder? Enter their code to get 3 free days of Premium!</Text>
           </View>
 
           <View style={styles.consentSection}>

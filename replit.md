@@ -1,7 +1,7 @@
-# PetReunite - Lost & Found Pets App
+# The Fur Finder - Lost & Found Pets App
 
 ## Overview
-PetReunite is a comprehensive mobile application designed to help reunite lost pets with their owners and assist in finding homes for found animals. The platform provides tools for users to report lost or found pets, view them on an interactive map, and proactively register their own pets.
+The Fur Finder is a comprehensive mobile application designed to help reunite lost pets with their owners and assist in finding homes for found animals. The platform provides tools for users to report lost or found pets, view them on an interactive map, and proactively register their own pets.
 
 The vision is to become the leading platform for pet recovery and community support, leveraging advanced AI for matching and identification. The project aims to reduce the number of lost pets, minimize shelter intake, and foster a compassionate community of pet lovers.
 

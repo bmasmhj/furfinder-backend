@@ -369,7 +369,7 @@ Return ONLY valid JSON, no markdown formatting.`;
           const response = await fetch(url, {
             signal: controller.signal,
             headers: {
-              'User-Agent': 'Mozilla/5.0 (compatible; PetReunite/1.0)',
+              'User-Agent': 'Mozilla/5.0 (compatible; TheFurFinder/1.0)',
             },
           });
           clearTimeout(timeout);
