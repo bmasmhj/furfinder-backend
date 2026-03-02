@@ -84,16 +84,10 @@ function getProfileBiometricPhotos(profile: PetProfile): string[] {
   return (profile.biometricPhotoUris || []).filter(p => p && (p.startsWith('data:') || p.startsWith('http')));
 }
 
-function buildImageContent(photoUri: string): OpenAI.Chat.Completions.ChatCompletionContentPartImage {
-  if (photoUri.startsWith('data:')) {
-    return {
-      type: "image_url",
-      image_url: { url: photoUri, detail: "low" },
-    };
-  }
+function buildImageContent(photoUri: string, detail: "high" | "low" = "high"): OpenAI.Chat.Completions.ChatCompletionContentPartImage {
   return {
     type: "image_url",
-    image_url: { url: photoUri, detail: "low" },
+    image_url: { url: photoUri, detail },
   };
 }
 
@@ -249,9 +243,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (c.photos.length > 0) {
             userContent.push({
               type: "text",
-              text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\nCandidate ${i + 1} photo:`,
+              text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\nCandidate ${i + 1} photo(s):`,
             });
-            userContent.push(buildImageContent(c.photos[0]));
+            for (const photo of c.photos.slice(0, 3)) {
+              userContent.push(buildImageContent(photo));
+            }
           } else {
             userContent.push({
               type: "text",
@@ -267,52 +263,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const systemPrompt = hasPhotos
-        ? `You are an expert AI pet identification system. You analyse BOTH photos and text descriptions to match lost and found pets.
+        ? `You are an expert veterinary-grade AI pet identification system. You perform rigorous visual and textual analysis to match lost and found pets with the highest possible accuracy.
 
-VISUAL ANALYSIS (most important when photos are available):
-- Compare physical features: face shape, ear shape/position, coat pattern, markings, body build
-- Look for unique identifiers: spots, patches, scars, collar, eye color
-- Assess breed consistency from visual appearance
-- Note any distinctive features visible in photos
-- BIOMETRIC ID SCANS: Some profiles include close-up photos of nose prints, eye patterns, and facial features. These are extremely high-value for matching — nose print patterns and iris details are unique to each animal. Prioritize comparing biometric close-ups when available.
+VISUAL ANALYSIS PROTOCOL (primary — most important when photos are available):
+1. BIOMETRIC FEATURES (highest confidence signal):
+   - Nose print texture: unique ridge patterns, nostril shape, pigmentation — as unique as human fingerprints
+   - Eye patterns: iris color, pupil shape, eye spacing, heterochromia
+   - Facial geometry: muzzle length, forehead width, jaw shape, ear set angle
+2. COAT ANALYSIS:
+   - Color distribution map: exact locations of color patches, transitions, and gradients
+   - Pattern type: solid, bicolor, tricolor, tabby, brindle, merle, tuxedo, pointed
+   - Unique markings: spots, patches, stripes — note exact position (left ear, right paw, chest, etc.)
+3. BODY STRUCTURE:
+   - Build type and proportions relative to breed standard
+   - Tail length/shape/carriage, leg proportions
+   - Ear shape: erect, floppy, semi-erect, cropped
+4. DISTINGUISHING FEATURES:
+   - Scars, healed injuries, missing fur patches
+   - Collar, harness, or tag visible
+   - Eye conditions (cherry eye, cloudiness)
+   - Ear notches or tattoos
 
-TEXT ANALYSIS:
-- Breed similarity (exact match is strongest)
-- Color and markings described
-- Size match
-- Geographic proximity (distance in km — closer is better, within ${searchRadius}km radius)
-- Description details overlap
+TEXT ANALYSIS (secondary):
+- Breed: exact match is strongest; cross-breed similarity considered
+- Color and markings description alignment with visual evidence
+- Size category match (small/medium/large)
+- Geographic proximity: distance in km — closer is stronger (within ${searchRadius}km radius)
+- Timeline plausibility: when was the pet lost vs. found
+- Description details: temperament, behaviour, any unique habits mentioned
 
 SCORING GUIDE:
-- 80-100: Photos show very likely the same animal + text details match well
-- 60-79: Photos show similar-looking animal + most text details align
-- 40-59: Some visual resemblance or strong text match but limited photo evidence
-- 30-39: Possible but uncertain match
-- Below 30: Unlikely match, do not include
+- 90-100: Virtually certain — biometric features confirm identity, text details fully align
+- 80-89: Very strong — photos show very likely the same animal, multiple unique features match
+- 65-79: Good — visually similar with most text details aligning, some distinguishing features match
+- 50-64: Moderate — breed and color match, some visual resemblance but limited distinguishing evidence
+- 35-49: Weak but possible — general similarities warrant human review
+- Below 35: Unlikely match, do not include
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": the candidate's id
 - "type": "report" or "profile"
 - "confidence": 0-100
-- "reason": 2-3 sentence explanation mentioning BOTH visual and text similarities/differences
+- "reason": 2-3 sentence explanation citing SPECIFIC visual features compared (e.g., "White chest patch shape matches", "Nose pigmentation pattern consistent") and text alignment
 
 Only include candidates with confidence >= 30. Return at most 10 matches.
 Return ONLY valid JSON, no markdown formatting.`
-        : `You are an AI assistant that matches lost and found pet reports. Given a target pet report and a list of candidates, analyze each candidate and determine how likely it is to be the same pet.
+        : `You are an expert AI pet matching system. Given a target pet report and candidates, perform thorough analysis to determine match likelihood.
 
-Consider these factors:
-- Breed similarity (exact match is strongest signal)
-- Color and markings similarity
-- Size match
-- Geographic proximity (closer is better, candidates are within ${searchRadius}km radius)
-- Date proximity (for reports)
-- Description details
+Analyse these factors with rigorous attention to detail:
+- Breed: exact match is strongest signal; note if mixed breed descriptions could overlap
+- Color: compare primary and secondary colors, patterns (e.g., "tan with black saddle" vs "black and tan")
+- Markings: specific marking locations (face blaze, chest patch, paw markings)
+- Size: must be same category (small/medium/large)
+- Geographic proximity: closer is better (within ${searchRadius}km radius)
+- Timeline: date proximity between lost and found events
+- Description: behavioural traits, age estimates, distinctive features
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": the candidate's id
 - "type": "report" or "profile"
 - "confidence": 0-100
-- "reason": 1-2 sentence explanation
+- "reason": 2-3 sentence explanation citing specific matching factors
 
 Only include candidates with confidence >= 30. Return at most 10 matches.
 Return ONLY valid JSON, no markdown formatting.`;
@@ -399,24 +410,26 @@ Return ONLY valid JSON, no markdown formatting.`;
         messages: [
           {
             role: "system",
-            content: `You are an AI that extracts pet information from social media posts (Facebook, Instagram, Nextdoor, community boards, etc.) about lost or found pets.
+            content: `You are an expert AI system that extracts comprehensive pet information from social media posts (Facebook, Instagram, Nextdoor, Gumtree, community boards, etc.) about lost or found pets in Australia.
 
-Extract the following details from the post text. If a detail is not mentioned, use "unknown".
+Extract ALL available details from the post text with maximum accuracy. Infer breed from descriptions when not explicitly stated (e.g., "fluffy white small dog" could suggest Maltese, Bichon, or Pomeranian). For Australian posts, recognise common location formats (suburb names, state abbreviations).
+
+If a detail is not mentioned and cannot be reasonably inferred, use "unknown".
 
 Return a JSON object with:
 - "isRelevant": boolean - true if this appears to be about a lost or found pet, false otherwise
-- "status": "lost" or "found" 
+- "status": "lost" or "found" (also consider "missing", "escaped", "stray", "wandering" as indicators)
 - "petType": one of "dog", "cat", "bird", "rabbit", "other"
 - "petName": the pet's name if mentioned
-- "breed": breed if mentioned
-- "size": "small", "medium", or "large"
-- "color": color/coloring description
-- "markings": distinguishing markings
-- "description": a cleaned up summary of the pet description from the post
-- "locationName": location/area mentioned in the post
-- "contactInfo": any contact info (phone, email) from the post
-- "reward": reward amount if mentioned
-- "postSummary": a 1-2 sentence summary of the post
+- "breed": breed if mentioned or can be inferred from description
+- "size": "small", "medium", or "large" (infer from breed if not stated)
+- "color": detailed color/coloring description including pattern (e.g., "tan and white bicolor" not just "brown")
+- "markings": ALL distinguishing markings mentioned — spots, patches, scars, collar color, tag details, microchipped status
+- "description": a comprehensive cleaned-up summary of the pet including age, temperament, medical conditions, and any behavioural traits
+- "locationName": full location/area — suburb, city, state if available
+- "contactInfo": any contact info (phone, email, social media handle) from the post
+- "reward": reward amount if mentioned (number only, no currency symbol)
+- "postSummary": a 2-3 sentence summary capturing all key details for matching purposes
 
 Return ONLY valid JSON, no markdown.`
           },
@@ -508,9 +521,11 @@ Return ONLY valid JSON, no markdown.`
           if (c.photos.length > 0) {
             userContent.push({
               type: "text",
-              text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\nPhoto:`,
+              text: `\nCANDIDATE ${i + 1} (${c.type}:${c.id}) — ${c.summary}\nPhoto(s):`,
             });
-            userContent.push(buildImageContent(c.photos[0]));
+            for (const photo of c.photos.slice(0, 3)) {
+              userContent.push(buildImageContent(photo));
+            }
           } else {
             userContent.push({
               type: "text",
@@ -530,41 +545,58 @@ Return ONLY valid JSON, no markdown.`
       }
 
       const scanSystemPrompt = hasPhotos
-        ? `You are an expert AI pet identification system. Match pets from online social media posts with existing reports and registered profiles in a lost & found app.
+        ? `You are an expert veterinary-grade AI pet identification system. Match pets from online social media posts against existing reports and registered profiles in a lost & found database.
 
-When photos are available, use VISUAL ANALYSIS as the primary matching method:
-- Compare coat patterns, markings, face shape, ear position, body build
-- Look for unique identifiers visible in photos
-- Cross-reference visual assessment with text descriptions
+VISUAL ANALYSIS PROTOCOL (primary when photos available):
+1. BIOMETRIC FEATURES:
+   - Nose print: ridge patterns, nostril shape, pigmentation
+   - Eyes: iris color, shape, spacing, heterochromia
+   - Facial geometry: muzzle, forehead, jaw, ear set angle
+2. COAT ANALYSIS:
+   - Color distribution: exact patch locations, transitions, gradients
+   - Pattern: solid, bicolor, tricolor, tabby, brindle, merle, tuxedo
+   - Unique markings: spots, patches, stripes with exact body position
+3. DISTINGUISHING FEATURES:
+   - Scars, collar/harness, ear notches, tail shape
+   - Body build and proportions
 
-Also consider text factors:
-- Breed, color, markings similarity
-- Size match
-- Geographic proximity
-- Description overlap
+TEXT ANALYSIS (secondary):
+- Breed match (exact or compatible cross-breeds)
+- Color and markings alignment with photos
+- Size category, geographic proximity, timeline
+- Description and behavioural details
+
+SCORING:
+- 90-100: Virtually certain — biometric/visual features confirm identity
+- 80-89: Very strong — multiple unique features match
+- 65-79: Good — visually similar, text aligns
+- 50-64: Moderate — breed/color match, limited distinguishing evidence
+- 35-49: Weak but worth reviewing
+- Below 25: Do not include
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": candidate id
 - "type": "report" or "profile"
 - "confidence": 0-100
-- "reason": 2-3 sentence explanation
+- "reason": 2-3 sentence explanation citing specific visual features compared
 
 Only include candidates with confidence >= 25. Return at most 10.
 Return ONLY valid JSON, no markdown.`
-        : `You are an AI that matches pets from online social media posts with existing pet reports and registered profiles.
+        : `You are an expert AI pet matching system. Match pets from online social media posts against existing reports and registered profiles.
 
-Consider these factors:
-- Breed similarity (exact match is strongest)
-- Color and markings similarity
-- Size match
-- Geographic proximity based on location names
-- Description details overlap
+Analyse with rigorous attention:
+- Breed: exact match is strongest; consider cross-breed compatibility
+- Color: compare primary/secondary colors, pattern descriptions
+- Markings: specific locations (face blaze, chest patch, paw markings)
+- Size: must be same category
+- Geographic proximity: location name matching, suburb/area overlap
+- Description: behavioural traits, age, distinctive features
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": candidate id
 - "type": "report" or "profile"
 - "confidence": 0-100
-- "reason": 1-2 sentence explanation
+- "reason": 2-3 sentence explanation citing specific matching factors
 
 Only include candidates with confidence >= 25. Return at most 10.
 Return ONLY valid JSON, no markdown.`;
@@ -689,33 +721,59 @@ Return ONLY valid JSON, no markdown.`;
         }
       }
 
-      const snapSystemPrompt = `You are an expert AI pet identification system specializing in visual biometric matching. A person has spotted a pet and taken a quick photo. Your job is to identify if this pet matches any lost pet reports or registered pet profiles.
+      const snapSystemPrompt = `You are an expert veterinary-grade AI pet identification system specializing in visual biometric matching. A person has spotted a pet in the wild and taken a quick photo. Your critical task is to determine if this pet matches any lost pet reports or registered pet profiles using the highest standard of visual analysis.
 
-VISUAL BIOMETRIC ANALYSIS (highest priority):
-- Compare the snapped photo against ALL candidate photos, especially biometric ID scans
-- NOSE PRINT MATCHING: Compare nose texture patterns, nostril shape, bridge width — these are unique like fingerprints
-- EYE MATCHING: Compare iris color, eye shape, eye spacing, pupil characteristics
-- FACIAL STRUCTURE: Compare head shape, ear position/shape, muzzle length, forehead markings
-- COAT MATCHING: Compare coat color patterns, spot locations, stripe patterns, patches
-- Look for unique identifiers: scars, markings, collar details, ear notches
+BIOMETRIC IDENTIFICATION PROTOCOL (highest priority — treat like forensic analysis):
+
+1. NOSE PRINT ANALYSIS (most reliable — unique to each animal like fingerprints):
+   - Ridge pattern topology: bumps, grooves, texture map
+   - Nostril shape: round, oval, asymmetric differences
+   - Bridge width and pigmentation: color variations, spots on nose leather
+   - Nose leather texture: smooth, rough, cracked patterns
+
+2. EYE IDENTIFICATION:
+   - Iris color: exact shade (amber, hazel, brown, blue, green, heterochromia)
+   - Eye shape and size relative to head
+   - Eye spacing: wide-set vs. close-set
+   - Sclera visibility, tear staining patterns
+
+3. FACIAL GEOMETRY (high reliability):
+   - Muzzle length-to-width ratio
+   - Forehead slope and width
+   - Jaw shape: square, rounded, narrow
+   - Ear set angle, ear shape (erect, folded, rose, button, pendulous)
+   - Ear size relative to head, inner ear hair/coloring
+
+4. COAT FORENSICS:
+   - Color distribution map: document exact position of every color zone
+   - Pattern classification: solid, bicolor, tricolor, tabby (mackerel/classic/spotted), brindle, merle, roan, ticking
+   - Unique marking positions: left vs. right asymmetry, chest shapes (star, blaze, bib), leg socks
+   - Coat texture visible: smooth, wiry, fluffy, double-coat evidence
+
+5. BODY & DISTINGUISHING FEATURES:
+   - Build: compact, athletic, stocky, leggy
+   - Tail: length, curl, plume, bob, carriage
+   - Scars, healed injuries, ear notches, tattoos
+   - Collar, harness, tags visible
 
 TEXT COMPARISON (secondary):
-- Breed consistency
+- Breed consistency with visual assessment
 - Color and size match
-- Markings described
+- Markings alignment with what is visible
 
-SCORING:
-- 80-100: Strong visual match — biometric features align (nose pattern, eye color, facial structure match)
-- 60-79: Good visual similarity — multiple features match but some uncertainty
-- 40-59: Moderate resemblance — same breed/color but limited distinguishing match
-- 30-39: Possible but uncertain
+SCORING (be precise — lives depend on accuracy):
+- 90-100: Virtually certain — multiple biometric features confirm (nose + eyes + unique markings align)
+- 80-89: Very strong — clear biometric similarity, unique markings match
+- 65-79: Good — multiple visual features match, breed and build consistent
+- 50-64: Moderate — same breed/color, some features match but cannot confirm unique identity
+- 35-49: Weak but possible — general similarity, worth human review
 - Below 30: Do not include
 
 Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
 - "id": candidate id
 - "type": "report" or "profile"
 - "confidence": 0-100
-- "reason": 2-3 sentence explanation focusing on VISUAL similarities found, mentioning specific biometric features compared
+- "reason": 2-3 sentence explanation citing SPECIFIC biometric and visual features compared (e.g., "Nose ridge pattern shows matching topology", "Distinctive white blaze on forehead matches in shape and position")
 
 Only include confidence >= 30. Return at most 10 matches.
 Return ONLY valid JSON, no markdown.`;
