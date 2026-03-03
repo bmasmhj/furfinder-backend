@@ -143,20 +143,40 @@ export default function ReportFormScreen() {
         return;
       }
 
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      let loc = await Location.getLastKnownPositionAsync({ maxAge: 60000 });
+
+      if (!loc) {
+        const locationPromise = Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Low,
+        });
+        const timeoutPromise = new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), 10000)
+        );
+        loc = await Promise.race([locationPromise, timeoutPromise]);
+      }
+
+      if (!loc) {
+        Alert.alert('Could not detect location', 'GPS is taking too long. Please enter your location manually.');
+        setIsLocating(false);
+        return;
+      }
+
       setLatitude(loc.coords.latitude);
       setLongitude(loc.coords.longitude);
 
-      const geocode = await Location.reverseGeocodeAsync({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      });
-
-      if (geocode.length > 0) {
-        const addr = geocode[0];
-        const name = [addr.street, addr.city, addr.region].filter(Boolean).join(', ');
-        setLocationName(name || 'Current Location');
-      } else {
+      try {
+        const geocode = await Location.reverseGeocodeAsync({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+        if (geocode.length > 0) {
+          const addr = geocode[0];
+          const name = [addr.suburb, addr.city, addr.region].filter(Boolean).join(', ');
+          setLocationName(name || 'Current Location');
+        } else {
+          setLocationName('Current Location');
+        }
+      } catch (_e) {
         setLocationName('Current Location');
       }
     } catch (e) {
