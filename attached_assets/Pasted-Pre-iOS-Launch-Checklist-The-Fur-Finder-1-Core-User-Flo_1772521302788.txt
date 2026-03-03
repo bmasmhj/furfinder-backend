@@ -1,0 +1,178 @@
+Pre-iOS Launch Checklist — The Fur Finder
+1️⃣ Core User Flow Tests
+
+Objective: Ensure every main feature works end-to-end without friction.
+
+ Lost Pet Report:
+
+Upload 5 photos, auto-compressed <1MB
+
+Required fields (breed, color, suburb) validated
+
+Optional fields editable
+
+Success confirmation screen displays
+
+Retry button works if upload fails
+
+Timeline updates correctly
+
+ Found Pet Report:
+
+Same as lost pet report
+
+AI match triggers and displays correctly
+
+ Quick Snap Feature:
+
+Take live photo
+
+AI matching works
+
+Shows confidence score
+
+Handles no-match scenario gracefully
+
+ AI Matching Reliability:
+
+Test 10,000+ reports
+
+Confirm response time <2s
+
+False positives controlled
+
+Logs for model improvement active
+
+ Partner / Org Flows:
+
+Register Org: GPS, type picker, submission success
+
+Org Dashboard: status-aware, delete/add functionality
+
+Animal Form: add/edit animals, image picker, desexed switch
+
+Partner Directory & Detail: search, filters, contact links
+
+Admin Panel: approve/reject orgs in real-time
+
+2️⃣ Push Notifications
+
+Objective: Ensure delivery reliability and decouple failures from core workflow.
+
+ Device token renewal on login works
+
+ Expo receipt checking implemented
+
+ Retry with exponential backoff (3 attempts)
+
+ Push failures do not block message save
+
+ Test under:
+
+Invalid device tokens
+
+User reinstalls
+
+Server downtime
+
+ Confirm notifications arrive correctly and quickly
+
+3️⃣ Onboarding & User Conversion
+
+ 3-slide onboarding complete
+
+ Skip option functional
+
+ Post-onboarding prompt for pet registration/alerts
+
+ Onboarding metrics tracked via analytics
+
+4️⃣ Analytics & Growth Tracking
+
+Objective: Collect actionable data for user behavior and retention.
+
+ Track installs and first app launch
+
+ Track onboarding completion
+
+ Track lost/found report submissions
+
+ Track AI match triggers
+
+ Track Premium upgrade clicks
+
+ Track push notification opens
+
+ Ensure Australian Privacy Act compliance
+
+ Data anonymization where possible
+
+5️⃣ UI / UX Polishing
+
+ Layout headers correct (no double headers)
+
+ Button touch targets ≥16px
+
+ Empty states & loading indicators present
+
+ Error states displayed for form failures
+
+ Dark mode deferred to v1.1
+
+ Color constants and theme consistent across screens
+
+6️⃣ Backend & Performance
+
+ Database indexing verified (pet_type, status, lat/lng)
+
+ Server handles 10k+ reports without performance degradation
+
+ Image storage and CDN tested
+
+ AI processing scalable & efficient
+
+ Rate limiting & input validation for API endpoints
+
+7️⃣ Security & Compliance
+
+ Encrypted password storage
+
+ Secure authentication
+
+ User data editable/deletable
+
+ API keys not exposed in client
+
+ Push notification tokens stored safely
+
+ Abuse reporting system active
+
+8️⃣ End-to-End Beta Test Plan
+
+ Run 10 complete internal user journeys covering:
+
+Report lost/found → AI match → push notification → timeline → contact
+
+Register org → add animal → approve/reject
+
+Search/filter partner directory → view animal details
+
+ Log any errors, delays, or UI glitches
+
+ Confirm metrics are tracked in analytics
+
+9️⃣ Pre-iOS Readiness Confirmation
+
+ Code compiles clean (TypeScript & Expo warnings zero)
+
+ Screens registered correctly (headerShown: false)
+
+ All backend endpoints returning expected fields
+
+ Core features stable & tested
+
+ Push notifications reliable
+
+ Analytics collecting actionable data
+
+ Security & privacy compliance confirmed
