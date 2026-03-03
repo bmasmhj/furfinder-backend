@@ -114,8 +114,8 @@ export default function SuburbDirectoryScreen() {
             renderItem={({ item }) => (
               <View style={styles.profileCard}>
                 <View style={styles.profilePhotoWrap}>
-                  {item.photoUris && item.photoUris.length > 0 ? (
-                    <Image source={{ uri: item.photoUris[0] }} style={styles.profilePhoto} />
+                  {item.photoUris && item.photoUris.filter(u => !u.startsWith('file://')).length > 0 ? (
+                    <Image source={{ uri: item.photoUris.filter(u => !u.startsWith('file://'))[0] }} style={styles.profilePhoto} />
                   ) : (
                     <View style={[styles.profilePhoto, styles.profilePhotoPlaceholder]}>
                       <MaterialCommunityIcons

@@ -75,15 +75,19 @@ export default function ReportFormScreen() {
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
+      base64: true,
     });
 
     if (!result.canceled) {
       const asset = result.assets[0];
-      if (asset.fileSize && asset.fileSize > 1048576) {
-        Alert.alert('Photo too large', 'Please choose a photo under 1MB, or take a new one.');
+      if (asset.fileSize && asset.fileSize > 5242880) {
+        Alert.alert('Photo too large', 'Please choose a photo under 5MB, or take a new one.');
         return;
       }
-      setPhotoUris(prev => [...prev, asset.uri].slice(0, photoLimit));
+      const dataUri = asset.base64
+        ? `data:image/jpeg;base64,${asset.base64}`
+        : asset.uri;
+      setPhotoUris(prev => [...prev, dataUri].slice(0, photoLimit));
     }
   };
 
@@ -109,15 +113,19 @@ export default function ReportFormScreen() {
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
+      base64: true,
     });
 
     if (!result.canceled) {
       const asset = result.assets[0];
-      if (asset.fileSize && asset.fileSize > 1048576) {
-        Alert.alert('Photo too large', 'The photo exceeds 1MB. Please try again with a smaller image.');
+      if (asset.fileSize && asset.fileSize > 5242880) {
+        Alert.alert('Photo too large', 'The photo exceeds 5MB. Please try again with a smaller image.');
         return;
       }
-      setPhotoUris(prev => [...prev, asset.uri].slice(0, 5));
+      const dataUri = asset.base64
+        ? `data:image/jpeg;base64,${asset.base64}`
+        : asset.uri;
+      setPhotoUris(prev => [...prev, dataUri].slice(0, 5));
     }
   };
 

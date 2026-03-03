@@ -131,9 +131,12 @@ export default function OrgAnimalFormScreen() {
       allowsMultipleSelection: true,
       selectionLimit: 5 - photoUris.length,
       quality: 0.8,
+      base64: true,
     });
     if (!result.canceled && result.assets) {
-      const newUris = result.assets.map((a) => a.uri);
+      const newUris = result.assets.map((a) =>
+        a.base64 ? `data:image/jpeg;base64,${a.base64}` : a.uri
+      );
       setPhotoUris((prev) => [...prev, ...newUris].slice(0, 5));
     }
   };

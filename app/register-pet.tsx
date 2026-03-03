@@ -59,20 +59,22 @@ export default function RegisterPetScreen() {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.8,
+        quality: 0.7,
+        base64: true,
       });
-      if (!result.canceled) {
-        setPhotoUris(prev => [...prev, result.assets[0].uri]);
+      if (!result.canceled && result.assets[0].base64) {
+        setPhotoUris(prev => [...prev, `data:image/jpeg;base64,${result.assets[0].base64}`]);
       }
     } else {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.8,
+        quality: 0.7,
+        base64: true,
       });
-      if (!result.canceled) {
-        setPhotoUris(prev => [...prev, result.assets[0].uri]);
+      if (!result.canceled && result.assets[0].base64) {
+        setPhotoUris(prev => [...prev, `data:image/jpeg;base64,${result.assets[0].base64}`]);
       }
     }
   };
@@ -91,20 +93,22 @@ export default function RegisterPetScreen() {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.9,
+        quality: 0.8,
+        base64: true,
       });
-      if (!result.canceled) {
-        setBiometricPhotoUris(prev => [...prev, result.assets[0].uri]);
+      if (!result.canceled && result.assets[0].base64) {
+        setBiometricPhotoUris(prev => [...prev, `data:image/jpeg;base64,${result.assets[0].base64}`]);
       }
     } else {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.9,
+        quality: 0.8,
+        base64: true,
       });
-      if (!result.canceled) {
-        setBiometricPhotoUris(prev => [...prev, result.assets[0].uri]);
+      if (!result.canceled && result.assets[0].base64) {
+        setBiometricPhotoUris(prev => [...prev, `data:image/jpeg;base64,${result.assets[0].base64}`]);
       }
     }
   };
