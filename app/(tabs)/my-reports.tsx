@@ -5,6 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInRight } from 'react-native-reanimated';
+import { Image } from 'expo-image';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
@@ -28,10 +29,10 @@ function PetProfileCard({ profile, index }: { profile: PetProfile; index: number
       >
         {profile.photoUris.length > 0 ? (
           <View style={styles.profileImageContainer}>
-            <Animated.Image
+            <Image
               source={{ uri: profile.photoUris[0] }}
               style={styles.profileImage}
-              resizeMode="cover"
+              contentFit="cover"
             />
           </View>
         ) : (
