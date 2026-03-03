@@ -13,6 +13,18 @@
       "android": {
         "buildType": "app-bundle",
         "credentialsSource": "local"
+      },
+      "ios": {
+        "credentialsSource": "remote"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "thefurfinderofficial@gmail.com",
+        "ascAppId": "",
+        "appleTeamId": ""
       }
     }
   }
