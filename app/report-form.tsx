@@ -136,27 +136,47 @@ export default function ReportFormScreen() {
   const detectLocation = async () => {
     setIsLocating(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Location access helps others find the pet.');
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      if (!servicesEnabled) {
+        Alert.alert(
+          'Location Services Off',
+          'Please enable Location Services in your iPhone Settings → Privacy & Security → Location Services.',
+          [{ text: 'OK' }]
+        );
         setIsLocating(false);
         return;
       }
 
-      let loc = await Location.getLastKnownPositionAsync({ maxAge: 60000 });
+      const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        if (!canAskAgain) {
+          Alert.alert(
+            'Location Permission Denied',
+            'Please allow location access in your iPhone Settings → Privacy & Security → Location Services → Fur Finder.',
+            [{ text: 'OK' }]
+          );
+        } else {
+          Alert.alert('Permission needed', 'Location access is needed to pinpoint where the pet was last seen.');
+        }
+        setIsLocating(false);
+        return;
+      }
+
+      let loc: Location.LocationObject | null = await Location.getLastKnownPositionAsync({ maxAge: 300000 });
 
       if (!loc) {
-        const locationPromise = Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Low,
-        });
-        const timeoutPromise = new Promise<null>((resolve) =>
-          setTimeout(() => resolve(null), 10000)
-        );
-        loc = await Promise.race([locationPromise, timeoutPromise]);
+        loc = await Promise.race([
+          Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest }),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 15000)),
+        ]);
       }
 
       if (!loc) {
-        Alert.alert('Could not detect location', 'GPS is taking too long. Please enter your location manually.');
+        Alert.alert(
+          'Location Unavailable',
+          'Could not detect your location right now. Please type it in manually.',
+          [{ text: 'OK' }]
+        );
         setIsLocating(false);
         return;
       }
