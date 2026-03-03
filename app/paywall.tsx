@@ -31,22 +31,16 @@ export default function PaywallScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
-    if (offerings.length > 0) {
-      setIsProcessing(true);
-      const pkg = offerings[selectedPlan === 'yearly' ? 1 : 0] || offerings[0];
-      const success = await purchasePackage(pkg);
-      setIsProcessing(false);
-      if (success) {
-        Alert.alert('Welcome to Premium!', 'You now have access to all premium features.', [
-          { text: 'Awesome!', onPress: () => router.back() },
-        ]);
-      }
-    } else {
-      Alert.alert(
-        'Preview Mode',
-        'In-app purchases will be available when the app is published to the App Store / Google Play. For now, the app is running in preview mode.',
-        [{ text: 'OK' }]
-      );
+    setIsProcessing(true);
+    const pkg = offerings.length > 0
+      ? (offerings[selectedPlan === 'yearly' ? 1 : 0] || offerings[0])
+      : null;
+    const success = await purchasePackage(pkg);
+    setIsProcessing(false);
+    if (success) {
+      Alert.alert('Welcome to Premium!', 'You now have access to all premium features.', [
+        { text: 'Awesome!', onPress: () => router.canGoBack() ? router.back() : router.replace('/(tabs)') },
+      ]);
     }
   };
 
@@ -90,7 +84,7 @@ export default function PaywallScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
         <Pressable onPress={() => router.back()} style={styles.closeBtn}>
           <Ionicons name="close" size={24} color="#fff" />
         </Pressable>
