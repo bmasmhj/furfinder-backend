@@ -1,10 +1,35 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import OpenAI from "openai";
+import rateLimit from "express-rate-limit";
 import pool from "./db";
 import { authMiddleware, optionalAuth, requireRole, registerUser, loginUser, getMe, awardPremiumDays } from "./auth";
 import { moderateContent } from "./moderation";
 import { sendPushNotification } from "./push";
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: "Too many attempts. Please try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  message: { message: "AI request limit reached. Please try again in an hour." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: { message: "Too many requests. Please slow down and try again shortly." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -198,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     </body></html>`);
   });
 
-  app.post("/api/match", async (req: Request, res: Response) => {
+  app.post("/api/match", aiLimiter, async (req: Request, res: Response) => {
     try {
       const { report, reports, profiles, radiusKm } = req.body as {
         report: PetReport;
@@ -429,7 +454,7 @@ Return ONLY valid JSON, no markdown formatting.`;
     }
   });
 
-  app.post("/api/scan-post", async (req: Request, res: Response) => {
+  app.post("/api/scan-post", aiLimiter, async (req: Request, res: Response) => {
     try {
       const { postText, url, reports, profiles } = req.body as {
         postText?: string;
@@ -720,7 +745,7 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
-  app.post("/api/quick-snap-match", async (req: Request, res: Response) => {
+  app.post("/api/quick-snap-match", aiLimiter, async (req: Request, res: Response) => {
     try {
       const { photoUri, petType, reports, profiles } = req.body as {
         photoUri: string;
@@ -912,8 +937,8 @@ Return ONLY valid JSON, no markdown.`;
   });
 
   // ===== AUTH ROUTES =====
-  app.post("/api/auth/register", registerUser);
-  app.post("/api/auth/login", loginUser);
+  app.post("/api/auth/register", authLimiter, registerUser);
+  app.post("/api/auth/login", authLimiter, loginUser);
   app.get("/api/auth/me", authMiddleware, getMe);
 
   // ===== PET REPORTS CRUD =====
@@ -1085,7 +1110,7 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
-  app.post("/api/reports", authMiddleware, async (req: Request, res: Response) => {
+  app.post("/api/reports", authMiddleware, writeLimiter, async (req: Request, res: Response) => {
     try {
       const b = req.body;
       const result = await pool.query(
@@ -1764,7 +1789,7 @@ Return ONLY valid JSON, no markdown.`;
 
   // ===== ORGANISATION ROUTES =====
 
-  app.post("/api/org/register", authMiddleware, async (req: Request, res: Response) => {
+  app.post("/api/org/register", authMiddleware, writeLimiter, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const { name, type, abn, address, phone, email, website, latitude, longitude, description, logoUri } = req.body;
