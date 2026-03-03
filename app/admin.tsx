@@ -164,7 +164,7 @@ export default function AdminScreen() {
           <Pressable
             testID="admin-back-button"
             style={styles.accessDeniedBackBtn}
-            onPress={() => router.back()}
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings')}
           >
             <Ionicons name="arrow-back" size={20} color={Colors.surface} />
             <Text style={styles.accessDeniedBackText}>Go Back</Text>
@@ -177,7 +177,7 @@ export default function AdminScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
       <View style={styles.header}>
-        <Pressable testID="admin-header-back" onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable testID="admin-header-back" onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Admin Panel</Text>

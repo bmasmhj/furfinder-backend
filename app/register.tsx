@@ -63,7 +63,7 @@ export default function RegisterScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Create Account</Text>
@@ -246,7 +246,7 @@ export default function RegisterScreen() {
 
           <View style={styles.loginRow}>
             <Text style={styles.loginRowText}>Already have an account? </Text>
-            <Pressable onPress={() => router.back()}>
+            <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}>
               <Text style={styles.loginLink}>Sign In</Text>
             </Pressable>
           </View>

@@ -98,7 +98,7 @@ export default function SafetyTipsScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.headerGradient, { paddingTop: insets.top + webTopPadding + 12 }]}
       >
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings')} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </Pressable>
         <View style={styles.headerContent}>

@@ -23,7 +23,7 @@ export default function MyPetDetailScreen() {
         <View style={styles.notFound}>
           <MaterialCommunityIcons name="alert-circle-outline" size={48} color={Colors.textLight} />
           <Text style={styles.notFoundText}>Pet not found</Text>
-          <Pressable onPress={() => router.back()}>
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/my-reports')}>
             <Text style={styles.backLink}>Go Back</Text>
           </Pressable>
         </View>
@@ -97,7 +97,7 @@ export default function MyPetDetailScreen() {
           )}
 
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/my-reports')}
             style={[styles.backBtn, { top: insets.top + webTopPadding + 12 }]}
           >
             <Ionicons name="chevron-back" size={24} color={Colors.text} />

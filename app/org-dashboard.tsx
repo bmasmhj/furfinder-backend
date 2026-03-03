@@ -180,7 +180,7 @@ export default function OrgDashboardScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]} testID="org-dashboard-screen">
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} testID="back-button">
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings')} style={styles.backBtn} testID="back-button">
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Organisation</Text>

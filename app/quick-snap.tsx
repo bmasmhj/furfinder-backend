@@ -132,7 +132,7 @@ export default function QuickSnapScreen() {
         style={[styles.header, { paddingTop: insets.top + webTopPadding + 12 }]}
       >
         <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={24} color="#fff" />
           </Pressable>
           <View style={{ flex: 1 }}>

@@ -24,7 +24,7 @@ export default function FlyerScreen() {
       <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
         <View style={styles.notFound}>
           <Text style={styles.notFoundText}>Report not found</Text>
-          <Pressable onPress={() => router.back()}>
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}>
             <Text style={styles.backLink}>Go Back</Text>
           </Pressable>
         </View>
@@ -65,7 +65,7 @@ export default function FlyerScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Pet Flyer</Text>

@@ -134,7 +134,7 @@ export default function RegisterOrgScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} testID="back-button-success">
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings')} style={styles.backBtn} testID="back-button-success">
             <Ionicons name="arrow-back" size={24} color={Colors.text} />
           </Pressable>
           <Text style={styles.headerTitle}>Registration Submitted</Text>
@@ -150,7 +150,7 @@ export default function RegisterOrgScreen() {
           </Text>
           <Pressable
             style={styles.successBtn}
-            onPress={() => router.back()}
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings')}
             testID="go-back-button"
           >
             <Text style={styles.successBtnText}>Go Back</Text>
@@ -163,7 +163,7 @@ export default function RegisterOrgScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} testID="back-button">
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings')} style={styles.backBtn} testID="back-button">
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Register Organisation</Text>

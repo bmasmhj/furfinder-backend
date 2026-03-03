@@ -84,7 +84,7 @@ export default function PetDetailScreen() {
         <View style={styles.notFound}>
           <MaterialCommunityIcons name="alert-circle-outline" size={48} color={Colors.textLight} />
           <Text style={styles.notFoundText}>Report not found</Text>
-          <Pressable onPress={() => router.back()}>
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}>
             <Text style={styles.backLink}>Go Back</Text>
           </Pressable>
         </View>
@@ -329,7 +329,7 @@ export default function PetDetailScreen() {
           )}
 
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
             style={[styles.backBtn, { top: insets.top + webTopPadding + 12 }]}
           >
             <Ionicons name="chevron-back" size={24} color={Colors.text} />

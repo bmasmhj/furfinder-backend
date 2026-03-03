@@ -110,7 +110,7 @@ export default function PartnersScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
       <View style={styles.header}>
-        <Pressable testID="partners-back" onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable testID="partners-back" onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings')} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>Partner Directory</Text>
