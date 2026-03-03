@@ -310,6 +310,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.15)',
   },
   serviceMarker: {
     width: 24,
@@ -322,6 +323,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 4,
+    boxShadow: '0px 2px 3px rgba(0,0,0,0.2)',
   },
   callout: {
     backgroundColor: '#fff',
@@ -333,6 +335,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
     alignItems: 'center',
     gap: 4,
   },
@@ -375,6 +378,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.15)',
   },
   servicesToggleMobile: {
     position: 'absolute',
@@ -390,6 +394,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 4,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.15)',
   },
   servicesToggle: {
     width: 40,

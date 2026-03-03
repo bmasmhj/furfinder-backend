@@ -43,6 +43,7 @@ export default function ReportFormScreen() {
   const [size, setSize] = useState<PetSize>(prefillProfile?.size || 'medium');
   const [color, setColor] = useState(prefillProfile?.color || '');
   const [markings, setMarkings] = useState(prefillProfile?.markings || '');
+  const [collarDescription, setCollarDescription] = useState('');
   const [description, setDescription] = useState(prefillProfile ? `${prefillProfile.petName} is missing. ${prefillProfile.microchipNumber ? `Microchip: ${prefillProfile.microchipNumber}. ` : ''}Please contact if found.` : '');
   const [locationName, setLocationName] = useState(prefillProfile?.suburb || '');
   const [latitude, setLatitude] = useState(-33.8688);
@@ -52,6 +53,8 @@ export default function ReportFormScreen() {
   const [contactPhone, setContactPhone] = useState(prefillProfile?.ownerPhone || '');
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const photoLimit = canUseMultiPhoto() ? 5 : 1;
 
@@ -71,11 +74,16 @@ export default function ReportFormScreen() {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.7,
     });
 
     if (!result.canceled) {
-      setPhotoUris(prev => [...prev, result.assets[0].uri].slice(0, photoLimit));
+      const asset = result.assets[0];
+      if (asset.fileSize && asset.fileSize > 1048576) {
+        Alert.alert('Photo too large', 'Please choose a photo under 1MB, or take a new one.');
+        return;
+      }
+      setPhotoUris(prev => [...prev, asset.uri].slice(0, photoLimit));
     }
   };
 
@@ -100,11 +108,16 @@ export default function ReportFormScreen() {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.7,
     });
 
     if (!result.canceled) {
-      setPhotoUris(prev => [...prev, result.assets[0].uri].slice(0, 5));
+      const asset = result.assets[0];
+      if (asset.fileSize && asset.fileSize > 1048576) {
+        Alert.alert('Photo too large', 'The photo exceeds 1MB. Please try again with a smaller image.');
+        return;
+      }
+      setPhotoUris(prev => [...prev, asset.uri].slice(0, 5));
     }
   };
 
@@ -153,12 +166,22 @@ export default function ReportFormScreen() {
       ]);
       return;
     }
+    setSubmitError('');
+
     if (!breed.trim()) {
-      Alert.alert('Missing info', 'Please enter the pet breed.');
+      setSubmitError('Please enter the pet breed.');
+      return;
+    }
+    if (!color.trim()) {
+      setSubmitError('Please enter the pet colour.');
+      return;
+    }
+    if (!locationName.trim()) {
+      setSubmitError('Please enter or detect the location.');
       return;
     }
     if (!contactName.trim() || !contactPhone.trim()) {
-      Alert.alert('Missing info', 'Please enter your contact details.');
+      setSubmitError('Please enter your contact name and phone number.');
       return;
     }
 
@@ -175,13 +198,13 @@ export default function ReportFormScreen() {
         breed: breed.trim(),
         size,
         color: color.trim(),
-        markings: markings.trim(),
+        markings: `${markings.trim()}${collarDescription.trim() ? ` | Collar: ${collarDescription.trim()}` : ''}`,
         photoUri: photoUris[0] || '',
         photoUris,
         description: description.trim(),
         latitude,
         longitude,
-        locationName: locationName.trim() || 'Unknown location',
+        locationName: locationName.trim(),
         lastSeenDate: new Date().toISOString().split('T')[0],
         reward: isLost ? reward.trim() : '',
         contactName: contactName.trim(),
@@ -189,9 +212,9 @@ export default function ReportFormScreen() {
         isOwner: true,
       });
 
-      router.back();
+      setShowSuccess(true);
     } catch (e) {
-      Alert.alert('Error', 'Failed to save report. Please try again.');
+      setSubmitError('Failed to save report. Please check your connection and try again.');
     } finally {
       setIsSaving(false);
     }
@@ -318,12 +341,21 @@ export default function ReportFormScreen() {
           placeholderTextColor={Colors.textLight}
         />
 
-        <Text style={styles.sectionLabel}>Markings</Text>
+        <Text style={styles.sectionLabel}>Markings (optional)</Text>
         <TextInput
           style={styles.input}
           value={markings}
           onChangeText={setMarkings}
           placeholder="Any distinctive markings"
+          placeholderTextColor={Colors.textLight}
+        />
+
+        <Text style={styles.sectionLabel}>Collar Description (optional)</Text>
+        <TextInput
+          style={styles.input}
+          value={collarDescription}
+          onChangeText={setCollarDescription}
+          placeholder="e.g. Red collar with name tag"
           placeholderTextColor={Colors.textLight}
         />
 
@@ -390,6 +422,13 @@ export default function ReportFormScreen() {
           keyboardType="phone-pad"
         />
 
+        {submitError ? (
+          <View style={styles.errorBox}>
+            <Ionicons name="alert-circle" size={18} color={Colors.danger} />
+            <Text style={styles.errorText}>{submitError}</Text>
+          </View>
+        ) : null}
+
         <Pressable
           onPress={handleSubmit}
           disabled={isSaving}
@@ -404,14 +443,36 @@ export default function ReportFormScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Ionicons name="checkmark-circle" size={22} color="#fff" />
+              <Ionicons name={submitError ? 'refresh' : 'checkmark-circle'} size={22} color="#fff" />
               <Text style={styles.submitBtnText}>
-                {isLost ? 'Submit Lost Report' : 'Submit Found Report'}
+                {submitError ? 'Try Again' : isLost ? 'Submit Lost Report' : 'Submit Found Report'}
               </Text>
             </>
           )}
         </Pressable>
       </ScrollView>
+
+      {showSuccess && (
+        <View style={styles.successOverlay}>
+          <View style={styles.successCard}>
+            <View style={styles.successIconWrap}>
+              <Ionicons name="checkmark-circle" size={64} color={Colors.secondary} />
+            </View>
+            <Text style={styles.successTitle}>Report Submitted!</Text>
+            <Text style={styles.successMessage}>
+              {isLost
+                ? 'Your lost pet report is now live. We\'ll notify you if a match is found.'
+                : 'Your found pet report is now live. We\'ll notify you if an owner is found.'}
+            </Text>
+            <Pressable
+              style={styles.successBtn}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.successBtnText}>Done</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -606,6 +667,67 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   submitBtnText: {
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#fff',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.danger,
+  },
+  successOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    zIndex: 100,
+  },
+  successCard: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    width: '100%',
+    gap: 12,
+  },
+  successIconWrap: {
+    marginBottom: 8,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontFamily: 'Poppins_700Bold',
+    color: Colors.text,
+    textAlign: 'center',
+  },
+  successMessage: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  successBtn: {
+    backgroundColor: Colors.secondary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 48,
+    marginTop: 8,
+  },
+  successBtnText: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
     color: '#fff',
