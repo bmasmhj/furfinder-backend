@@ -1,31 +1,110 @@
-import { useState, useMemo, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, RefreshControl, Platform, Pressable, ScrollView } from 'react-native';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import {
+  StyleSheet, Text, View, FlatList, RefreshControl,
+  Platform, Pressable, ActivityIndicator,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, Redirect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetch } from 'expo/fetch';
+import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
 import { useAuth } from '@/lib/auth-context';
+import { getApiUrl } from '@/lib/query-client';
 import PetCard from '@/components/PetCard';
-import FilterBar from '@/components/FilterBar';
 import EmptyState from '@/components/EmptyState';
+import AreaFilterModal, { AreaFilterValue } from '@/components/AreaFilterModal';
+import { PetReport } from '@/lib/types';
+
+const STATUS_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'lost', label: 'Lost' },
+  { key: 'found', label: 'Found' },
+  { key: 'reunited', label: 'Reunited' },
+];
+
+const PAGE_SIZE = 20;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { isAuthenticated } = useAuth();
-  const { reports, isLoading, unreadCount, refreshReports } = usePets();
+  const { isAuthenticated, token } = useAuth();
+  const { unreadCount } = usePets();
   const { isPremium, canUseScanPost } = useSubscription();
-  const [filter, setFilter] = useState('all');
-  const [areaFilter, setAreaFilter] = useState('');
+
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [areaFilter, setAreaFilter] = useState<AreaFilterValue>(null);
+  const [showAreaModal, setShowAreaModal] = useState(false);
+
+  const [feedReports, setFeedReports] = useState<PetReport[]>([]);
+  const [feedPage, setFeedPage] = useState(0);
+  const [feedHasMore, setFeedHasMore] = useState(true);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const [feedLoadingMore, setFeedLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const availableAreas = useMemo(() => {
+  const fetchingRef = useRef(false);
+
+  const buildUrl = useCallback((page: number) => {
+    const url = new URL('/api/reports', getApiUrl());
+    url.searchParams.set('page', String(page));
+    url.searchParams.set('limit', String(PAGE_SIZE));
+    if (statusFilter !== 'all') url.searchParams.set('status', statusFilter);
+    if (areaFilter) {
+      if (areaFilter.mode === 'geo') {
+        url.searchParams.set('lat', String(areaFilter.lat));
+        url.searchParams.set('lng', String(areaFilter.lng));
+        url.searchParams.set('radius', String(areaFilter.radius));
+      } else {
+        url.searchParams.set('suburb', areaFilter.suburb);
+      }
+    }
+    return url.toString();
+  }, [statusFilter, areaFilter]);
+
+  const fetchPage = useCallback(async (page: number, reset = false) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+    try {
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(buildUrl(page), { headers });
+      const data = await res.json();
+      const incoming: PetReport[] = data.reports ?? [];
+      if (reset) {
+        setFeedReports(incoming);
+      } else {
+        setFeedReports(prev => [...prev, ...incoming]);
+      }
+      setFeedHasMore(data.hasMore ?? false);
+      setFeedPage(page);
+    } catch (e) {
+      console.error('Feed fetch error', e);
+    } finally {
+      fetchingRef.current = false;
+    }
+  }, [buildUrl, token]);
+
+  useEffect(() => {
+    setFeedLoading(true);
+    setFeedReports([]);
+    setFeedPage(0);
+    fetchPage(0, true).finally(() => setFeedLoading(false));
+  }, [statusFilter, areaFilter]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('hasSeenOnboarding').then(seen => {
+      if (!seen) router.replace('/onboarding');
+    });
+  }, []);
+
+  const suggestedSuburbs = useMemo(() => {
     const seen = new Set<string>();
     const areas: string[] = [];
-    reports.forEach(r => {
+    feedReports.forEach(r => {
       if (!r.locationName) return;
       const suburb = r.locationName.split(',')[0].trim();
       if (suburb && !seen.has(suburb.toLowerCase())) {
@@ -34,51 +113,75 @@ export default function HomeScreen() {
       }
     });
     return areas.sort();
-  }, [reports]);
+  }, [feedReports]);
 
-  const filteredReports = useMemo(() => {
-    let base = filter === 'all' ? reports : reports.filter(r => r.status === filter);
-    if (areaFilter) {
-      base = base.filter(r =>
-        r.locationName?.toLowerCase().includes(areaFilter.toLowerCase())
-      );
-    }
-    const now = Date.now();
-    return [...base].sort((a, b) => {
-      const aBoosted = a.isBoosted && a.boostExpiresAt && new Date(a.boostExpiresAt).getTime() > now;
-      const bBoosted = b.isBoosted && b.boostExpiresAt && new Date(b.boostExpiresAt).getTime() > now;
-      if (aBoosted && !bBoosted) return -1;
-      if (!aBoosted && bBoosted) return 1;
-      return 0;
-    });
-  }, [reports, filter, areaFilter]);
+  const lostCount = useMemo(() => feedReports.filter(r => r.status === 'lost').length, [feedReports]);
+  const foundCount = useMemo(() => feedReports.filter(r => r.status === 'found').length, [feedReports]);
 
-  const lostCount = useMemo(() => reports.filter(r => r.status === 'lost').length, [reports]);
-  const foundCount = useMemo(() => reports.filter(r => r.status === 'found').length, [reports]);
-
-  useEffect(() => {
-    AsyncStorage.getItem('hasSeenOnboarding').then((seen) => {
-      if (!seen) {
-        router.replace('/onboarding');
-      }
-    });
-  }, []);
-
-  if (!isAuthenticated) {
-    return <Redirect href="/login" />;
-  }
+  if (!isAuthenticated) return <Redirect href="/login" />;
 
   const onRefresh = async () => {
     setRefreshing(true);
-    try {
-      await refreshReports();
-    } catch (e) {
-      console.error('Refresh failed', e);
-    }
+    await fetchPage(0, true);
     setRefreshing(false);
   };
 
+  const loadMore = async () => {
+    if (!feedHasMore || feedLoadingMore || fetchingRef.current) return;
+    setFeedLoadingMore(true);
+    await fetchPage(feedPage + 1);
+    setFeedLoadingMore(false);
+  };
+
+  const handleStatusFilter = (key: string) => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setStatusFilter(key);
+  };
+
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+
+  const ListHeader = (
+    <View style={styles.listHeaderContainer}>
+      <View style={styles.segmentedRow}>
+        {STATUS_FILTERS.map(f => {
+          const active = statusFilter === f.key;
+          return (
+            <Pressable
+              key={f.key}
+              style={[styles.segmentChip, active && styles.segmentChipActive]}
+              onPress={() => handleStatusFilter(f.key)}
+            >
+              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{f.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <Pressable
+        style={[styles.areaFilterBtn, !!areaFilter && styles.areaFilterBtnActive]}
+        onPress={() => setShowAreaModal(true)}
+      >
+        <Ionicons
+          name={areaFilter ? 'location' : 'location-outline'}
+          size={15}
+          color={areaFilter ? Colors.secondary : Colors.textSecondary}
+        />
+        <Text style={[styles.areaFilterBtnText, !!areaFilter && styles.areaFilterBtnTextActive]}>
+          {areaFilter ? areaFilter.label : 'All Australia  ·  Filter by Area'}
+        </Text>
+        {areaFilter ? (
+          <Pressable
+            onPress={e => { e.stopPropagation?.(); setAreaFilter(null); }}
+            hitSlop={8}
+          >
+            <Ionicons name="close-circle" size={16} color={Colors.secondary} />
+          </Pressable>
+        ) : (
+          <Ionicons name="chevron-down" size={14} color={Colors.textSecondary} />
+        )}
+      </Pressable>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -95,16 +198,10 @@ export default function HomeScreen() {
               <Text style={styles.subtitle}>Help pets find their way home</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Pressable
-                style={styles.bellBtn}
-                onPress={() => router.push('/settings')}
-              >
+              <Pressable style={styles.bellBtn} onPress={() => router.push('/settings')}>
                 <Ionicons name="settings-outline" size={20} color="#fff" />
               </Pressable>
-              <Pressable
-                style={styles.bellBtn}
-                onPress={() => router.push('/notifications')}
-              >
+              <Pressable style={styles.bellBtn} onPress={() => router.push('/notifications')}>
                 <Ionicons name="notifications-outline" size={22} color="#fff" />
                 {unreadCount > 0 && (
                   <View style={styles.bellBadge}>
@@ -114,6 +211,7 @@ export default function HomeScreen() {
               </Pressable>
             </View>
           </View>
+
           <View style={styles.statsRow}>
             <View style={styles.statBubble}>
               <Ionicons name="alert-circle" size={14} color={Colors.lost} />
@@ -125,46 +223,29 @@ export default function HomeScreen() {
             </View>
             <Pressable
               style={styles.scanBubble}
-              onPress={() => {
-                if (!canUseScanPost()) {
-                  router.push('/paywall');
-                  return;
-                }
-                router.push('/scan-post');
-              }}
+              onPress={() => { if (!canUseScanPost()) { router.push('/paywall'); return; } router.push('/scan-post'); }}
             >
               <Feather name="search" size={14} color="#F97316" />
               <Text style={styles.scanBubbleText}>Scan Post</Text>
               {!canUseScanPost() && <Ionicons name="diamond" size={10} color="#F59E0B" style={{ marginLeft: 2 }} />}
             </Pressable>
-            <Pressable
-              style={styles.snapBubble}
-              onPress={() => router.push('/quick-snap')}
-            >
+            <Pressable style={styles.snapBubble} onPress={() => router.push('/quick-snap')}>
               <MaterialCommunityIcons name="camera-iris" size={14} color={Colors.secondary} />
               <Text style={styles.snapBubbleText}>Quick Snap</Text>
             </Pressable>
           </View>
+
           <View style={styles.statsRow}>
-            <Pressable
-              style={styles.tipsBubble}
-              onPress={() => router.push('/safety-tips')}
-            >
+            <Pressable style={styles.tipsBubble} onPress={() => router.push('/safety-tips')}>
               <Ionicons name="shield-checkmark" size={14} color="#059669" />
               <Text style={styles.tipsBubbleText}>Safety Tips</Text>
             </Pressable>
-            <Pressable
-              style={styles.suburbBubble}
-              onPress={() => router.push('/suburb-directory')}
-            >
+            <Pressable style={styles.suburbBubble} onPress={() => router.push('/suburb-directory')}>
               <Ionicons name="location" size={14} color="#7C3AED" />
               <Text style={styles.suburbBubbleText}>Suburb Pets</Text>
             </Pressable>
             {!isPremium && (
-              <Pressable
-                style={styles.upgradeBubble}
-                onPress={() => router.push('/paywall')}
-              >
+              <Pressable style={styles.upgradeBubble} onPress={() => router.push('/paywall')}>
                 <Ionicons name="diamond" size={14} color="#F59E0B" />
                 <Text style={styles.upgradeBubbleText}>Upgrade</Text>
               </Pressable>
@@ -173,67 +254,49 @@ export default function HomeScreen() {
         </View>
       </LinearGradient>
 
-      <FlatList
-        data={filteredReports}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <PetCard report={item} index={index} />}
-        ListHeaderComponent={
-          <View>
-            <FilterBar selected={filter} onSelect={setFilter} />
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.areaFilterRow}
-            >
-              <Pressable
-                style={[styles.areaChip, !areaFilter && styles.areaChipActive]}
-                onPress={() => setAreaFilter('')}
-              >
-                <Ionicons name="globe-outline" size={13} color={!areaFilter ? '#fff' : Colors.textSecondary} />
-                <Text style={[styles.areaChipText, !areaFilter && styles.areaChipTextActive]}>All Areas</Text>
-              </Pressable>
-              {availableAreas.map(area => (
-                <Pressable
-                  key={area}
-                  style={[styles.areaChip, areaFilter === area && styles.areaChipActive]}
-                  onPress={() => setAreaFilter(areaFilter === area ? '' : area)}
-                >
-                  <Ionicons name="location" size={13} color={areaFilter === area ? '#fff' : Colors.secondary} />
-                  <Text style={[styles.areaChipText, areaFilter === area && styles.areaChipTextActive]}>{area}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-            {areaFilter ? (
-              <View style={styles.areaFilterBanner}>
-                <Ionicons name="location" size={14} color={Colors.secondary} />
-                <Text style={styles.areaFilterBannerText}>Showing pets in <Text style={{ fontFamily: 'Poppins_600SemiBold' }}>{areaFilter}</Text></Text>
-                <Pressable onPress={() => setAreaFilter('')} style={styles.areaFilterClear}>
-                  <Ionicons name="close-circle" size={16} color={Colors.textSecondary} />
-                </Pressable>
-              </View>
-            ) : null}
-          </View>
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon="paw-off"
-            title={areaFilter ? `No pets reported in ${areaFilter}` : 'No reports yet'}
-            subtitle={areaFilter ? 'Try selecting a different area or view all areas' : 'Be the first to report a lost or found pet in your area'}
-          />
-        }
-        contentContainerStyle={[
-          styles.listContent,
-          filteredReports.length === 0 && styles.emptyList,
-        ]}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={!!filteredReports.length || true}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.primary}
-          />
-        }
+      {feedLoading ? (
+        <View style={styles.loadingCenter}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Finding pets near you...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={feedReports}
+          keyExtractor={item => item.id}
+          renderItem={({ item, index }) => <PetCard report={item} index={index} />}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={
+            <EmptyState
+              icon="paw-off"
+              title={areaFilter ? `No pets in ${areaFilter.label}` : 'No reports yet'}
+              subtitle={areaFilter ? 'Try a larger radius or browse all Australia' : 'Be the first to report a lost or found pet'}
+            />
+          }
+          ListFooterComponent={
+            feedLoadingMore
+              ? <ActivityIndicator size="small" color={Colors.primary} style={styles.loadMoreSpinner} />
+              : null
+          }
+          contentContainerStyle={[
+            styles.listContent,
+            feedReports.length === 0 && styles.emptyList,
+          ]}
+          showsVerticalScrollIndicator={false}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.4}
+          removeClippedSubviews={Platform.OS !== 'web'}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+          }
+        />
+      )}
+
+      <AreaFilterModal
+        visible={showAreaModal}
+        onClose={() => setShowAreaModal(false)}
+        onApply={setAreaFilter}
+        currentFilter={areaFilter}
+        suggestedSuburbs={suggestedSuburbs}
       />
     </View>
   );
@@ -391,6 +454,64 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_500Medium',
     color: '#7C3AED',
   },
+  listHeaderContainer: {
+    paddingTop: 6,
+    paddingBottom: 4,
+  },
+  segmentedRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  segmentChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 9,
+    borderRadius: 22,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+  },
+  segmentChipActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.textSecondary,
+  },
+  segmentTextActive: {
+    color: '#fff',
+  },
+  areaFilterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+  },
+  areaFilterBtnActive: {
+    borderColor: Colors.secondary,
+    backgroundColor: '#F0FAFA',
+  },
+  areaFilterBtnText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    color: Colors.textSecondary,
+  },
+  areaFilterBtnTextActive: {
+    color: Colors.secondary,
+    fontFamily: 'Poppins_600SemiBold',
+  },
   listContent: {
     paddingTop: 4,
     paddingBottom: 100,
@@ -398,55 +519,18 @@ const styles = StyleSheet.create({
   emptyList: {
     flexGrow: 1,
   },
-  areaFilterRow: {
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-    paddingTop: 2,
-    gap: 8,
-  },
-  areaChip: {
-    flexDirection: 'row',
+  loadingCenter: {
+    flex: 1,
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: Colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    justifyContent: 'center',
+    gap: 12,
   },
-  areaChipActive: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
-  },
-  areaChipText: {
-    fontSize: 13,
-    fontFamily: 'Poppins_500Medium',
+  loadingText: {
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
     color: Colors.textSecondary,
   },
-  areaChipTextActive: {
-    color: '#fff',
-  },
-  areaFilterBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#E6FAF9',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#99E9E7',
-  },
-  areaFilterBannerText: {
-    flex: 1,
-    fontSize: 13,
-    fontFamily: 'Poppins_400Regular',
-    color: Colors.text,
-  },
-  areaFilterClear: {
-    padding: 2,
+  loadMoreSpinner: {
+    marginVertical: 20,
   },
 });

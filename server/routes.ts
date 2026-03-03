@@ -919,44 +919,85 @@ Return ONLY valid JSON, no markdown.`;
   // ===== PET REPORTS CRUD =====
   app.get("/api/reports", optionalAuth, async (req: Request, res: Response) => {
     try {
-      const limit = Math.min(parseInt(req.query.limit as string) || 100, 500);
-      const offset = parseInt(req.query.offset as string) || 0;
+      const isPaginated = req.query.page !== undefined;
+      const limit = Math.min(parseInt(req.query.limit as string) || (isPaginated ? 20 : 100), 500);
+      const page = parseInt(req.query.page as string) || 0;
+      const offset = isPaginated ? page * limit : (parseInt(req.query.offset as string) || 0);
       const statusFilter = req.query.status as string | undefined;
       const userId = req.query.userId as string | undefined;
+      const suburbFilter = req.query.suburb as string | undefined;
+      const lat = parseFloat(req.query.lat as string);
+      const lng = parseFloat(req.query.lng as string);
+      const radiusKm = parseFloat(req.query.radius as string);
+      const hasGeo = !isNaN(lat) && !isNaN(lng) && !isNaN(radiusKm) && radiusKm > 0;
 
-      const conditions: string[] = ["r.status != 'reunited'"];
+      const innerConditions: string[] = [];
       const params: any[] = [];
 
-      if (statusFilter && ['lost', 'found'].includes(statusFilter)) {
+      if (statusFilter && statusFilter !== 'all' && ['lost', 'found', 'reunited'].includes(statusFilter)) {
         params.push(statusFilter);
-        conditions.push(`r.status = $${params.length}`);
+        innerConditions.push(`r.status = $${params.length}`);
+      } else {
+        innerConditions.push(`r.status != 'reunited'`);
       }
 
       if (userId) {
         params.push(userId);
-        conditions.push(`r.user_id = $${params.length}`);
+        innerConditions.push(`r.user_id = $${params.length}`);
       }
 
-      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+      if (suburbFilter) {
+        params.push(`%${suburbFilter.toLowerCase()}%`);
+        innerConditions.push(`LOWER(r.location_name) LIKE $${params.length}`);
+      }
 
+      if (hasGeo) {
+        const delta = radiusKm / 111.0;
+        params.push(lat - delta); params.push(lat + delta);
+        innerConditions.push(`r.latitude BETWEEN $${params.length - 1} AND $${params.length}`);
+        params.push(lng - delta); params.push(lng + delta);
+        innerConditions.push(`r.longitude BETWEEN $${params.length - 1} AND $${params.length}`);
+      }
+
+      const whereClause = innerConditions.length > 0 ? `WHERE ${innerConditions.join(' AND ')}` : '';
+
+      const distanceExpr = hasGeo
+        ? `(6371 * acos(GREATEST(-1.0, LEAST(1.0, cos(radians(${lat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(${lng})) + sin(radians(${lat})) * sin(radians(latitude))))))`
+        : 'NULL::float';
+
+      const outerWhere = hasGeo ? `WHERE distance < ${radiusKm}` : '';
+
+      const orderClause = hasGeo
+        ? `ORDER BY distance ASC`
+        : `ORDER BY CASE WHEN is_boosted = true AND boost_expires_at > NOW() THEN 0 ELSE 1 END, created_at DESC`;
+
+      const limitIdx = params.length + 1;
+      const offsetIdx = params.length + 2;
       params.push(limit);
       params.push(offset);
 
-      const result = await pool.query(
-        `SELECT r.*,
-          COALESCE((SELECT COUNT(*) FROM report_likes WHERE report_id = r.id), 0)::int AS likes
-        FROM pet_reports r
-        ${whereClause}
-        ORDER BY
-          CASE WHEN r.is_boosted = true AND r.boost_expires_at > NOW() THEN 0 ELSE 1 END,
-          r.created_at DESC
-        LIMIT $${params.length - 1} OFFSET $${params.length}`,
-        params
-      );
+      const mainQuery = `
+        SELECT * FROM (
+          SELECT r.*,
+            COALESCE((SELECT COUNT(*) FROM report_likes WHERE report_id = r.id), 0)::int AS likes,
+            ${distanceExpr} AS distance
+          FROM pet_reports r
+          ${whereClause}
+        ) sub
+        ${outerWhere}
+        ${orderClause}
+        LIMIT $${limitIdx} OFFSET $${offsetIdx}
+      `;
+
+      const result = await pool.query(mainQuery, params);
 
       const reports = result.rows.map((row: any) => {
         const isOwner = req.user ? row.user_id === req.user.id : false;
-        return mapReportRow(row, isOwner, false);
+        const mapped = mapReportRow(row, isOwner, false);
+        if (hasGeo && row.distance !== null) {
+          (mapped as any).distanceKm = parseFloat(parseFloat(row.distance).toFixed(1));
+        }
+        return mapped;
       });
 
       if (req.user) {
@@ -966,6 +1007,21 @@ Return ONLY valid JSON, no markdown.`;
         );
         const likedIds = new Set(likedResult.rows.map((r: any) => r.report_id));
         reports.forEach((r: any) => { r.likedByMe = likedIds.has(r.id); });
+      }
+
+      if (isPaginated) {
+        const countParams = params.slice(0, params.length - 2);
+        const countQuery = `
+          SELECT COUNT(*) FROM (
+            SELECT r.id, ${distanceExpr} AS distance
+            FROM pet_reports r
+            ${whereClause}
+          ) sub
+          ${outerWhere}
+        `;
+        const countResult = await pool.query(countQuery, countParams);
+        const total = parseInt(countResult.rows[0].count);
+        return res.json({ reports, total, page, hasMore: (page + 1) * limit < total });
       }
 
       return res.json(reports);
