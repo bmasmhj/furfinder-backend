@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetch } from 'expo/fetch';
 import Colors from '@/constants/colors';
 import { getApiUrl } from '@/lib/query-client';
 import { useAuth } from '@/lib/auth-context';
@@ -46,9 +47,10 @@ export default function SuburbDirectoryScreen() {
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
   const { data: suburbs = [], isLoading: loadingSuburbs } = useQuery<SuburbInfo[]>({
-    queryKey: ['suburbs'],
+    queryKey: ['/api/suburbs'],
     queryFn: async () => {
-      const res = await fetch(`${getApiUrl()}/api/suburbs`, {
+      const url = new URL('/api/suburbs', getApiUrl()).toString();
+      const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error('Failed to fetch suburbs');
@@ -58,10 +60,11 @@ export default function SuburbDirectoryScreen() {
   });
 
   const { data: profiles = [], isLoading: loadingProfiles } = useQuery<SuburbProfile[]>({
-    queryKey: ['suburb-profiles', selectedSuburb],
+    queryKey: ['/api/profiles/suburb', selectedSuburb],
     queryFn: async () => {
       if (!selectedSuburb) return [];
-      const res = await fetch(`${getApiUrl()}/api/profiles/suburb/${encodeURIComponent(selectedSuburb)}`, {
+      const url = new URL(`/api/profiles/suburb/${encodeURIComponent(selectedSuburb)}`, getApiUrl()).toString();
+      const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error('Failed to fetch profiles');
@@ -73,8 +76,8 @@ export default function SuburbDirectoryScreen() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ['suburbs'] });
-    await queryClient.invalidateQueries({ queryKey: ['suburb-profiles'] });
+    await queryClient.invalidateQueries({ queryKey: ['/api/suburbs'] });
+    await queryClient.invalidateQueries({ queryKey: ['/api/profiles/suburb'] });
     setRefreshing(false);
   }, [queryClient]);
 
