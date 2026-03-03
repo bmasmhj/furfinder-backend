@@ -55,6 +55,11 @@ The application is built with a React Native (Expo) frontend and an Express.js (
 -   **Subscription Model:** Free tier with limited features; Premium tier ($4.99/month or $49.99/year) unlocks unlimited reports/profiles, AI matching, scan posts, and multi-photo uploads.
 -   **Implementation:** RevenueCat SDK (`react-native-purchases`) for in-app subscriptions, with feature gating via a `useSubscription()` hook.
 
+## Post-Launch Tasks (v1.1 — After iOS Submission)
+These are confirmed features to build after the iOS App Store submission is complete:
+1. **Dark Mode** — Full dark theme across all 30+ screens. Requires a complete colour system refactor using `useColorScheme()`. Estimated 3-4 hours.
+2. **Analytics Tracking** — In-app event logging for report submissions, match success rate, referral conversions, and feature usage. Must comply with Australian Privacy Act. Estimated 2 hours.
+
 ## External Dependencies
 -   **Database:** PostgreSQL (cloud) with `pg` driver.
 -   **AI Services:** OpenAI (via Replit AI Integrations) for AI matching, post scanning, and biometric analysis.
