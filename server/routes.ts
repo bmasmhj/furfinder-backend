@@ -924,7 +924,7 @@ Return ONLY valid JSON, no markdown.`;
       const statusFilter = req.query.status as string | undefined;
       const userId = req.query.userId as string | undefined;
 
-      const conditions: string[] = ['r.is_reunited = false'];
+      const conditions: string[] = ["r.status != 'reunited'"];
       const params: any[] = [];
 
       if (statusFilter && ['lost', 'found'].includes(statusFilter)) {
