@@ -919,13 +919,39 @@ Return ONLY valid JSON, no markdown.`;
   // ===== PET REPORTS CRUD =====
   app.get("/api/reports", optionalAuth, async (req: Request, res: Response) => {
     try {
+      const limit = Math.min(parseInt(req.query.limit as string) || 100, 500);
+      const offset = parseInt(req.query.offset as string) || 0;
+      const statusFilter = req.query.status as string | undefined;
+      const userId = req.query.userId as string | undefined;
+
+      const conditions: string[] = ['r.is_reunited = false'];
+      const params: any[] = [];
+
+      if (statusFilter && ['lost', 'found'].includes(statusFilter)) {
+        params.push(statusFilter);
+        conditions.push(`r.status = $${params.length}`);
+      }
+
+      if (userId) {
+        params.push(userId);
+        conditions.push(`r.user_id = $${params.length}`);
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      params.push(limit);
+      params.push(offset);
+
       const result = await pool.query(
         `SELECT r.*,
           COALESCE((SELECT COUNT(*) FROM report_likes WHERE report_id = r.id), 0)::int AS likes
         FROM pet_reports r
+        ${whereClause}
         ORDER BY
           CASE WHEN r.is_boosted = true AND r.boost_expires_at > NOW() THEN 0 ELSE 1 END,
-          r.created_at DESC`
+          r.created_at DESC
+        LIMIT $${params.length - 1} OFFSET $${params.length}`,
+        params
       );
 
       const reports = result.rows.map((row: any) => {
