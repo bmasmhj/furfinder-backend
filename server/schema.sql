@@ -223,6 +223,9 @@ CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id
 CREATE INDEX IF NOT EXISTS idx_conversations_participant1 ON conversations(participant1_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_participant2 ON conversations(participant2_id);
 
+ALTER TABLE users ADD COLUMN IF NOT EXISTS push_token TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'user';
+
 CREATE INDEX IF NOT EXISTS idx_organisations_user_id ON organisations(user_id);
 CREATE INDEX IF NOT EXISTS idx_organisations_status ON organisations(status);
 CREATE INDEX IF NOT EXISTS idx_org_animals_org_id ON organisation_animals(org_id);

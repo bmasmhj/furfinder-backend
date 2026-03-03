@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, RefreshControl, Platform, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, Redirect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
@@ -19,6 +20,14 @@ export default function HomeScreen() {
   const { isPremium, canUseScanPost } = useSubscription();
   const [filter, setFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem('hasSeenOnboarding').then((seen) => {
+      if (!seen) {
+        router.replace('/onboarding');
+      }
+    });
+  }, []);
 
   if (!isAuthenticated) {
     return <Redirect href="/login" />;

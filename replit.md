@@ -35,6 +35,9 @@ The application is built with a React Native (Expo) frontend and an Express.js (
     -   Suburb Directory: Browse all registered pets by suburb. Users can search suburbs and view pet profiles in their neighbourhood. Privacy-safe — only shows public info (no phone, medical notes).
     -   Partner Organisations: Vets, shelters, and rescue groups can register, list animals in their care, and have those animals included in AI matching results. Self-registration with admin approval workflow.
     -   In-App Messaging: Users can message report owners directly through the app via a "Message in App" button on report detail pages. Full conversations inbox accessible from Settings > My Messages. Chat screen with inverted FlatList, optimistic message sending, and 5-second polling for new messages.
+    -   Onboarding Flow: 3-slide onboarding screen shown on first launch (stored in AsyncStorage). Slides cover emotional benefit, AI matching, and community power. Skip option and post-onboarding CTA to register pet or browse.
+    -   Comment Moderation: Admins and report owners can delete comments via a trash icon. DELETE /api/comments/:id enforces role and ownership checks.
+    -   Push Notifications: expo-notifications integrated. Push tokens registered on login and stored in users.push_token DB column. Real push notifications sent server-side (Expo Push API) when messages are received.
 
 **Backend:**
 -   **Framework:** Express + TypeScript running on port 5000.

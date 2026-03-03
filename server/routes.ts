@@ -10,6 +10,19 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
+async function sendPushNotification(pushToken: string | null, title: string, body: string, data?: object) {
+  if (!pushToken || !pushToken.startsWith('ExponentPushToken[')) return;
+  try {
+    await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ to: pushToken, title, body, data: data || {}, sound: 'default' }),
+    });
+  } catch (err) {
+    console.error('Push notification send error:', err);
+  }
+}
+
 interface PetReport {
   id: string;
   status: string;
@@ -1168,6 +1181,46 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
+  app.delete("/api/comments/:commentId", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { commentId } = req.params;
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+
+      const existing = await pool.query('SELECT * FROM comments WHERE id = $1', [commentId]);
+      if (existing.rows.length === 0) return res.status(404).json({ message: 'Comment not found' });
+
+      const comment = existing.rows[0];
+      const isOwner = comment.user_id === userId;
+      const isAdmin = userRole === 'admin';
+
+      const reportResult = await pool.query('SELECT user_id FROM pet_reports WHERE id = $1', [comment.report_id]);
+      const isReportOwner = reportResult.rows.length > 0 && reportResult.rows[0].user_id === userId;
+
+      if (!isOwner && !isAdmin && !isReportOwner) {
+        return res.status(403).json({ message: 'Not authorised to delete this comment' });
+      }
+
+      await pool.query('DELETE FROM comments WHERE id = $1', [commentId]);
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error('Delete comment error:', err);
+      return res.status(500).json({ message: 'Failed to delete comment' });
+    }
+  });
+
+  app.put("/api/users/push-token", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { pushToken } = req.body;
+      if (!pushToken) return res.status(400).json({ message: 'Push token is required' });
+      await pool.query('UPDATE users SET push_token = $1 WHERE id = $2', [pushToken, req.user!.id]);
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error('Save push token error:', err);
+      return res.status(500).json({ message: 'Failed to save push token' });
+    }
+  });
+
   app.post("/api/reports/:id/like", authMiddleware, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -2147,6 +2200,10 @@ Return ONLY valid JSON, no markdown.`;
         `INSERT INTO notifications (user_id, type, title, message) VALUES ($1, 'message', $2, $3)`,
         [otherId, `New message from ${senderName}`, text.trim().substring(0, 100)]
       );
+
+      const recipientResult = await pool.query('SELECT push_token FROM users WHERE id = $1', [otherId]);
+      const recipientToken = recipientResult.rows[0]?.push_token || null;
+      await sendPushNotification(recipientToken, `New message from ${senderName}`, text.trim().substring(0, 100));
 
       const msg = result.rows[0];
       return res.status(201).json({

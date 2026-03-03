@@ -1,16 +1,18 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 import React, { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { queryClient } from "@/lib/query-client";
+import { queryClient, getApiUrl } from "@/lib/query-client";
 import { PetProvider } from "@/lib/pet-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
 import { ConsentProvider } from "@/lib/consent-context";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { fetch } from "expo/fetch";
 import {
   useFonts,
   Poppins_400Regular,
@@ -19,10 +21,41 @@ import {
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, token } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated || !token || Platform.OS === 'web') return;
+    (async () => {
+      try {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        if (finalStatus !== 'granted') return;
+        const tokenData = await Notifications.getExpoPushTokenAsync();
+        const pushToken = tokenData.data;
+        const baseUrl = getApiUrl();
+        await fetch(new URL('/api/users/push-token', baseUrl).toString(), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ pushToken }),
+        });
+      } catch {}
+    })();
+  }, [isAuthenticated, token]);
 
   if (isLoading) {
     return (
@@ -37,6 +70,10 @@ function RootLayoutNav() {
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="register" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="onboarding"
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
       <Stack.Screen
         name="consent"
         options={{ headerShown: false, gestureEnabled: false }}

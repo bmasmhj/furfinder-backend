@@ -505,18 +505,49 @@ export default function PetDetailScreen() {
             <Text style={styles.sectionTitle}>Community Tips</Text>
             {report.comments && report.comments.length > 0 ? (
               <View style={styles.commentsContainer}>
-                {report.comments.map((comment) => (
-                  <View key={comment.id} style={styles.commentItem}>
-                    <View style={styles.commentHeader}>
-                      <Ionicons name="person-circle-outline" size={28} color={Colors.primary} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.commentAuthor}>{comment.author}</Text>
-                        <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
+                {report.comments.map((comment) => {
+                  const canDelete = user && (
+                    user.role === 'admin' ||
+                    (comment as any).userId === user.id ||
+                    report.userId === user.id
+                  );
+                  return (
+                    <View key={comment.id} style={styles.commentItem}>
+                      <View style={styles.commentHeader}>
+                        <Ionicons name="person-circle-outline" size={28} color={Colors.primary} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.commentAuthor}>{comment.author}</Text>
+                          <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
+                        </View>
+                        {canDelete && (
+                          <Pressable
+                            onPress={() => {
+                              Alert.alert('Delete Comment', 'Remove this comment?', [
+                                { text: 'Cancel', style: 'cancel' },
+                                {
+                                  text: 'Delete', style: 'destructive',
+                                  onPress: async () => {
+                                    try {
+                                      const baseUrl = getApiUrl();
+                                      await fetch(new URL(`/api/comments/${comment.id}`, baseUrl).toString(), {
+                                        method: 'DELETE',
+                                        headers: { Authorization: `Bearer ${token}` },
+                                      });
+                                    } catch {}
+                                  },
+                                },
+                              ]);
+                            }}
+                            style={{ padding: 4 }}
+                          >
+                            <Ionicons name="trash-outline" size={16} color={Colors.danger} />
+                          </Pressable>
+                        )}
                       </View>
+                      <Text style={styles.commentText}>{comment.text}</Text>
                     </View>
-                    <Text style={styles.commentText}>{comment.text}</Text>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             ) : (
               <Text style={styles.noCommentsText}>No tips yet. Be the first to share!</Text>
