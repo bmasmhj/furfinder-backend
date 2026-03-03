@@ -22,9 +22,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "thefurfinderofficial@gmail.com",
-        "ascAppId": "",
-        "appleTeamId": ""
+        "appleId": "thefurfinderofficial@gmail.com"
       }
     }
   }

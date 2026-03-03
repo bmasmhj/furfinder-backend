@@ -21,7 +21,8 @@
         "NSCameraUsageDescription": "The Fur Finder needs access to your camera to take photos of lost or found pets.",
         "NSPhotoLibraryUsageDescription": "The Fur Finder needs access to your photo library to upload pet photos for reports and profiles.",
         "NSLocationWhenInUseUsageDescription": "The Fur Finder needs your location to show nearby lost and found pets and to accurately pin reports on the map.",
-        "CFBundleAllowMixedLocalizations": true
+        "CFBundleAllowMixedLocalizations": true,
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
