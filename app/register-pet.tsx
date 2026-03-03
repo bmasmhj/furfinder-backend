@@ -315,7 +315,7 @@ export default function RegisterPetScreen() {
           </Text>
           <View style={styles.biometricGuide}>
             {[
-              { icon: 'nose' as const, label: 'Nose close-up' },
+              { icon: 'dog-side' as const, label: 'Nose close-up' },
               { icon: 'eye-outline' as const, label: 'Eyes close-up' },
               { icon: 'emoticon-outline' as const, label: 'Face front' },
             ].map((guide, idx) => (

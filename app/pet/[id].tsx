@@ -199,7 +199,7 @@ export default function PetDetailScreen() {
   };
 
   const handleBlockUser = async () => {
-    if (!token || !report.userId) return;
+    if (!token || !(report as any).userId) return;
     setShowMoreMenu(false);
     Alert.alert(
       'Block User',
@@ -212,7 +212,7 @@ export default function PetDetailScreen() {
           onPress: async () => {
             try {
               const baseUrl = getApiUrl();
-              await fetch(new URL(`/api/users/${report.userId}/block`, baseUrl).toString(), {
+              await fetch(new URL(`/api/users/${(report as any).userId}/block`, baseUrl).toString(), {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
               });
@@ -339,7 +339,7 @@ export default function PetDetailScreen() {
             <Pressable onPress={handleShare} style={styles.shareBtn}>
               <Ionicons name="share-outline" size={22} color={Colors.text} />
             </Pressable>
-            {token && report.userId && report.userId !== (undefined) && (
+            {token && (report as any).userId && (
               <Pressable onPress={() => setShowMoreMenu(true)} style={styles.moreBtn}>
                 <Ionicons name="ellipsis-vertical" size={20} color={Colors.text} />
               </Pressable>
@@ -509,7 +509,7 @@ export default function PetDetailScreen() {
                   const canDelete = user && (
                     user.role === 'admin' ||
                     (comment as any).userId === user.id ||
-                    report.userId === user.id
+                    report.isOwner
                   );
                   return (
                     <View key={comment.id} style={styles.commentItem}>
