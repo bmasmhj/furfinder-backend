@@ -262,7 +262,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',

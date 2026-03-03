@@ -181,7 +181,7 @@ export default function HappyTailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: Colors.background,
   },
   headerGradient: {
     paddingBottom: 20,
