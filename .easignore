@@ -1,6 +1,5 @@
 .git
 node_modules
-assets/store
 attached_assets
 static-build
 *.log
