@@ -204,6 +204,74 @@
       }
       .open-button:hover { opacity: 0.9; }
 
+      .founder-section {
+        background: linear-gradient(135deg, #fff8f6 0%, #f0fdfb 100%);
+        border: 1px solid #FFD5CC;
+        border-radius: 20px;
+        padding: 36px 32px;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+      }
+      .founder-section::before {
+        content: '\201C';
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        font-size: 120px;
+        color: #FF6B4A;
+        opacity: 0.12;
+        font-family: Georgia, serif;
+        line-height: 1;
+      }
+      .founder-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #FF6B4A;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin-bottom: 16px;
+      }
+      .founder-section h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1A1A2E;
+        margin-bottom: 18px;
+        line-height: 1.3;
+      }
+      .founder-story p {
+        font-size: 14px;
+        color: #374151;
+        line-height: 1.8;
+        margin-bottom: 14px;
+      }
+      .founder-story p:last-child { margin-bottom: 0; }
+      .founder-sig {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid #FFD5CC;
+        font-size: 13px;
+        color: #FF6B4A;
+        font-weight: 600;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .founder-section {
+          background: linear-gradient(135deg, #1e1410 0%, #101e1d 100%);
+          border-color: #4a2c24;
+        }
+        .founder-section h2 { color: #f0f0f0; }
+        .founder-story p { color: #b0b0b0; }
+        .founder-sig { color: #FF8A6E; }
+        .founder-section::before { color: #FF6B4A; }
+      }
+
       .footer {
         text-align: center;
         padding: 30px 20px;
@@ -311,6 +379,19 @@
             <h3>Area Alerts</h3>
             <p>Get notified when a lost or found pet is reported near your registered pet's location.</p>
           </div>
+        </div>
+
+        <div class="founder-section">
+          <div class="founder-label">🐾 Founder's Story</div>
+          <h2>Why I Built The Fur Finder</h2>
+          <div class="founder-story">
+            <p>Last year, my own dog went missing for two days, and I was devastated. I felt completely broken, unable to eat, and overwhelmed with fear and anxiety. I visited every vet, shelter, pound, and local park. I walked the streets, knocked on doors, and scoured Facebook lost and found pages, as well as community pages across different suburbs. But everything was scattered, and there wasn't one centralised place to get all the information I needed.</p>
+            <p>Time was critical in locating my dog. We live in an area with busy roads and reckless drivers, and I was terrified that my dog might be hurt. When I finally found him after two and a half days, he was traumatised, hungry, thirsty, and in pain. I was incredibly lucky to have found him, but not everyone is. There are elderly people and others who struggle to navigate multiple resources in the frantic moments after their pet goes missing.</p>
+            <p>Every minute counts when a pet is lost. Too often, these animals end up in far-away pounds, shelters, or even in the hands of people who have no intention of returning them. Many owners are unable to find their pets because their microchip information or contact details haven't been updated. Too many lost pets live in shelters, never reunited with their loving owners, and both the pets and their families suffer.</p>
+            <p>I see this situation every month when I come across lost animals, and I always try to help them reunite with their owners. Having gone through that heartbreak myself, I knew I had to do something to help in a more significant way. That's why I decided to create The Fur Finder — a platform that brings all the lost and found pet information into one place.</p>
+            <p>The running costs of the app are covered by paid subscriptions, ensuring that it remains accessible to everyone, especially those who need it most. It was my own painful experience that motivated me to build this app, and I hope it helps reunite as many pets with their families as possible.</p>
+          </div>
+          <div class="founder-sig">— Founder, The Fur Finder</div>
         </div>
 
         <div class="download-section">
