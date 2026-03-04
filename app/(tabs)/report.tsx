@@ -5,9 +5,11 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function ReportScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const webBottomPadding = Platform.OS === 'web' ? 34 : 0;
@@ -104,7 +106,7 @@ export default function ReportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

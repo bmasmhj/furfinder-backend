@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { getStatusColor, getStatusLabel, getPetTypeIcon, formatDate } from '@/lib/helpers';
 import FilterBar from '@/components/FilterBar';
@@ -125,6 +125,8 @@ function Legend({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
 }
 
 export default function MapScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { reports } = usePets();
   const { track } = useAnalytics();
@@ -292,7 +294,7 @@ export default function MapScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

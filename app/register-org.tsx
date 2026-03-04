@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/lib/auth-context';
 import { getApiUrl } from '@/lib/query-client';
 import { fetch } from 'expo/fetch';
@@ -28,6 +28,8 @@ const ORG_TYPES: { value: OrgType; label: string; icon: string }[] = [
 ];
 
 export default function RegisterOrgScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
@@ -360,7 +362,7 @@ export default function RegisterOrgScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

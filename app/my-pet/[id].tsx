@@ -6,12 +6,14 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { getPetTypeIcon, getSizeLabel, formatDate } from '@/lib/helpers';
 
 export default function MyPetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { getProfile, deleteProfile } = usePets();
   const profile = getProfile(id);
@@ -238,7 +240,7 @@ export default function MyPetDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

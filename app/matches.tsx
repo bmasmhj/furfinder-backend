@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { PetMatch, PetReport, PetProfile } from '@/lib/types';
 import { getPetTypeIcon, getStatusColor, getStatusLabel } from '@/lib/helpers';
@@ -21,6 +21,8 @@ const ORG_TYPE_LABELS: Record<string, string> = {
 
 export default function MatchesScreen() {
   const { reportId } = useLocalSearchParams<{ reportId: string }>();
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { getReport, reports, profiles, searchRadiusKm } = usePets();
   const { track } = useAnalytics();
@@ -269,7 +271,7 @@ export default function MatchesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

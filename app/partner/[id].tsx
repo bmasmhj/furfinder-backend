@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { fetch } from 'expo/fetch';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { getApiUrl } from '@/lib/query-client';
 import type { Organisation, OrganisationAnimal, OrgType } from '@/lib/types';
 
@@ -38,6 +38,8 @@ const INTAKE_LABELS: Record<string, string> = {
 };
 
 export default function PartnerDetailScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
@@ -226,7 +228,7 @@ export default function PartnerDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

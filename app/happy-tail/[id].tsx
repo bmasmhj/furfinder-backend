@@ -7,7 +7,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-ico
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { formatDate, getPetTypeIcon, getSizeLabel } from '@/lib/helpers';
 
@@ -15,6 +15,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HappyTailDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { getReport, toggleLike, addComment } = usePets();
   const report = getReport(id);
@@ -271,7 +273,7 @@ export default function HappyTailDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

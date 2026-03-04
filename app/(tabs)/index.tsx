@@ -10,7 +10,7 @@ import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetch } from 'expo/fetch';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
 import { useAuth } from '@/lib/auth-context';
@@ -30,6 +30,8 @@ const STATUS_FILTERS = [
 const PAGE_SIZE = 20;
 
 export default function HomeScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { isAuthenticated, token } = useAuth();
   const { unreadCount } = usePets();
@@ -302,7 +304,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

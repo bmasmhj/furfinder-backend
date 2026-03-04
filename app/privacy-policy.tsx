@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, ScrollView, Pressable, Platform } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 const SECTIONS = [
   {
@@ -122,6 +122,8 @@ If you are not satisfied with how we handle your complaint, you have the right t
 ];
 
 export default function PrivacyPolicyScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
@@ -163,7 +165,7 @@ export default function PrivacyPolicyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

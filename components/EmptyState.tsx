@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 interface EmptyStateProps {
   icon: string;
@@ -9,6 +9,8 @@ interface EmptyStateProps {
 }
 
 export default function EmptyState({ icon, title, subtitle }: EmptyStateProps) {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   return (
     <View style={styles.container}>
       <MaterialCommunityIcons name={icon as any} size={56} color={Colors.textLight} />
@@ -18,7 +20,7 @@ export default function EmptyState({ icon, title, subtitle }: EmptyStateProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',

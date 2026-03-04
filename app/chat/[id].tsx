@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/lib/auth-context';
 import { getApiUrl } from '@/lib/query-client';
 import { fetch } from 'expo/fetch';
@@ -50,6 +50,8 @@ function formatMessageTime(dateStr: string): string {
 
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { token, user } = useAuth();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
@@ -259,7 +261,7 @@ export default function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

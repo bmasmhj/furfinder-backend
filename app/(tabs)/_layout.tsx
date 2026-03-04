@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Platform, StyleSheet, useColorScheme, View, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
-import Colors from "@/constants/colors";
+import { useTheme } from '@/hooks/useTheme';
 import { useConsent } from "@/lib/consent-context";
 
 function NativeTabLayout() {
@@ -38,6 +38,7 @@ function NativeTabLayout() {
 }
 
 function ClassicTabLayout() {
+  const Colors = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isWeb = Platform.OS === "web";
@@ -123,6 +124,7 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
+  const Colors = useTheme();
   const { hasConsented, isLoading } = useConsent();
 
   useEffect(() => {

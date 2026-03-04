@@ -12,10 +12,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/lib/auth-context';
 
 export default function RegisterScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { register } = useAuth();
   const [email, setEmail] = useState('');
@@ -256,7 +258,7 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

@@ -14,7 +14,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/lib/auth-context';
 import { getApiUrl } from '@/lib/query-client';
 import { fetch } from 'expo/fetch';
@@ -48,6 +48,8 @@ function formatTime(dateStr: string): string {
 }
 
 export default function ConversationsScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
@@ -192,7 +194,7 @@ export default function ConversationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

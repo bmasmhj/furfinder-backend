@@ -13,7 +13,7 @@ import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { useConsent } from '@/lib/consent-context';
 import { usePets } from '@/lib/pet-context';
 import { useAuth } from '@/lib/auth-context';
@@ -27,6 +27,8 @@ const ORG_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function SettingsScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { consentDate, revokeConsent } = useConsent();
   const { reports, profiles, deleteReport, deleteProfile, searchRadiusKm, setSearchRadiusKm } = usePets();
@@ -548,7 +550,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

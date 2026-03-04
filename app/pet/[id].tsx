@@ -7,7 +7,7 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
 import { useAuth } from '@/lib/auth-context';
@@ -18,7 +18,7 @@ import { fetch } from 'expo/fetch';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-function getTimelineColor(type: TimelineEvent['type']): string {
+function getTimelineColor(type: TimelineEvent['type'], Colors: any): string {
   switch (type) {
     case 'created': return Colors.primary;
     case 'status_change': return Colors.secondary;
@@ -31,6 +31,8 @@ function getTimelineColor(type: TimelineEvent['type']): string {
 
 export default function PetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { getReport, updateReportStatus, markReunited, addComment, addRewardContribution, boostReport } = usePets();
   const { canUseAIMatching } = useSubscription();
@@ -482,7 +484,7 @@ export default function PetDetailScreen() {
               <Text style={styles.sectionTitle}>Timeline</Text>
               <View style={styles.timelineContainer}>
                 {report.timeline.map((event, index) => {
-                  const color = getTimelineColor(event.type);
+                  const color = getTimelineColor(event.type, Colors);
                   const isLast = index === report.timeline.length - 1;
                   return (
                     <View key={event.id} style={styles.timelineItem}>
@@ -701,7 +703,7 @@ export default function PetDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

@@ -7,12 +7,14 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { getStatusColor, getStatusLabel, getPetTypeIcon, getSizeLabel } from '@/lib/helpers';
 
 export default function FlyerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { getReport } = usePets();
   const report = getReport(id);
@@ -212,7 +214,7 @@ export default function FlyerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

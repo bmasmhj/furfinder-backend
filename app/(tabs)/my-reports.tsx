@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { Image } from 'expo-image';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
 import { PetReport, PetProfile, PetStatus } from '@/lib/types';
@@ -169,6 +169,8 @@ function MyReportItem({ report, index }: { report: PetReport; index: number }) {
 }
 
 export default function MyPetsScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { myReports, profiles } = usePets();
   const { isPremium } = useSubscription();
@@ -274,7 +276,7 @@ export default function MyPetsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

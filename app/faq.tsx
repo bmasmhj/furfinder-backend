@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, useAnimatedStyle, withTiming, useSharedValue } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 interface FAQItem {
   question: string;
@@ -130,6 +130,8 @@ function FAQAccordion({ item, index }: { item: FAQItem; index: number }) {
 }
 
 export default function FAQScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const webBottomPadding = Platform.OS === 'web' ? 34 : 0;
@@ -234,7 +236,7 @@ export default function FAQScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

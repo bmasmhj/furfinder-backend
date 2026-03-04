@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 const categories = [
   {
@@ -99,6 +99,8 @@ function TipCard({ category, index }: { category: typeof categories[number]; ind
 }
 
 export default function SafetyTipsScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
@@ -157,7 +159,7 @@ export default function SafetyTipsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

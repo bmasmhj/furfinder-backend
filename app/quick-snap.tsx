@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { PetMatch, PetReport, PetProfile } from '@/lib/types';
 import { getPetTypeIcon, getStatusColor, getStatusLabel } from '@/lib/helpers';
@@ -16,6 +16,8 @@ import { apiRequest } from '@/lib/query-client';
 import { PetType } from '@/lib/types';
 
 export default function QuickSnapScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { reports, profiles, getReport, getProfile } = usePets();
   const [photoUri, setPhotoUri] = useState('');
@@ -311,7 +313,7 @@ export default function QuickSnapScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

@@ -4,59 +4,7 @@ import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
-
-const STEPS = [
-  {
-    icon: 'camera-outline' as const,
-    color: Colors.primary,
-    bgColor: '#FEF2F2',
-    title: 'Report a Lost or Found Pet',
-    description: 'Take a photo, add details like breed, colour, and location, and submit a report. The more info you add, the better chance of a match.',
-  },
-  {
-    icon: 'search' as const,
-    color: '#6366F1',
-    bgColor: '#EEF2FF',
-    title: 'AI-Powered Matching',
-    description: 'Our AI compares photos, breed info, markings, and location to find potential matches between lost and found reports — even using biometric scanning of nose prints and facial features.',
-  },
-  {
-    icon: 'map-outline' as const,
-    color: Colors.secondary,
-    bgColor: '#F0FDFA',
-    title: 'Explore the Map',
-    description: 'View all reported pets near you on an interactive map. Find nearby vets, shelters, and rescue organisations across Australia.',
-  },
-  {
-    icon: 'paw-outline' as const,
-    color: '#D97706',
-    bgColor: '#FEF3C7',
-    title: 'Register Your Pet',
-    description: 'Pre-register your pet with photos, microchip number, and details. If they ever go missing, quickly create a report with pre-filled information.',
-  },
-  {
-    icon: 'notifications-outline' as const,
-    color: '#E11D48',
-    bgColor: '#FFF1F2',
-    title: 'Get Area Alerts',
-    description: 'Receive notifications when a lost or found pet is reported near your registered pet\'s suburb — so you can keep an eye out.',
-  },
-  {
-    icon: 'document-text-outline' as const,
-    color: Colors.secondary,
-    bgColor: '#F0FDFA',
-    title: 'Generate & Share Flyers',
-    description: 'Create a shareable flyer from any pet report with all the important details. Send it via messaging apps, social media, or print it out.',
-  },
-  {
-    icon: 'heart-outline' as const,
-    color: Colors.reunited,
-    bgColor: '#F0FDF4',
-    title: 'Celebrate Reunions',
-    description: 'When a pet is found, mark it as reunited and share your happy story in the Happy Tails feed. Like, comment, and share reunion stories with the community.',
-  },
-];
+import { useTheme } from '@/hooks/useTheme';
 
 const TIPS = [
   {
@@ -82,7 +30,18 @@ const TIPS = [
 ];
 
 export default function HowItWorksScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
+  const STEPS = [
+    { icon: 'camera-outline' as const, color: Colors.primary, bgColor: '#FEF2F2', title: 'Report a Lost or Found Pet', description: 'Take a photo, add details like breed, colour, and location, and submit a report. The more info you add, the better chance of a match.' },
+    { icon: 'search' as const, color: '#6366F1', bgColor: '#EEF2FF', title: 'AI-Powered Matching', description: 'Our AI compares photos, breed info, markings, and location to find potential matches between lost and found reports — even using biometric scanning of nose prints and facial features.' },
+    { icon: 'map-outline' as const, color: Colors.secondary, bgColor: '#F0FDFA', title: 'Explore the Map', description: 'View all reported pets near you on an interactive map. Find nearby vets, shelters, and rescue organisations across Australia.' },
+    { icon: 'paw-outline' as const, color: '#D97706', bgColor: '#FEF3C7', title: 'Register Your Pet', description: 'Pre-register your pet with photos, microchip number, and details. If they ever go missing, quickly create a report with pre-filled information.' },
+    { icon: 'notifications-outline' as const, color: '#E11D48', bgColor: '#FFF1F2', title: 'Get Area Alerts', description: "Receive notifications when a lost or found pet is reported near your registered pet's suburb — so you can keep an eye out." },
+    { icon: 'document-text-outline' as const, color: Colors.secondary, bgColor: '#F0FDFA', title: 'Generate & Share Flyers', description: 'Create a shareable flyer from any pet report with all the important details. Send it via messaging apps, social media, or print it out.' },
+    { icon: 'heart-outline' as const, color: Colors.reunited, bgColor: '#F0FDF4', title: 'Celebrate Reunions', description: 'When a pet is found, mark it as reunited and share your happy story in the Happy Tails feed. Like, comment, and share reunion stories with the community.' },
+  ];
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const webBottomPadding = Platform.OS === 'web' ? 34 : 0;
 
@@ -169,7 +128,7 @@ export default function HowItWorksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

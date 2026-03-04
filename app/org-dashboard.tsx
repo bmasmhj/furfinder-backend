@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest, getApiUrl } from '@/lib/query-client';
 import { fetch } from 'expo/fetch';
@@ -43,6 +43,8 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function OrgDashboardScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
   const queryClient = useQueryClient();
@@ -269,7 +271,7 @@ export default function OrgDashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

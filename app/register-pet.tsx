@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
 import { PetType, PetSize } from '@/lib/types';
@@ -27,6 +27,8 @@ const PET_SIZES: { key: PetSize; label: string }[] = [
 
 export default function RegisterPetScreen() {
   const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { addProfile, updateProfile, getProfile, profiles } = usePets();
   const { canAddProfile } = useSubscription();
@@ -428,7 +430,7 @@ export default function RegisterPetScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

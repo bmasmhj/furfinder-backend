@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetch } from 'expo/fetch';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { getApiUrl } from '@/lib/query-client';
 import { useAuth } from '@/lib/auth-context';
 
@@ -38,6 +38,8 @@ interface SuburbProfile {
 }
 
 export default function SuburbDirectoryScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
   const queryClient = useQueryClient();
@@ -256,7 +258,7 @@ export default function SuburbDirectoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

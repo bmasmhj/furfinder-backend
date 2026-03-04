@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, Pressable, ScrollView, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 interface FilterBarProps {
   selected: string;
@@ -15,6 +15,9 @@ const FILTERS = [
 ];
 
 export default function FilterBar({ selected, onSelect }: FilterBarProps) {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
+
   const handlePress = (key: string) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -52,7 +55,7 @@ export default function FilterBar({ selected, onSelect }: FilterBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingVertical: 12,

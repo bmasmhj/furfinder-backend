@@ -14,7 +14,7 @@ The application is built with a React Native (Expo) frontend and an Express.js (
 **Frontend:**
 -   **Frameworks:** Expo Router for file-based routing, React Native for UI, and React Query for data fetching and caching.
 -   **State Management:** React Context (`lib/pet-context.tsx`) backed by a cloud API for pet reports and profiles. `AsyncStorage` is used for local preferences like search radius.
--   **UI/UX:** Features a Coral (#FF6B4A) and Teal (#2CBCB6) color scheme with the Poppins font family.
+-   **UI/UX:** Features a Coral (#FF6B4A) and Teal (#2CBCB6) color scheme with the Poppins font family. Full dark mode support via `useTheme()` hook from `hooks/useTheme.ts`. Dark colours defined in `constants/dark-colors.ts`.
 -   **Core Features:**
     -   Home feed displaying lost/found pet cards.
     -   Interactive map with pet sightings and markers for vets, shelters, and rescue organizations.
@@ -96,6 +96,12 @@ When a screen shows empty data or a fetch appears to do nothing:
 ### Paywalls & Subscriptions
 - **Do not gate `purchasePackage()` behind an `offerings.length > 0` check.** The subscription context already handles the case where RevenueCat isn't configured (preview/dev mode) — it grants premium directly. The paywall must always call `purchasePackage()` and let the context decide.
 - **Always add `insets.bottom` to ScrollView `contentContainerStyle` padding** on any screen with a CTA button at the bottom. Without it the button can be hidden behind the iPhone home indicator.
+
+### Dark Mode & Theming
+- **Never import `Colors` as a static module-level import for use in `StyleSheet.create()`.** The `Colors` constant must always come from `const Colors = useTheme()` inside the component function.
+- **Always use the `getStyles(Colors: any)` factory pattern** for stylesheets: `const getStyles = (Colors: any) => StyleSheet.create({...})` at module level, then `const styles = getStyles(Colors)` inside the component.
+- **Never reference `Colors` in module-level data structures** (arrays, objects, helper functions defined outside components). Move these inside the component or pass Colors as a parameter.
+- Sub-components that use `styles` must call `const Colors = useTheme()` and `const styles = getStyles(Colors)` themselves — they cannot rely on a parent component's `styles` variable.
 
 ### Backend API Changes
 - **Check the actual DB column list before writing any new SQL filter condition.** Run a quick `SELECT column_name FROM information_schema.columns WHERE table_name = '...'` before adding WHERE clauses with new column names.

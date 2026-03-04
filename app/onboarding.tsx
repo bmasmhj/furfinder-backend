@@ -12,48 +12,19 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 
-const SLIDES = [
-  {
-    id: '1',
-    icon: 'heart' as const,
-    iconSet: 'ionicons' as const,
-    iconColor: Colors.primary,
-    bg: '#FFF5F2',
-    title: 'Reunite with your\nfurry family',
-    subtitle:
-      'Every second counts when a pet goes missing. The Fur Finder helps you reach thousands of local eyes instantly.',
-    accent: Colors.primary,
-  },
-  {
-    id: '2',
-    icon: 'robot-outline' as const,
-    iconSet: 'material' as const,
-    iconColor: Colors.secondary,
-    bg: '#F0FAFA',
-    title: 'AI that never\nmisses a match',
-    subtitle:
-      'Our AI compares photos, breed, colour, and location to find matches across lost and found reports — even when descriptions are vague.',
-    accent: Colors.secondary,
-  },
-  {
-    id: '3',
-    icon: 'people' as const,
-    iconSet: 'ionicons' as const,
-    iconColor: '#7C3AED',
-    bg: '#F5F0FF',
-    title: "Australia's pet\ncommunity",
-    subtitle:
-      'Vets, shelters, rescue groups, and thousands of locals working together. Your next-door neighbour might have found your pet.',
-    accent: '#7C3AED',
-  },
-];
-
 export default function OnboardingScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
+  const SLIDES = [
+    { id: '1', icon: 'heart' as const, iconSet: 'ionicons' as const, iconColor: Colors.primary, bg: '#FFF5F2', title: 'Reunite with your\nfurry family', subtitle: 'Every second counts when a pet goes missing. The Fur Finder helps you reach thousands of local eyes instantly.', accent: Colors.primary },
+    { id: '2', icon: 'robot-outline' as const, iconSet: 'material' as const, iconColor: Colors.secondary, bg: '#F0FAFA', title: 'AI that never\nmisses a match', subtitle: 'Our AI compares photos, breed, colour, and location to find matches across lost and found reports — even when descriptions are vague.', accent: Colors.secondary },
+    { id: '3', icon: 'people' as const, iconSet: 'ionicons' as const, iconColor: '#7C3AED', bg: '#F5F0FF', title: "Australia's pet\ncommunity", subtitle: 'Vets, shelters, rescue groups, and thousands of locals working together. Your next-door neighbour might have found your pet.', accent: '#7C3AED' },
+  ];
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const webTop = Platform.OS === 'web' ? 67 : 0;
@@ -159,7 +130,7 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

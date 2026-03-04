@@ -6,7 +6,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { useSubscription } from '@/lib/subscription-context';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
@@ -21,6 +21,8 @@ const FEATURES = [
 ];
 
 export default function PaywallScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { isPremium, offerings, purchasePackage, restorePurchases } = useSubscription();
   const { track } = useAnalytics();
@@ -210,7 +212,7 @@ export default function PaywallScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

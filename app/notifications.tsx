@@ -4,12 +4,12 @@ import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { PetNotification } from '@/lib/types';
 import { formatDate } from '@/lib/helpers';
 
-function getNotificationIcon(type: PetNotification['type']): { name: string; color: string; bg: string } {
+function getNotificationIcon(type: PetNotification['type'], Colors: any): { name: string; color: string; bg: string } {
   switch (type) {
     case 'lost_nearby':
       return { name: 'alert-circle', color: '#EF4444', bg: '#FEE2E2' };
@@ -25,7 +25,9 @@ function getNotificationIcon(type: PetNotification['type']): { name: string; col
 }
 
 function NotificationItem({ notification, onPress }: { notification: PetNotification; onPress: () => void }) {
-  const icon = getNotificationIcon(notification.type);
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
+  const icon = getNotificationIcon(notification.type, Colors);
 
   return (
     <Pressable
@@ -54,6 +56,8 @@ function NotificationItem({ notification, onPress }: { notification: PetNotifica
 }
 
 export default function NotificationsScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { notifications, unreadCount, markNotificationRead, markAllNotificationsRead, clearNotifications } = usePets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
@@ -142,7 +146,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

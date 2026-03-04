@@ -7,7 +7,7 @@ import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { PetReport } from '@/lib/types';
 import { formatDate, getPetTypeIcon } from '@/lib/helpers';
@@ -121,6 +121,8 @@ function StoryCard({ report, index }: { report: PetReport; index: number }) {
 }
 
 export default function HappyTailsScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { reunitedReports } = usePets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
@@ -178,7 +180,7 @@ export default function HappyTailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

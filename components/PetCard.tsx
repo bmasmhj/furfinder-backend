@@ -4,7 +4,7 @@ import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { PetReport } from '@/lib/types';
 import { getStatusColor, getStatusBg, getStatusLabel, getPetTypeIcon, formatDate } from '@/lib/helpers';
 
@@ -14,6 +14,8 @@ interface PetCardProps {
 }
 
 export default function PetCard({ report, index }: PetCardProps) {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const statusColor = getStatusColor(report.status);
   const statusBg = getStatusBg(report.status);
   const isActiveBoosted = !!(report.isBoosted && report.boostExpiresAt && new Date(report.boostExpiresAt).getTime() > Date.now());
@@ -93,7 +95,7 @@ export default function PetCard({ report, index }: PetCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 16,

@@ -7,7 +7,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
 import { PetType, PetSize } from '@/lib/types';
@@ -29,6 +29,8 @@ const PET_SIZES: { key: PetSize; label: string }[] = [
 
 export default function ReportFormScreen() {
   const { type, fromProfileId } = useLocalSearchParams<{ type: string; fromProfileId?: string }>();
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { addReport, getProfile, reports } = usePets();
   const { canUseMultiPhoto, canAddReport, isPremium } = useSubscription();
@@ -528,7 +530,7 @@ export default function ReportFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

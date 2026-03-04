@@ -16,7 +16,7 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/lib/auth-context';
 import { getApiUrl } from '@/lib/query-client';
 import { fetch } from 'expo/fetch';
@@ -39,6 +39,8 @@ const REFERRAL_MILESTONES = [
 const SHARE_TARGET = 20;
 
 export default function ReferralScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { token } = useAuth();
   const [data, setData] = useState<ReferralData | null>(null);
@@ -389,7 +391,7 @@ export default function ReferralScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

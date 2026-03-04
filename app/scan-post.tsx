@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { PetMatch, PetReport, PetProfile } from '@/lib/types';
 import { getPetTypeIcon, getStatusColor, getStatusLabel } from '@/lib/helpers';
@@ -29,6 +29,8 @@ interface ExtractedInfo {
 }
 
 export default function ScanPostScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const insets = useSafeAreaInsets();
   const { reports, profiles } = usePets();
   const [postText, setPostText] = useState('');
@@ -392,7 +394,7 @@ export default function ScanPostScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,

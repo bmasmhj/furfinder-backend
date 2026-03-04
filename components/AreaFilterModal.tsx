@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 
 export type AreaFilterValue = {
   mode: 'geo';
@@ -30,6 +30,8 @@ interface Props {
 const RADIUS_OPTIONS = [5, 10, 25, 50];
 
 export default function AreaFilterModal({ visible, onClose, onApply, currentFilter, suggestedSuburbs }: Props) {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const [mode, setMode] = useState<'all' | 'geo' | 'suburb'>('all');
   const [suburbText, setSuburbText] = useState('');
   const [radius, setRadius] = useState(10);
@@ -243,13 +245,13 @@ export default function AreaFilterModal({ visible, onClose, onApply, currentFilt
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (Colors: any) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -283,7 +285,7 @@ const styles = StyleSheet.create({
   },
   optionRowActive: {
     borderColor: Colors.secondary,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: Colors.foundBg,
   },
   optionIcon: {
     width: 36,
@@ -380,7 +382,7 @@ const styles = StyleSheet.create({
   },
   searchBoxActive: {
     borderColor: Colors.secondary,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: Colors.foundBg,
   },
   searchInput: {
     flex: 1,
