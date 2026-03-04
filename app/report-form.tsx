@@ -11,6 +11,7 @@ import Colors from '@/constants/colors';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
 import { PetType, PetSize } from '@/lib/types';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const PET_TYPES: { key: PetType; label: string; icon: string }[] = [
   { key: 'dog', label: 'Dog', icon: 'dog' },
@@ -31,6 +32,7 @@ export default function ReportFormScreen() {
   const insets = useSafeAreaInsets();
   const { addReport, getProfile, reports } = usePets();
   const { canUseMultiPhoto, canAddReport, isPremium } = useSubscription();
+  const { track } = useAnalytics();
   const isLost = type === 'lost';
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
@@ -260,6 +262,7 @@ export default function ReportFormScreen() {
         isOwner: true,
       });
 
+      track('report_submitted', { petType, status: isLost ? 'lost' : 'found' });
       setShowSuccess(true);
     } catch (e) {
       setSubmitError('Failed to save report. Please check your connection and try again.');

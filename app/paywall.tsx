@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 import { useSubscription } from '@/lib/subscription-context';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const FEATURES = [
   { icon: 'infinite', label: 'Unlimited pet reports', free: '1 report', premium: 'Unlimited' },
@@ -22,10 +23,15 @@ const FEATURES = [
 export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
   const { isPremium, offerings, purchasePackage, restorePurchases } = useSubscription();
+  const { track } = useAnalytics();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [isProcessing, setIsProcessing] = useState(false);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    track('paywall_viewed');
+  }, []);
 
   const handleSelectPlan = (plan: 'monthly' | 'yearly') => {
     setSelectedPlan(plan);
@@ -46,6 +52,7 @@ export default function PaywallScreen() {
     const success = await purchasePackage(pkg);
     setIsProcessing(false);
     if (success) {
+      track('premium_purchased', { plan: selectedPlan });
       Alert.alert('Welcome to Premium!', 'You now have access to all premium features.', [
         { text: 'Awesome!', onPress: () => router.canGoBack() ? router.back() : router.replace('/(tabs)') },
       ]);

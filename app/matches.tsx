@@ -11,6 +11,7 @@ import { usePets } from '@/lib/pet-context';
 import { PetMatch, PetReport, PetProfile } from '@/lib/types';
 import { getPetTypeIcon, getStatusColor, getStatusLabel } from '@/lib/helpers';
 import { apiRequest } from '@/lib/query-client';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const ORG_TYPE_LABELS: Record<string, string> = {
   vet: 'Vet Clinic',
@@ -22,6 +23,7 @@ export default function MatchesScreen() {
   const { reportId } = useLocalSearchParams<{ reportId: string }>();
   const insets = useSafeAreaInsets();
   const { getReport, reports, profiles, searchRadiusKm } = usePets();
+  const { track } = useAnalytics();
   const [matches, setMatches] = useState<PetMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,7 +49,9 @@ export default function MatchesScreen() {
         radiusKm: searchRadiusKm,
       });
       const data = await res.json();
-      setMatches(data.matches || []);
+      const found = data.matches || [];
+      setMatches(found);
+      track('ai_match_run', { matchCount: found.length, reportId });
     } catch (e: any) {
       console.error('Match error:', e);
       setError('Could not find matches. Please try again.');

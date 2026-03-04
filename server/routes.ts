@@ -2321,6 +2321,58 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
+  // ── Analytics ──────────────────────────────────────────────────────────
+  app.post("/api/analytics/event", optionalAuth, async (req: Request, res: Response) => {
+    try {
+      const { eventName, properties = {}, sessionId, platform } = req.body;
+      if (!eventName || typeof eventName !== "string") {
+        return res.status(400).json({ message: "eventName required" });
+      }
+      const safeName = eventName.slice(0, 100);
+      const userId = req.user?.id || null;
+      const safeProps = typeof properties === "object" && !Array.isArray(properties) ? { ...properties } : {};
+      delete safeProps.email;
+      delete safeProps.phone;
+      delete safeProps.password;
+      delete safeProps.name;
+      await pool.query(
+        `INSERT INTO analytics_events (event_name, properties, user_id, session_id, platform)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [safeName, JSON.stringify(safeProps), userId, sessionId || null, platform || null]
+      );
+      return res.status(201).json({ ok: true });
+    } catch (err) {
+      console.error("Analytics event error:", err);
+      return res.status(500).json({ message: "Failed to log event" });
+    }
+  });
+
+  app.get("/api/admin/analytics", authMiddleware, requireRole("admin"), async (req: Request, res: Response) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const summary = await pool.query(
+        `SELECT event_name, COUNT(*) AS total, COUNT(DISTINCT user_id) AS unique_users
+         FROM analytics_events
+         WHERE created_at >= NOW() - ($1 || ' days')::INTERVAL
+         GROUP BY event_name
+         ORDER BY total DESC`,
+        [days]
+      );
+      const daily = await pool.query(
+        `SELECT DATE(created_at) AS day, COUNT(*) AS events, COUNT(DISTINCT user_id) AS users
+         FROM analytics_events
+         WHERE created_at >= NOW() - ($1 || ' days')::INTERVAL
+         GROUP BY DATE(created_at)
+         ORDER BY day DESC`,
+        [days]
+      );
+      return res.json({ summary: summary.rows, daily: daily.rows, days });
+    } catch (err) {
+      console.error("Analytics summary error:", err);
+      return res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, Pressable, Platform, ScrollView, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import FilterBar from '@/components/FilterBar';
 import { PetReport, VetShelter } from '@/lib/types';
 import { NativeMapView, NativeMarker, NativeCallout } from '@/components/MapViewNative';
 import { VET_SHELTERS } from '@/lib/vet-shelters';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const INITIAL_REGION = {
   latitude: -33.8688,
@@ -126,11 +127,16 @@ function Legend({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const { reports } = usePets();
+  const { track } = useAnalytics();
   const [filter, setFilter] = useState('all');
   const [showServices, setShowServices] = useState(true);
   const mapRef = useRef<any>(null);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
   const isWeb = Platform.OS === 'web';
+
+  useEffect(() => {
+    track('map_opened');
+  }, []);
 
   const filteredReports = useMemo(() => {
     if (filter === 'all') return reports;
