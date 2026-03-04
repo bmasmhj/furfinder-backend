@@ -27,7 +27,7 @@ function NativeTabLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="happy-tails">
         <Icon sf={{ default: "heart.circle", selected: "heart.circle.fill" }} />
-        <Label>Happy Tails</Label>
+        <Label>Reunited</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="my-reports">
         <Icon sf={{ default: "pawprint", selected: "pawprint.fill" }} />
@@ -103,7 +103,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="happy-tails"
         options={{
-          title: "Happy Tails",
+          title: "Reunited",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "heart-circle" : "heart-circle-outline"} size={24} color={color} />
           ),

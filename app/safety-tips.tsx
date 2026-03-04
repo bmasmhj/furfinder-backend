@@ -18,6 +18,7 @@ const categories = [
       'Post on social media and community groups immediately',
       'Put out familiar items (bed, toys) near your home',
       'Check with microchip company to ensure contact details are current',
+      'Browse our Partner Directory for local vets, shelters & rescue groups',
     ],
   },
   {
@@ -72,14 +73,25 @@ function TipCard({ category, index }: { category: typeof categories[number]; ind
           <Text style={styles.cardTitle}>{category.title}</Text>
         </View>
         <View style={styles.tipsContainer}>
-          {category.tips.map((tip, tipIndex) => (
-            <View key={tipIndex} style={styles.tipRow}>
-              <View style={[styles.checkIcon, { backgroundColor: category.bgColor }]}>
-                <Ionicons name="checkmark-circle" size={18} color={category.color} />
-              </View>
-              <Text style={styles.tipText}>{tip}</Text>
-            </View>
-          ))}
+          {category.tips.map((tip, tipIndex) => {
+            const isPartnerLink = tip.includes('Partner Directory');
+            return (
+              <Pressable
+                key={tipIndex}
+                style={styles.tipRow}
+                onPress={isPartnerLink ? () => router.push('/partners') : undefined}
+                disabled={!isPartnerLink}
+              >
+                <View style={[styles.checkIcon, { backgroundColor: category.bgColor }]}>
+                  <Ionicons name="checkmark-circle" size={18} color={category.color} />
+                </View>
+                <Text style={[styles.tipText, isPartnerLink && styles.tipLink]}>{tip}</Text>
+                {isPartnerLink && (
+                  <Ionicons name="chevron-forward" size={16} color={Colors.secondary} />
+                )}
+              </Pressable>
+            );
+          })}
         </View>
       </View>
     </Animated.View>
@@ -242,6 +254,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_400Regular',
     color: Colors.textSecondary,
     lineHeight: 22,
+  },
+  tipLink: {
+    color: Colors.secondary,
+    fontFamily: 'Poppins_500Medium',
+    textDecorationLine: 'underline',
   },
   ctaCard: {
     borderRadius: 16,

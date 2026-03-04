@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -25,6 +25,14 @@ export default function PaywallScreen() {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [isProcessing, setIsProcessing] = useState(false);
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+  const scrollRef = useRef<ScrollView>(null);
+
+  const handleSelectPlan = (plan: 'monthly' | 'yearly') => {
+    setSelectedPlan(plan);
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 300);
+  };
 
   const handlePurchase = async () => {
     if (Platform.OS !== 'web') {
@@ -84,7 +92,7 @@ export default function PaywallScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + webTopPadding }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+      <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
         <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={styles.closeBtn}>
           <Ionicons name="close" size={24} color="#fff" />
         </Pressable>
@@ -112,14 +120,14 @@ export default function PaywallScreen() {
             <View style={styles.plansRow}>
               <Pressable
                 style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
-                onPress={() => setSelectedPlan('monthly')}
+                onPress={() => handleSelectPlan('monthly')}
               >
                 <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceSelected]}>$4.99</Text>
                 <Text style={[styles.planPeriod, selectedPlan === 'monthly' && styles.planPeriodSelected]}>per month</Text>
               </Pressable>
               <Pressable
                 style={[styles.planCard, selectedPlan === 'yearly' && styles.planCardSelected]}
-                onPress={() => setSelectedPlan('yearly')}
+                onPress={() => handleSelectPlan('yearly')}
               >
                 <View style={styles.saveBadge}>
                   <Text style={styles.saveBadgeText}>SAVE 17%</Text>

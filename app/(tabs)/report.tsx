@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Pressable, Platform } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import Colors from '@/constants/colors';
 export default function ReportScreen() {
   const insets = useSafeAreaInsets();
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+  const webBottomPadding = Platform.OS === 'web' ? 34 : 0;
 
   const handleReport = (type: 'lost' | 'found') => {
     if (Platform.OS !== 'web') {
@@ -20,6 +21,10 @@ export default function ReportScreen() {
 
   return (
     <View style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + webBottomPadding + 80 }}
+      >
       <View style={[styles.header, { paddingTop: insets.top + webTopPadding + 20 }]}>
         <Text style={styles.title}>Report a Pet</Text>
         <Text style={styles.subtitle}>Help a pet get back home safely</Text>
@@ -94,6 +99,7 @@ export default function ReportScreen() {
           <Text style={styles.tipText}>Add your contact info so finders can reach you</Text>
         </View>
       </View>
+      </ScrollView>
     </View>
   );
 }
