@@ -58,11 +58,11 @@ The application is built with a React Native (Expo) frontend and an Express.js (
 -   **Implementation:** RevenueCat SDK (`react-native-purchases`) for in-app subscriptions, with feature gating via a `useSubscription()` hook.
 
 ## Post-Launch Tasks (v1.1 — After iOS Submission)
-These are confirmed features to build after the iOS App Store submission is complete:
-1. **Dark Mode** — Full dark theme across all 30+ screens. Requires a complete colour system refactor using `useColorScheme()`. Estimated 3-4 hours.
-2. **Analytics Tracking** — In-app event logging for report submissions, match success rate, referral conversions, and feature usage. Must comply with Australian Privacy Act. Estimated 2 hours.
-3. **Optional Phone Number** — Add an optional phone number field to user profiles and pet reports. Users can choose whether to share their number so finders can call them directly. Display as a tappable `tel:` link on report detail screens.
-4. **Advertising Platform** — Allow businesses (vets, pet shops, pet food brands, etc.) to run ads within the app. Requires an ad management system, advertiser registration flow, and ad placement in the home feed and map screen. Will require updating App Privacy labels to include Advertising Data and Product Interaction tracking.
+All v1.1 tasks are complete:
+1. ✅ **Dark Mode** — `useTheme()` hook reads device colour scheme, switches between `colors.ts` and `dark-colors.ts`. `getStyles(Colors)` pattern used across all screens.
+2. ✅ **Analytics Tracking** — `hooks/useAnalytics.ts` posts events to `/api/analytics/event`. Admin dashboard at `/api/admin/analytics`.
+3. ✅ **Optional Phone Number** — `contact_phone` in schema and report form. Tappable call/SMS button on pet detail screens with public/private privacy toggle.
+4. ✅ **Advertising Platform** — Self-service ad submission, admin approval workflow, home feed placement every 5 reports, global on/off toggle.
 
 ## Debugging Rules (Non-Negotiable)
 
