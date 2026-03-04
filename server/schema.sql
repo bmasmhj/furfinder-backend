@@ -234,3 +234,37 @@ CREATE INDEX IF NOT EXISTS idx_organisations_status ON organisations(status);
 CREATE INDEX IF NOT EXISTS idx_org_animals_org_id ON organisation_animals(org_id);
 CREATE INDEX IF NOT EXISTS idx_org_animals_status ON organisation_animals(status);
 CREATE INDEX IF NOT EXISTS idx_org_animals_pet_type ON organisation_animals(pet_type);
+
+CREATE TABLE IF NOT EXISTS ads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  business_name VARCHAR(255) NOT NULL,
+  business_type VARCHAR(50) DEFAULT 'other',
+  contact_name VARCHAR(255),
+  contact_email VARCHAR(255),
+  contact_phone VARCHAR(100),
+  website VARCHAR(500),
+  image_uri TEXT NOT NULL,
+  link_url TEXT,
+  description TEXT,
+  placement VARCHAR(20) DEFAULT 'feed',
+  status VARCHAR(20) DEFAULT 'pending',
+  duration_days INTEGER DEFAULT 30,
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  approved_at TIMESTAMPTZ,
+  approved_by UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key VARCHAR(100) PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO app_settings (key, value) VALUES ('ads_enabled', 'true') ON CONFLICT (key) DO NOTHING;
+
+CREATE INDEX IF NOT EXISTS idx_ads_status ON ads(status);
+CREATE INDEX IF NOT EXISTS idx_ads_user_id ON ads(user_id);
+CREATE INDEX IF NOT EXISTS idx_ads_placement ON ads(placement);

@@ -204,6 +204,20 @@ export default function AdminScreen() {
             </View>
           </View>
 
+          <Pressable
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 16, backgroundColor: Colors.surface, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: Colors.borderLight }}
+            onPress={() => router.push('/admin-ads')}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Ionicons name="megaphone" size={22} color="#D97706" />
+              <View>
+                <Text style={{ fontSize: 15, fontFamily: 'Poppins_600SemiBold', color: Colors.text }}>Manage Ads</Text>
+                <Text style={{ fontSize: 12, fontFamily: 'Poppins_400Regular', color: Colors.textLight }}>Approve, pause, or remove ads</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+          </Pressable>
+
           {pendingOrgs.length === 0 ? (
             <View style={styles.emptyState}>
               <MaterialCommunityIcons name="check-circle-outline" size={64} color={Colors.success} />

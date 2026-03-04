@@ -38,11 +38,12 @@ The application is built with a React Native (Expo) frontend and an Express.js (
     -   Onboarding Flow: 3-slide onboarding screen shown on first launch (stored in AsyncStorage). Slides cover emotional benefit, AI matching, and community power. Skip option and post-onboarding CTA to register pet or browse.
     -   Comment Moderation: Admins and report owners can delete comments via a trash icon. DELETE /api/comments/:id enforces role and ownership checks.
     -   Push Notifications: expo-notifications integrated. Push tokens registered on login and stored in users.push_token DB column. Real push notifications sent server-side (Expo Push API) when messages are received.
+    -   Advertising Platform: Admin-controlled ad system for pet businesses. Self-service ad submission form, admin approval with configurable duration (30/60/90 days), auto-expiry, pause/resume, and a global ads on/off toggle. Approved ads display as "Sponsored" cards in the home feed (every 5 reports). Screens: `submit-ad.tsx` (advertiser form), `admin-ads.tsx` (admin management). AdCard component in `components/AdCard.tsx`.
 
 **Backend:**
 -   **Framework:** Express + TypeScript running on port 5000.
 -   **Authentication:** JWT-based authentication with bcryptjs for password hashing and 30-day token expiry. Role-based access control (user/org/admin) with `requireRole()` middleware.
--   **API:** Provides comprehensive CRUD routes for reports, profiles, comments, likes, boosting, reuniting pets, notifications, and partner organisations (registration, animal management, admin approval).
+-   **API:** Provides comprehensive CRUD routes for reports, profiles, comments, likes, boosting, reuniting pets, notifications, partner organisations, and advertising (submission, admin approval/rejection/pause/resume, active ad retrieval, global toggle).
 
 **AI Integration:**
 -   Leverages Replit AI Integrations for OpenAI (gpt-5.2) for advanced matching.

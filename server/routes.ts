@@ -2385,6 +2385,156 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
+  // ==================== ADS ====================
+
+  app.post("/api/ads/submit", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { businessName, businessType, contactName, contactEmail, contactPhone, website, imageUri, linkUrl, description, placement } = req.body;
+      if (!businessName || !imageUri) {
+        return res.status(400).json({ message: "Business name and ad image are required" });
+      }
+      const result = await pool.query(
+        `INSERT INTO ads (user_id, business_name, business_type, contact_name, contact_email, contact_phone, website, image_uri, link_url, description, placement)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+        [req.user!.id, businessName, businessType || 'other', contactName || '', contactEmail || '', contactPhone || '', website || '', imageUri, linkUrl || '', description || '', placement || 'feed']
+      );
+      return res.status(201).json(result.rows[0]);
+    } catch (err) {
+      console.error("Submit ad error:", err);
+      return res.status(500).json({ message: "Failed to submit ad" });
+    }
+  });
+
+  app.get("/api/ads/active", async (_req: Request, res: Response) => {
+    try {
+      const settingsResult = await pool.query("SELECT value FROM app_settings WHERE key = 'ads_enabled'");
+      const adsEnabled = settingsResult.rows[0]?.value !== 'false';
+      if (!adsEnabled) return res.json([]);
+
+      const result = await pool.query(
+        `SELECT id, business_name, business_type, image_uri, link_url, description, website, placement
+         FROM ads
+         WHERE status = 'approved'
+           AND (start_date IS NULL OR start_date <= NOW())
+           AND (end_date IS NULL OR end_date > NOW())
+         ORDER BY RANDOM()`
+      );
+      return res.json(result.rows);
+    } catch (err) {
+      console.error("Fetch active ads error:", err);
+      return res.status(500).json({ message: "Failed to fetch ads" });
+    }
+  });
+
+  app.get("/api/admin/ads/pending", authMiddleware, requireRole('admin'), async (_req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        `SELECT a.*, u.display_name as registrant_name, u.email as registrant_email
+         FROM ads a
+         LEFT JOIN users u ON a.user_id = u.id
+         WHERE a.status = 'pending'
+         ORDER BY a.created_at ASC`
+      );
+      return res.json(result.rows);
+    } catch (err) {
+      console.error("Fetch pending ads error:", err);
+      return res.status(500).json({ message: "Failed to fetch pending ads" });
+    }
+  });
+
+  app.get("/api/admin/ads/all", authMiddleware, requireRole('admin'), async (_req: Request, res: Response) => {
+    try {
+      const settingsResult = await pool.query("SELECT value FROM app_settings WHERE key = 'ads_enabled'");
+      const result = await pool.query(
+        `SELECT a.*, u.display_name as registrant_name, u.email as registrant_email
+         FROM ads a
+         LEFT JOIN users u ON a.user_id = u.id
+         ORDER BY a.created_at DESC`
+      );
+      return res.json({ ads: result.rows, adsEnabled: settingsResult.rows[0]?.value !== 'false' });
+    } catch (err) {
+      console.error("Fetch all ads error:", err);
+      return res.status(500).json({ message: "Failed to fetch ads" });
+    }
+  });
+
+  app.post("/api/admin/ads/:id/approve", authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { durationDays } = req.body;
+      const days = durationDays || 30;
+      const now = new Date();
+      const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+      await pool.query(
+        `UPDATE ads SET status = 'approved', start_date = $1, end_date = $2, duration_days = $3, approved_at = $1, approved_by = $4 WHERE id = $5`,
+        [now, endDate, days, req.user!.id, id]
+      );
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Approve ad error:", err);
+      return res.status(500).json({ message: "Failed to approve ad" });
+    }
+  });
+
+  app.post("/api/admin/ads/:id/reject", authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await pool.query("UPDATE ads SET status = 'rejected' WHERE id = $1", [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Reject ad error:", err);
+      return res.status(500).json({ message: "Failed to reject ad" });
+    }
+  });
+
+  app.post("/api/admin/ads/:id/pause", authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await pool.query("UPDATE ads SET status = 'paused' WHERE id = $1 AND status = 'approved'", [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Pause ad error:", err);
+      return res.status(500).json({ message: "Failed to pause ad" });
+    }
+  });
+
+  app.post("/api/admin/ads/:id/resume", authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await pool.query("UPDATE ads SET status = 'approved' WHERE id = $1 AND status = 'paused'", [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Resume ad error:", err);
+      return res.status(500).json({ message: "Failed to resume ad" });
+    }
+  });
+
+  app.delete("/api/admin/ads/:id", authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await pool.query("DELETE FROM ads WHERE id = $1", [id]);
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Delete ad error:", err);
+      return res.status(500).json({ message: "Failed to delete ad" });
+    }
+  });
+
+  app.post("/api/admin/ads/toggle", authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const { enabled } = req.body;
+      await pool.query(
+        "INSERT INTO app_settings (key, value, updated_at) VALUES ('ads_enabled', $1, NOW()) ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()",
+        [enabled ? 'true' : 'false']
+      );
+      return res.json({ success: true, enabled });
+    } catch (err) {
+      console.error("Toggle ads error:", err);
+      return res.status(500).json({ message: "Failed to toggle ads" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

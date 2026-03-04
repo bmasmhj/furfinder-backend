@@ -16,6 +16,7 @@ import { useSubscription } from '@/lib/subscription-context';
 import { useAuth } from '@/lib/auth-context';
 import { getApiUrl } from '@/lib/query-client';
 import PetCard from '@/components/PetCard';
+import AdCard from '@/components/AdCard';
 import EmptyState from '@/components/EmptyState';
 import AreaFilterModal, { AreaFilterValue } from '@/components/AreaFilterModal';
 import { PetReport } from '@/lib/types';
@@ -47,6 +48,7 @@ export default function HomeScreen() {
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedLoadingMore, setFeedLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeAds, setActiveAds] = useState<any[]>([]);
 
   const fetchingRef = useRef(false);
 
@@ -90,11 +92,22 @@ export default function HomeScreen() {
     }
   }, [buildUrl, token]);
 
+  const fetchActiveAds = useCallback(async () => {
+    try {
+      const res = await fetch(new URL('/api/ads/active', getApiUrl()).toString());
+      if (res.ok) {
+        const data = await res.json();
+        setActiveAds(data);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     setFeedLoading(true);
     setFeedReports([]);
     setFeedPage(0);
     fetchPage(0, true).finally(() => setFeedLoading(false));
+    fetchActiveAds();
   }, [statusFilter, areaFilter]);
 
   useEffect(() => {
@@ -102,6 +115,20 @@ export default function HomeScreen() {
       if (!seen) router.replace('/onboarding');
     });
   }, []);
+
+  const feedData = useMemo(() => {
+    if (activeAds.length === 0) return feedReports.map(r => ({ type: 'report' as const, data: r }));
+    const mixed: { type: 'report' | 'ad'; data: any }[] = [];
+    let adIdx = 0;
+    feedReports.forEach((r, i) => {
+      mixed.push({ type: 'report', data: r });
+      if ((i + 1) % 5 === 0 && adIdx < activeAds.length) {
+        mixed.push({ type: 'ad', data: activeAds[adIdx % activeAds.length] });
+        adIdx++;
+      }
+    });
+    return mixed;
+  }, [feedReports, activeAds]);
 
   const suggestedSuburbs = useMemo(() => {
     const seen = new Set<string>();
@@ -124,7 +151,7 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchPage(0, true);
+    await Promise.all([fetchPage(0, true), fetchActiveAds()]);
     setRefreshing(false);
   };
 
@@ -263,9 +290,9 @@ export default function HomeScreen() {
         </View>
       ) : (
         <FlatList
-          data={feedReports}
-          keyExtractor={item => item.id}
-          renderItem={({ item, index }) => <PetCard report={item} index={index} />}
+          data={feedData}
+          keyExtractor={(item, index) => item.type === 'ad' ? `ad-${item.data.id}-${index}` : item.data.id}
+          renderItem={({ item, index }) => item.type === 'ad' ? <AdCard ad={item.data} /> : <PetCard report={item.data} index={index} />}
           ListHeaderComponent={ListHeader}
           ListEmptyComponent={
             <EmptyState

@@ -42,6 +42,8 @@ function PickerRow<T extends string>({
   onChange: (v: T) => void;
   testID: string;
 }) {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   return (
     <View style={styles.fieldGroup} testID={testID}>
       <Text style={styles.label}>{label}</Text>
@@ -126,6 +128,15 @@ export default function OrgAnimalFormScreen() {
   const handlePickPhoto = async () => {
     if (photoUris.length >= 5) {
       Alert.alert('Limit Reached', 'You can upload up to 5 photos.');
+      return;
+    }
+    const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      if (!canAskAgain) {
+        Alert.alert('Permission Needed', 'Please enable photo access in your device Settings to upload photos.');
+      } else {
+        Alert.alert('Permission Needed', 'We need access to your photos to upload animal images.');
+      }
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({

@@ -342,6 +342,38 @@ export default function SettingsScreen() {
         )}
 
         <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>Advertising</Text>
+        </View>
+
+        <Pressable style={styles.menuItem} onPress={() => router.push('/submit-ad')} testID="advertise-link">
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
+              <Ionicons name="megaphone" size={18} color="#D97706" />
+            </View>
+            <View>
+              <Text style={styles.menuItemText}>Advertise with Us</Text>
+              <Text style={styles.menuItemSubtext}>Promote your pet business</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+        </Pressable>
+
+        {user?.role === 'admin' && (
+          <Pressable style={styles.menuItem} onPress={() => router.push('/admin-ads')} testID="admin-ads-link">
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.menuIcon, { backgroundColor: '#FEF2F2' }]}>
+                <Ionicons name="settings" size={18} color={Colors.primary} />
+              </View>
+              <View>
+                <Text style={styles.menuItemText}>Manage Ads</Text>
+                <Text style={styles.menuItemSubtext}>Approve, pause, or remove ads</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textLight} />
+          </Pressable>
+        )}
+
+        <View style={styles.sectionHeader}>
           <Text style={styles.sectionHeaderText}>Resources</Text>
         </View>
 

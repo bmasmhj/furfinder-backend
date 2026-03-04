@@ -185,6 +185,14 @@ function RootLayoutNav() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="submit-ad"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="admin-ads"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="conversations"
         options={{ headerShown: false }}
       />

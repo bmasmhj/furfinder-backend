@@ -32,6 +32,8 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 function StatusBadge({ status }: { status: string }) {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const colors = STATUS_COLORS[status] || { bg: '#F3F4F6', text: '#6B7280' };
   return (
     <View style={[styles.badge, { backgroundColor: colors.bg }]}>
