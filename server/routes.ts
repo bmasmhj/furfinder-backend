@@ -139,6 +139,7 @@ function mapReportRow(row: any, isOwner: boolean, likedByMe: boolean): any {
     rewardPool: row.reward_pool || 0,
     contactName: row.contact_name,
     contactPhone: row.contact_phone,
+    showContactPublic: row.show_contact_public ?? true,
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
     isOwner,
     comments: [],
@@ -1114,10 +1115,10 @@ Return ONLY valid JSON, no markdown.`;
     try {
       const b = req.body;
       const result = await pool.query(
-        `INSERT INTO pet_reports (user_id, status, pet_type, pet_name, breed, size, color, markings, photo_uri, photo_uris, description, latitude, longitude, location_name, last_seen_date, reward, contact_name, contact_phone)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+        `INSERT INTO pet_reports (user_id, status, pet_type, pet_name, breed, size, color, markings, photo_uri, photo_uris, description, latitude, longitude, location_name, last_seen_date, reward, contact_name, contact_phone, show_contact_public)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
          RETURNING *`,
-        [req.user!.id, b.status, b.petType, b.petName, b.breed || '', b.size || 'medium', b.color || '', b.markings || '', b.photoUri || '', JSON.stringify(b.photoUris || []), b.description || '', b.latitude || 0, b.longitude || 0, b.locationName || '', b.lastSeenDate || '', b.reward || '', b.contactName || '', b.contactPhone || '']
+        [req.user!.id, b.status, b.petType, b.petName, b.breed || '', b.size || 'medium', b.color || '', b.markings || '', b.photoUri || '', JSON.stringify(b.photoUris || []), b.description || '', b.latitude || 0, b.longitude || 0, b.locationName || '', b.lastSeenDate || '', b.reward || '', b.contactName || '', b.contactPhone || '', b.showContactPublic !== false]
       );
 
       const reportId = result.rows[0].id;
@@ -1151,7 +1152,7 @@ Return ONLY valid JSON, no markdown.`;
         description: 'description', latitude: 'latitude', longitude: 'longitude',
         locationName: 'location_name', lastSeenDate: 'last_seen_date',
         reward: 'reward', contactName: 'contact_name', contactPhone: 'contact_phone',
-        reunionMessage: 'reunion_message',
+        showContactPublic: 'show_contact_public', reunionMessage: 'reunion_message',
       };
 
       for (const [key, col] of Object.entries(updatable)) {
@@ -1313,6 +1314,17 @@ Return ONLY valid JSON, no markdown.`;
     } catch (err) {
       console.error('Save push token error:', err);
       return res.status(500).json({ message: 'Failed to save push token' });
+    }
+  });
+
+  app.patch("/api/user/profile", authMiddleware, async (req: Request, res: Response) => {
+    try {
+      const { phone } = req.body;
+      await pool.query('UPDATE users SET phone = $1 WHERE id = $2', [phone ?? null, req.user!.id]);
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error('Update profile error:', err);
+      return res.status(500).json({ message: 'Failed to update profile' });
     }
   });
 

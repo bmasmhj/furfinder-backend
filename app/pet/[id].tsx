@@ -457,19 +457,25 @@ export default function PetDetailScreen() {
                 <Ionicons name="person-circle" size={40} color={Colors.primary} />
                 <View>
                   <Text style={styles.contactName}>{report.contactName}</Text>
-                  <Text style={styles.contactPhone}>{report.contactPhone}</Text>
+                  {(report as any).showContactPublic !== false && report.contactPhone ? (
+                    <Text style={styles.contactPhone}>{report.contactPhone}</Text>
+                  ) : (report as any).showContactPublic === false ? (
+                    <Text style={[styles.contactPhone, { color: Colors.textLight, fontStyle: 'italic' }]}>Phone number private</Text>
+                  ) : null}
                 </View>
               </View>
-              <View style={styles.contactActions}>
-                <Pressable onPress={handleCall} style={[styles.contactBtn, { backgroundColor: Colors.primary }]}>
-                  <Ionicons name="call" size={20} color="#fff" />
-                  <Text style={styles.contactBtnText}>Call</Text>
-                </Pressable>
-                <Pressable onPress={handleMessage} style={[styles.contactBtn, { backgroundColor: Colors.secondary }]}>
-                  <Ionicons name="chatbubble" size={20} color="#fff" />
-                  <Text style={styles.contactBtnText}>Text</Text>
-                </Pressable>
-              </View>
+              {(report as any).showContactPublic !== false && report.contactPhone && (
+                <View style={styles.contactActions}>
+                  <Pressable onPress={handleCall} style={[styles.contactBtn, { backgroundColor: Colors.primary }]}>
+                    <Ionicons name="call" size={20} color="#fff" />
+                    <Text style={styles.contactBtnText}>Call</Text>
+                  </Pressable>
+                  <Pressable onPress={handleMessage} style={[styles.contactBtn, { backgroundColor: Colors.secondary }]}>
+                    <Ionicons name="chatbubble" size={20} color="#fff" />
+                    <Text style={styles.contactBtnText}>Text</Text>
+                  </Pressable>
+                </View>
+              )}
               {!report.isOwner && token && (
                 <Pressable onPress={handleInAppMessage} style={[styles.contactBtn, { backgroundColor: '#0284C7', marginTop: 10, alignSelf: 'stretch' }]}>
                   <Ionicons name="chatbubbles" size={20} color="#fff" />

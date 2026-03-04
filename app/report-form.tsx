@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Pressable, ScrollView, Platform, Alert, ActivityIndicator, Switch } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -55,6 +55,7 @@ export default function ReportFormScreen() {
   const [reward, setReward] = useState('');
   const [contactName, setContactName] = useState(prefillProfile?.ownerName || '');
   const [contactPhone, setContactPhone] = useState(prefillProfile?.ownerPhone || '');
+  const [showContactPublic, setShowContactPublic] = useState(true);
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -232,8 +233,8 @@ export default function ReportFormScreen() {
       setSubmitError('Please enter or detect the location.');
       return;
     }
-    if (!contactName.trim() || !contactPhone.trim()) {
-      setSubmitError('Please enter your contact name and phone number.');
+    if (!contactName.trim()) {
+      setSubmitError('Please enter your contact name.');
       return;
     }
 
@@ -243,7 +244,7 @@ export default function ReportFormScreen() {
 
     setIsSaving(true);
     try {
-      await addReport({
+      await (addReport as any)({
         status: isLost ? 'lost' : 'found',
         petType,
         petName: petName.trim() || 'Unknown',
@@ -261,6 +262,7 @@ export default function ReportFormScreen() {
         reward: isLost ? reward.trim() : '',
         contactName: contactName.trim(),
         contactPhone: contactPhone.trim(),
+        showContactPublic,
         isOwner: true,
       });
 
@@ -470,10 +472,24 @@ export default function ReportFormScreen() {
           style={styles.input}
           value={contactPhone}
           onChangeText={setContactPhone}
-          placeholder="Phone number *"
+          placeholder="Phone number (optional)"
           placeholderTextColor={Colors.textLight}
           keyboardType="phone-pad"
         />
+        {contactPhone.trim().length > 0 && (
+          <View style={styles.toggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.toggleLabel}>Share phone number publicly</Text>
+              <Text style={styles.toggleHint}>Finders can call or text you directly</Text>
+            </View>
+            <Switch
+              value={showContactPublic}
+              onValueChange={setShowContactPublic}
+              trackColor={{ false: Colors.border, true: Colors.secondary }}
+              thumbColor="#fff"
+            />
+          </View>
+        )}
 
         {submitError ? (
           <View style={styles.errorBox}>
@@ -667,6 +683,28 @@ const getStyles = (Colors: any) => StyleSheet.create({
   textArea: {
     height: 100,
     paddingTop: 14,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 12,
+    marginTop: 2,
+  },
+  toggleLabel: {
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    color: Colors.text,
+  },
+  toggleHint: {
+    fontSize: 12,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textLight,
+    marginTop: 2,
   },
   sizeRow: {
     flexDirection: 'row',

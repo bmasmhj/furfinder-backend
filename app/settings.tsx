@@ -8,6 +8,7 @@ import {
   Platform,
   Alert,
   Linking,
+  TextInput,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,6 +35,27 @@ export default function SettingsScreen() {
   const { reports, profiles, deleteReport, deleteProfile, searchRadiusKm, setSearchRadiusKm } = usePets();
   const { user, token, logout } = useAuth();
   const [localRadius, setLocalRadius] = useState(searchRadiusKm);
+  const [phoneValue, setPhoneValue] = useState(user?.phone || '');
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
+
+  const handleSavePhone = async () => {
+    setIsSavingPhone(true);
+    try {
+      const res = await fetch(new URL('/api/user/profile', getApiUrl()).toString(), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ phone: phoneValue.trim() || null }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      setEditingPhone(false);
+      Alert.alert('Saved', 'Your phone number has been updated.');
+    } catch {
+      Alert.alert('Error', 'Failed to save phone number. Please try again.');
+    } finally {
+      setIsSavingPhone(false);
+    }
+  };
 
   const handleRadiusChange = useCallback((value: number) => {
     const rounded = Math.round(value);
@@ -504,6 +526,65 @@ export default function SettingsScreen() {
         </Pressable>
 
         <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>My Profile</Text>
+        </View>
+
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Name</Text>
+            <Text style={styles.infoValue}>{user?.displayName || '—'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Email</Text>
+            <Text style={styles.infoValue} numberOfLines={1}>{user?.email || '—'}</Text>
+          </View>
+          <View style={[styles.infoRow, { borderBottomWidth: 0, flexDirection: 'column', alignItems: 'flex-start', gap: 8 }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+              <Text style={styles.infoLabel}>Phone number</Text>
+              {!editingPhone && (
+                <Pressable onPress={() => setEditingPhone(true)}>
+                  <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', color: Colors.secondary }}>
+                    {phoneValue ? 'Edit' : 'Add'}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+            {editingPhone ? (
+              <View style={{ width: '100%', gap: 8 }}>
+                <TextInput
+                  style={styles.phoneInput}
+                  value={phoneValue}
+                  onChangeText={setPhoneValue}
+                  placeholder="e.g. 0412 345 678"
+                  placeholderTextColor={Colors.textLight}
+                  keyboardType="phone-pad"
+                  autoFocus
+                />
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Pressable
+                    onPress={() => { setEditingPhone(false); setPhoneValue(user?.phone || ''); }}
+                    style={[styles.phoneBtn, { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border }]}
+                  >
+                    <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', color: Colors.text }}>Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleSavePhone}
+                    disabled={isSavingPhone}
+                    style={[styles.phoneBtn, { backgroundColor: Colors.secondary, flex: 1 }]}
+                  >
+                    <Text style={{ fontSize: 13, fontFamily: 'Poppins_600SemiBold', color: '#fff' }}>
+                      {isSavingPhone ? 'Saving…' : 'Save'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Text style={styles.infoValue}>{phoneValue || 'Not set'}</Text>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.sectionHeader}>
           <Text style={styles.sectionHeaderText}>Account</Text>
         </View>
 
@@ -648,6 +729,24 @@ const getStyles = (Colors: any) => StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
     color: Colors.text,
+  },
+  phoneInput: {
+    backgroundColor: Colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  phoneBtn: {
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   footerNote: {
     flexDirection: 'row',
