@@ -6,8 +6,8 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "npm run expo:static:build && npm run server:build"]
-run = ["sh", "-c", "npm run server:prod"]
+build = ["bash", "-c", "npm run server:build && node scripts/build.js"]
+run = ["npm", "run", "server:prod"]
 
 [[ports]]
 localPort = 5000
