@@ -60,6 +60,7 @@ These are confirmed features to build after the iOS App Store submission is comp
 1. **Dark Mode** — Full dark theme across all 30+ screens. Requires a complete colour system refactor using `useColorScheme()`. Estimated 3-4 hours.
 2. **Analytics Tracking** — In-app event logging for report submissions, match success rate, referral conversions, and feature usage. Must comply with Australian Privacy Act. Estimated 2 hours.
 3. **Optional Phone Number** — Add an optional phone number field to user profiles and pet reports. Users can choose whether to share their number so finders can call them directly. Display as a tappable `tel:` link on report detail screens.
+4. **Advertising Platform** — Allow businesses (vets, pet shops, pet food brands, etc.) to run ads within the app. Requires an ad management system, advertiser registration flow, and ad placement in the home feed and map screen. Will require updating App Privacy labels to include Advertising Data and Product Interaction tracking.
 
 ## Debugging Rules (Non-Negotiable)
 
