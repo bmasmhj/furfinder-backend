@@ -9,7 +9,7 @@ import { usePets } from '@/lib/pet-context';
 import { PetNotification } from '@/lib/types';
 import { formatDate } from '@/lib/helpers';
 
-function getNotificationIcon(type: PetNotification['type'], Colors: any): { name: string; color: string; bg: string } {
+function getNotificationIcon(type: string, Colors: any): { name: string; color: string; bg: string } {
   switch (type) {
     case 'lost_nearby':
       return { name: 'alert-circle', color: '#EF4444', bg: '#FEE2E2' };
@@ -17,8 +17,12 @@ function getNotificationIcon(type: PetNotification['type'], Colors: any): { name
       return { name: 'checkmark-circle', color: Colors.secondary, bg: '#D1FAE5' };
     case 'match_found':
       return { name: 'sparkles', color: '#6366F1', bg: '#E0E7FF' };
+    case 'ai_match':
+      return { name: 'paw', color: '#6366F1', bg: '#EDE9FE' };
     case 'status_update':
       return { name: 'information-circle', color: Colors.primary, bg: '#FFF1EE' };
+    case 'message':
+      return { name: 'chatbubble', color: Colors.secondary, bg: '#D1FAE5' };
     default:
       return { name: 'notifications', color: Colors.textLight, bg: '#F3F4F6' };
   }

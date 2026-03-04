@@ -224,7 +224,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     </body></html>`);
   });
 
-  app.post("/api/match", aiLimiter, async (req: Request, res: Response) => {
+  async function notifyMatchedReportOwners(
+    matches: Array<{ id: string; type: string; confidence: number }>,
+    scannerUserId: string | null,
+    confidenceThreshold = 50
+  ): Promise<void> {
+    const reportMatches = matches.filter(
+      (m) => m.type === 'report' && m.confidence >= confidenceThreshold
+    );
+    for (const match of reportMatches) {
+      try {
+        const reportResult = await pool.query(
+          `SELECT pr.id, pr.pet_name, pr.pet_type, pr.status, pr.user_id,
+                  u.push_token
+           FROM pet_reports pr
+           JOIN users u ON u.id = pr.user_id
+           WHERE pr.id = $1 AND pr.status = 'lost'`,
+          [match.id]
+        );
+        if (reportResult.rows.length === 0) continue;
+        const row = reportResult.rows[0];
+        if (scannerUserId && row.user_id === scannerUserId) continue;
+        const dedup = await pool.query(
+          `SELECT id FROM notifications
+           WHERE user_id = $1 AND type = 'ai_match' AND report_id = $2
+             AND created_at > NOW() - INTERVAL '4 hours'
+           LIMIT 1`,
+          [row.user_id, match.id]
+        );
+        if (dedup.rows.length > 0) continue;
+        const petName = row.pet_name || 'your pet';
+        const title = `Possible match found for ${petName}!`;
+        const message = `Someone spotted a pet nearby that our AI thinks could be a match for your lost ${petName}. Open The Fur Finder to review the details — it may not be exact, but it\'s worth checking.`;
+        await pool.query(
+          `INSERT INTO notifications (user_id, type, title, message, report_id)
+           VALUES ($1, 'ai_match', $2, $3, $4)`,
+          [row.user_id, title, message, match.id]
+        );
+        sendPushNotification(row.push_token, row.user_id, title, message, {
+          type: 'ai_match',
+          reportId: match.id,
+        }).catch((err: any) => console.error('[Push] AI match notification error:', err));
+        console.log(`[Match] Notified user ${row.user_id} of probable match for report ${match.id} (confidence ${match.confidence}%)`);
+      } catch (err) {
+        console.error('[Match] Failed to notify report owner:', err);
+      }
+    }
+  }
+
+  app.post("/api/match", aiLimiter, optionalAuth, async (req: Request, res: Response) => {
     try {
       const { report, reports, profiles, radiusKm } = req.body as {
         report: PetReport;
@@ -448,7 +496,15 @@ Return ONLY valid JSON, no markdown formatting.`;
         .sort((a: any, b: any) => b.confidence - a.confidence)
         .slice(0, 10);
 
-      return res.json({ matches });
+      res.json({ matches });
+
+      if (report.status === 'found') {
+        notifyMatchedReportOwners(matches, req.user?.id || null).catch(
+          (err: any) => console.error('[Match] notifyMatchedReportOwners error:', err)
+        );
+      }
+
+      return;
     } catch (error) {
       console.error("Match error:", error);
       return res.status(500).json({ error: "Failed to find matches" });
@@ -746,7 +802,7 @@ Return ONLY valid JSON, no markdown.`;
     }
   });
 
-  app.post("/api/quick-snap-match", aiLimiter, async (req: Request, res: Response) => {
+  app.post("/api/quick-snap-match", aiLimiter, optionalAuth, async (req: Request, res: Response) => {
     try {
       const { photoUri, petType, reports, profiles } = req.body as {
         photoUri: string;
@@ -930,7 +986,13 @@ Return ONLY valid JSON, no markdown.`;
         .sort((a: any, b: any) => b.confidence - a.confidence)
         .slice(0, 10);
 
-      return res.json({ matches });
+      res.json({ matches });
+
+      notifyMatchedReportOwners(matches, req.user?.id || null).catch(
+        (err: any) => console.error('[QuickSnap] notifyMatchedReportOwners error:', err)
+      );
+
+      return;
     } catch (error) {
       console.error("Quick snap match error:", error);
       return res.status(500).json({ error: "Failed to process snap match" });
