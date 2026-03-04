@@ -7,7 +7,8 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-const BATCH_RADIUS_KM = 10;
+const PRIMARY_RADIUS_KM = 10;
+const EXTENDED_RADIUS_KM = 50;
 const CONFIDENCE_THRESHOLD = 50;
 const MAX_LOST_PER_RUN = 40;
 const MAX_FOUND_POOL = 300;
@@ -101,15 +102,27 @@ export async function runBatchMatch(): Promise<BatchRunResult> {
     console.log(`[BatchMatch] ${lostReports.length} lost, ${foundReports.length} found`);
 
     for (const lost of lostReports) {
-      const nearby = foundReports.filter(found => {
-        if (found.pet_type !== lost.pet_type) return false;
-        if (lost.latitude && lost.longitude && found.latitude && found.longitude) {
-          if (getDistance(lost.latitude, lost.longitude, found.latitude, found.longitude) > BATCH_RADIUS_KM) {
-            return false;
+      const filterByRadius = (maxKm: number) =>
+        foundReports.filter(found => {
+          if (found.pet_type !== lost.pet_type) return false;
+          if (lost.latitude && lost.longitude && found.latitude && found.longitude) {
+            if (getDistance(lost.latitude, lost.longitude, found.latitude, found.longitude) > maxKm) {
+              return false;
+            }
           }
+          return true;
+        });
+
+      let nearby = filterByRadius(PRIMARY_RADIUS_KM);
+      let radiusUsed = PRIMARY_RADIUS_KM;
+
+      if (nearby.length === 0) {
+        nearby = filterByRadius(EXTENDED_RADIUS_KM);
+        radiusUsed = EXTENDED_RADIUS_KM;
+        if (nearby.length > 0) {
+          console.log(`[BatchMatch] No candidates within ${PRIMARY_RADIUS_KM}km for "${lost.pet_name}" — expanding to ${EXTENDED_RADIUS_KM}km, found ${nearby.length}`);
         }
-        return true;
-      });
+      }
 
       if (nearby.length === 0) continue;
 
@@ -126,8 +139,12 @@ export async function runBatchMatch(): Promise<BatchRunResult> {
 
       const targetSummary = `LOST ${lost.pet_type.toUpperCase()} "${lost.pet_name}", breed: ${lost.breed}, size: ${lost.size}, color: ${lost.color}, markings: "${lost.markings}", location: ${lost.location_name}, date: ${lost.last_seen_date}, description: "${lost.description}"`;
 
+      const radiusNote = radiusUsed > PRIMARY_RADIUS_KM
+        ? ` [NOTE: No candidates found within ${PRIMARY_RADIUS_KM}km — these candidates are within the expanded ${radiusUsed}km search radius.]`
+        : ` [Candidates are within ${radiusUsed}km.]`;
+
       const userContent: any[] = [
-        { type: 'text', text: `TARGET (LOST PET):\n${targetSummary}\n` }
+        { type: 'text', text: `TARGET (LOST PET):\n${targetSummary}\n${radiusNote}` }
       ];
 
       for (const photo of getRowPhotos(lost).slice(0, 2)) {
