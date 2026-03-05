@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -21,17 +22,21 @@ import {
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+} catch {}
 
-SplashScreen.preventAutoHideAsync();
+try {
+  SplashScreen.preventAutoHideAsync();
+} catch {}
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, token } = useAuth();
@@ -47,7 +52,10 @@ function RootLayoutNav() {
           finalStatus = status;
         }
         if (finalStatus !== 'granted') return;
-        const tokenData = await Notifications.getExpoPushTokenAsync();
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+        const tokenData = await Notifications.getExpoPushTokenAsync(
+          projectId ? { projectId } : undefined
+        );
         const pushToken = tokenData.data;
         const baseUrl = getApiUrl();
         await fetch(new URL('/api/users/push-token', baseUrl).toString(), {
