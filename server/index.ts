@@ -301,7 +301,7 @@ function setupErrorHandler(app: express.Application) {
       (async () => {
         try {
           const schemaPaths = [
-            path.join(__dirname, "schema.sql"),
+            path.resolve(process.cwd(), "server_dist", "schema.sql"),
             path.resolve(process.cwd(), "server", "schema.sql"),
           ];
           let schemaApplied = false;

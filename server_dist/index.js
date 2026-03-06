@@ -1,11 +1,5 @@
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
@@ -115,7 +109,7 @@ async function sendPushNotification(pushToken, userId, title, body, data) {
         err
       );
       if (attempt < PUSH_MAX_ATTEMPTS) {
-        await new Promise((resolve2) => setTimeout(resolve2, 1e3 * attempt));
+        await new Promise((resolve3) => setTimeout(resolve3, 1e3 * attempt));
       }
     }
   }
@@ -300,10 +294,10 @@ Only include matches with confidence >= ${CONFIDENCE_THRESHOLD}. Confidence scal
             console.error("[BatchMatch] Insert error:", err);
           }
         }
-        await new Promise((resolve2) => setTimeout(resolve2, AI_DELAY_MS));
+        await new Promise((resolve3) => setTimeout(resolve3, AI_DELAY_MS));
       } catch (err) {
         console.error(`[BatchMatch] AI error for lost report ${lost.id}:`, err);
-        await new Promise((resolve2) => setTimeout(resolve2, AI_DELAY_MS));
+        await new Promise((resolve3) => setTimeout(resolve3, AI_DELAY_MS));
       }
     }
     console.log(`[BatchMatch] Done. Processed ${processed}, new matches: ${newMatches}`);
@@ -569,11 +563,13 @@ var init_production_seed = __esm({
 });
 
 // server/index.ts
-import express from "express";
+import express2 from "express";
 
 // server/routes.ts
 init_db();
 import { createServer } from "node:http";
+import * as path from "path";
+import express from "express";
 import OpenAI2 from "openai";
 import rateLimit from "express-rate-limit";
 
@@ -993,10 +989,8 @@ async function getOrgAnimalCandidates(petType, excludeOrgId) {
   return result.rows;
 }
 async function registerRoutes(app2) {
-  const path2 = __require("path");
-  const express2 = __require("express");
-  app2.use("/store-assets", express2.static(path2.join(__dirname, "..", "assets", "store")));
-  app2.use("/app-assets", express2.static(path2.join(__dirname, "..", "assets")));
+  app2.use("/store-assets", express.static(path.resolve(process.cwd(), "assets", "store")));
+  app2.use("/app-assets", express.static(path.resolve(process.cwd(), "assets")));
   app2.get("/download-assets", (_req, res) => {
     res.setHeader("Content-Type", "text/html");
     res.send(`<!DOCTYPE html><html><head><title>Download Assets</title>
@@ -3425,8 +3419,8 @@ Return ONLY valid JSON, no markdown.`;
 
 // server/index.ts
 import * as fs from "fs";
-import * as path from "path";
-var app = express();
+import * as path2 from "path";
+var app = express2();
 var log = console.log;
 function setupCors(app2) {
   app2.use((req, res, next) => {
@@ -3458,19 +3452,19 @@ function setupCors(app2) {
 }
 function setupBodyParsing(app2) {
   app2.use(
-    express.json({
+    express2.json({
       limit: "50mb",
       verify: (req, _res, buf) => {
         req.rawBody = buf;
       }
     })
   );
-  app2.use(express.urlencoded({ extended: false }));
+  app2.use(express2.urlencoded({ extended: false }));
 }
 function setupRequestLogging(app2) {
   app2.use((req, res, next) => {
     const start = Date.now();
-    const path2 = req.path;
+    const path3 = req.path;
     let capturedJsonResponse = void 0;
     const originalResJson = res.json;
     res.json = function(bodyJson, ...args) {
@@ -3478,9 +3472,9 @@ function setupRequestLogging(app2) {
       return originalResJson.apply(res, [bodyJson, ...args]);
     };
     res.on("finish", () => {
-      if (!path2.startsWith("/api")) return;
+      if (!path3.startsWith("/api")) return;
       const duration = Date.now() - start;
-      let logLine = `${req.method} ${path2} ${res.statusCode} in ${duration}ms`;
+      let logLine = `${req.method} ${path3} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
@@ -3494,7 +3488,7 @@ function setupRequestLogging(app2) {
 }
 function getAppName() {
   try {
-    const appJsonPath = path.resolve(process.cwd(), "app.json");
+    const appJsonPath = path2.resolve(process.cwd(), "app.json");
     const appJsonContent = fs.readFileSync(appJsonPath, "utf-8");
     const appJson = JSON.parse(appJsonContent);
     return appJson.expo?.name || "App Landing Page";
@@ -3503,7 +3497,7 @@ function getAppName() {
   }
 }
 function serveExpoManifest(platform, res) {
-  const manifestPath = path.resolve(
+  const manifestPath = path2.resolve(
     process.cwd(),
     "static-build",
     platform,
@@ -3537,7 +3531,7 @@ function serveLandingPage({
   res.status(200).send(html);
 }
 function configureExpoAndLanding(app2) {
-  const templatePath = path.resolve(
+  const templatePath = path2.resolve(
     process.cwd(),
     "server",
     "templates",
@@ -3545,11 +3539,11 @@ function configureExpoAndLanding(app2) {
   );
   const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
   const privacyPolicyHtml = fs.readFileSync(
-    path.resolve(process.cwd(), "server", "templates", "privacy-policy.html"),
+    path2.resolve(process.cwd(), "server", "templates", "privacy-policy.html"),
     "utf-8"
   );
   const termsOfUseHtml = fs.readFileSync(
-    path.resolve(process.cwd(), "server", "templates", "terms-of-use.html"),
+    path2.resolve(process.cwd(), "server", "templates", "terms-of-use.html"),
     "utf-8"
   );
   const appName = getAppName();
@@ -3563,7 +3557,7 @@ function configureExpoAndLanding(app2) {
     res.status(200).send(termsOfUseHtml);
   });
   const deleteAccountHtml = fs.readFileSync(
-    path.resolve(process.cwd(), "server", "templates", "delete-account.html"),
+    path2.resolve(process.cwd(), "server", "templates", "delete-account.html"),
     "utf-8"
   );
   app2.get("/delete-account", (_req, res) => {
@@ -3571,7 +3565,7 @@ function configureExpoAndLanding(app2) {
     res.status(200).send(deleteAccountHtml);
   });
   const appFeaturesHtml = fs.readFileSync(
-    path.resolve(process.cwd(), "server", "templates", "app-features.html"),
+    path2.resolve(process.cwd(), "server", "templates", "app-features.html"),
     "utf-8"
   );
   app2.get("/app-features", (_req, res) => {
@@ -3579,14 +3573,14 @@ function configureExpoAndLanding(app2) {
     res.status(200).send(appFeaturesHtml);
   });
   const colourPreviewHtml = fs.readFileSync(
-    path.resolve(process.cwd(), "server", "templates", "colour-preview.html"),
+    path2.resolve(process.cwd(), "server", "templates", "colour-preview.html"),
     "utf-8"
   );
   app2.get("/colour-preview", (_req, res) => {
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.status(200).send(colourPreviewHtml);
   });
-  app2.use("/store-assets", express.static(path.resolve(process.cwd(), "assets", "store")));
+  app2.use("/store-assets", express2.static(path2.resolve(process.cwd(), "assets", "store")));
   app2.use((req, res, next) => {
     if (req.path.startsWith("/api")) {
       return next();
@@ -3608,8 +3602,8 @@ function configureExpoAndLanding(app2) {
     }
     next();
   });
-  app2.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
-  app2.use(express.static(path.resolve(process.cwd(), "static-build")));
+  app2.use("/assets", express2.static(path2.resolve(process.cwd(), "assets")));
+  app2.use(express2.static(path2.resolve(process.cwd(), "static-build")));
   log("Expo routing: Checking expo-platform header on / and /manifest");
 }
 function setupErrorHandler(app2) {
@@ -3646,8 +3640,8 @@ function setupErrorHandler(app2) {
       (async () => {
         try {
           const schemaPaths = [
-            path.join(__dirname, "schema.sql"),
-            path.resolve(process.cwd(), "server", "schema.sql")
+            path2.resolve(process.cwd(), "server_dist", "schema.sql"),
+            path2.resolve(process.cwd(), "server", "schema.sql")
           ];
           let schemaApplied = false;
           for (const sp of schemaPaths) {

@@ -1,5 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
+import * as path from "path";
+import express from "express";
 import OpenAI from "openai";
 import rateLimit from "express-rate-limit";
 import pool from "./db";
@@ -190,10 +192,8 @@ async function getOrgAnimalCandidates(petType: string, excludeOrgId?: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  const path = require("path");
-  const express = require("express");
-  app.use("/store-assets", express.static(path.join(__dirname, "..", "assets", "store")));
-  app.use("/app-assets", express.static(path.join(__dirname, "..", "assets")));
+  app.use("/store-assets", express.static(path.resolve(process.cwd(), "assets", "store")));
+  app.use("/app-assets", express.static(path.resolve(process.cwd(), "assets")));
 
   app.get("/download-assets", (_req: Request, res: Response) => {
     res.setHeader("Content-Type", "text/html");
