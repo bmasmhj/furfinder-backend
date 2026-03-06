@@ -1,5 +1,4 @@
 import type { Express, Request, Response } from "express";
-import { createServer, type Server } from "node:http";
 import * as path from "path";
 import express from "express";
 import OpenAI from "openai";
@@ -191,7 +190,7 @@ async function getOrgAnimalCandidates(petType: string, excludeOrgId?: string) {
   return result.rows;
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   app.use("/store-assets", express.static(path.resolve(process.cwd(), "assets", "store")));
   app.use("/app-assets", express.static(path.resolve(process.cwd(), "assets")));
 
@@ -2783,6 +2782,4 @@ Return ONLY valid JSON, no markdown.`;
       .catch(err => console.error('[BatchMatch] Manual run error:', err));
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
 }

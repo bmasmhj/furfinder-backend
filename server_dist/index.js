@@ -564,10 +564,10 @@ var init_production_seed = __esm({
 
 // server/index.ts
 import express2 from "express";
+import { createServer } from "node:http";
 
 // server/routes.ts
 init_db();
-import { createServer } from "node:http";
 import * as path from "path";
 import express from "express";
 import OpenAI2 from "openai";
@@ -3413,8 +3413,6 @@ Return ONLY valid JSON, no markdown.`;
     res.json({ success: true, message: "Batch scan started. Check back in a few minutes." });
     runBatchMatch().then((r) => console.log("[BatchMatch] Manual run complete:", r)).catch((err) => console.error("[BatchMatch] Manual run error:", err));
   });
-  const httpServer = createServer(app2);
-  return httpServer;
 }
 
 // server/index.ts
@@ -3618,57 +3616,74 @@ function setupErrorHandler(app2) {
     return res.status(status).json({ message });
   });
 }
-(async () => {
-  setupCors(app);
-  setupBodyParsing(app);
-  setupRequestLogging(app);
-  app.get("/api/healthcheck", (_req, res) => {
-    res.status(200).json({ status: "ok", timestamp: (/* @__PURE__ */ new Date()).toISOString() });
-  });
-  configureExpoAndLanding(app);
-  const server = await registerRoutes(app);
-  setupErrorHandler(app);
-  const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true
-    },
-    () => {
-      log(`express server serving on port ${port}`);
-      (async () => {
-        try {
-          const schemaPaths = [
-            path2.resolve(process.cwd(), "server_dist", "schema.sql"),
-            path2.resolve(process.cwd(), "server", "schema.sql")
-          ];
-          let schemaApplied = false;
-          for (const sp of schemaPaths) {
-            if (fs.existsSync(sp)) {
-              const schemaSql = fs.readFileSync(sp, "utf-8");
-              const pool2 = (await Promise.resolve().then(() => (init_db(), db_exports))).default;
-              await pool2.query(schemaSql);
-              log("Database schema applied successfully from " + sp);
-              schemaApplied = true;
-              break;
-            }
+var httpServer = createServer(app);
+var port = parseInt(process.env.PORT || "5000", 10);
+setupCors(app);
+setupBodyParsing(app);
+setupRequestLogging(app);
+app.get("/api/healthcheck", (_req, res) => {
+  res.status(200).json({ status: "ok", timestamp: (/* @__PURE__ */ new Date()).toISOString() });
+});
+var appReady = false;
+app.use((req, res, next) => {
+  if (!appReady && req.path === "/") {
+    return res.status(200).send("OK");
+  }
+  next();
+});
+httpServer.listen(
+  {
+    port,
+    host: "0.0.0.0",
+    reusePort: true
+  },
+  () => {
+    log(`express server serving on port ${port}`);
+    (async () => {
+      try {
+        configureExpoAndLanding(app);
+      } catch (err) {
+        console.error("Expo/Landing setup error (non-fatal):", err);
+      }
+      try {
+        await registerRoutes(app);
+      } catch (err) {
+        console.error("Route registration error (non-fatal):", err);
+      }
+      setupErrorHandler(app);
+      appReady = true;
+      log("Routes loaded, app fully ready");
+      try {
+        const schemaPaths = [
+          path2.resolve(process.cwd(), "server_dist", "schema.sql"),
+          path2.resolve(process.cwd(), "server", "schema.sql")
+        ];
+        let schemaApplied = false;
+        for (const sp of schemaPaths) {
+          if (fs.existsSync(sp)) {
+            const schemaSql = fs.readFileSync(sp, "utf-8");
+            const pool2 = (await Promise.resolve().then(() => (init_db(), db_exports))).default;
+            await pool2.query(schemaSql);
+            log("Database schema applied successfully from " + sp);
+            schemaApplied = true;
+            break;
           }
-          if (!schemaApplied) {
-            log("Warning: schema.sql not found, skipping schema init");
-          }
-          const { runProductionSeed: runProductionSeed2 } = await Promise.resolve().then(() => (init_production_seed(), production_seed_exports));
-          await runProductionSeed2();
-        } catch (err) {
-          console.error("Schema/seed init error (non-fatal):", err);
         }
-        try {
-          const { scheduleBatchMatch: scheduleBatchMatch2 } = await Promise.resolve().then(() => (init_batch_match(), batch_match_exports));
-          scheduleBatchMatch2();
-        } catch (err) {
-          console.error("BatchMatch schedule error (non-fatal):", err);
+        if (!schemaApplied) {
+          log("Warning: schema.sql not found, skipping schema init");
         }
-      })();
-    }
-  );
-})();
+        const { runProductionSeed: runProductionSeed2 } = await Promise.resolve().then(() => (init_production_seed(), production_seed_exports));
+        await runProductionSeed2();
+      } catch (err) {
+        console.error("Schema/seed init error (non-fatal):", err);
+      }
+      try {
+        const { scheduleBatchMatch: scheduleBatchMatch2 } = await Promise.resolve().then(() => (init_batch_match(), batch_match_exports));
+        scheduleBatchMatch2();
+      } catch (err) {
+        console.error("BatchMatch schedule error (non-fatal):", err);
+      }
+      log("All startup tasks completed");
+    })();
+  }
+);

@@ -1,5 +1,6 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
+import { createServer } from "node:http";
 import { registerRoutes } from "./routes";
 import * as fs from "fs";
 import * as path from "path";
@@ -273,64 +274,84 @@ function setupErrorHandler(app: express.Application) {
   });
 }
 
-(async () => {
-  setupCors(app);
-  setupBodyParsing(app);
-  setupRequestLogging(app);
+const httpServer = createServer(app);
+const port = parseInt(process.env.PORT || "5000", 10);
 
-  app.get("/api/healthcheck", (_req: Request, res: Response) => {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
-  });
+setupCors(app);
+setupBodyParsing(app);
+setupRequestLogging(app);
 
-  configureExpoAndLanding(app);
+app.get("/api/healthcheck", (_req: Request, res: Response) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
-  const server = await registerRoutes(app);
+let appReady = false;
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (!appReady && req.path === "/") {
+    return res.status(200).send("OK");
+  }
+  next();
+});
 
-  setupErrorHandler(app);
+httpServer.listen(
+  {
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  },
+  () => {
+    log(`express server serving on port ${port}`);
 
-  const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`express server serving on port ${port}`);
+    (async () => {
+      try {
+        configureExpoAndLanding(app);
+      } catch (err) {
+        console.error("Expo/Landing setup error (non-fatal):", err);
+      }
 
-      (async () => {
-        try {
-          const schemaPaths = [
-            path.resolve(process.cwd(), "server_dist", "schema.sql"),
-            path.resolve(process.cwd(), "server", "schema.sql"),
-          ];
-          let schemaApplied = false;
-          for (const sp of schemaPaths) {
-            if (fs.existsSync(sp)) {
-              const schemaSql = fs.readFileSync(sp, "utf-8");
-              const pool = (await import("./db")).default;
-              await pool.query(schemaSql);
-              log("Database schema applied successfully from " + sp);
-              schemaApplied = true;
-              break;
-            }
+      try {
+        await registerRoutes(app);
+      } catch (err) {
+        console.error("Route registration error (non-fatal):", err);
+      }
+
+      setupErrorHandler(app);
+      appReady = true;
+      log("Routes loaded, app fully ready");
+
+      try {
+        const schemaPaths = [
+          path.resolve(process.cwd(), "server_dist", "schema.sql"),
+          path.resolve(process.cwd(), "server", "schema.sql"),
+        ];
+        let schemaApplied = false;
+        for (const sp of schemaPaths) {
+          if (fs.existsSync(sp)) {
+            const schemaSql = fs.readFileSync(sp, "utf-8");
+            const pool = (await import("./db")).default;
+            await pool.query(schemaSql);
+            log("Database schema applied successfully from " + sp);
+            schemaApplied = true;
+            break;
           }
-          if (!schemaApplied) {
-            log("Warning: schema.sql not found, skipping schema init");
-          }
-          const { runProductionSeed } = await import("./production-seed");
-          await runProductionSeed();
-        } catch (err) {
-          console.error("Schema/seed init error (non-fatal):", err);
         }
+        if (!schemaApplied) {
+          log("Warning: schema.sql not found, skipping schema init");
+        }
+        const { runProductionSeed } = await import("./production-seed");
+        await runProductionSeed();
+      } catch (err) {
+        console.error("Schema/seed init error (non-fatal):", err);
+      }
 
-        try {
-          const { scheduleBatchMatch } = await import("./batch-match");
-          scheduleBatchMatch();
-        } catch (err) {
-          console.error("BatchMatch schedule error (non-fatal):", err);
-        }
-      })();
-    },
-  );
-})();
+      try {
+        const { scheduleBatchMatch } = await import("./batch-match");
+        scheduleBatchMatch();
+      } catch (err) {
+        console.error("BatchMatch schedule error (non-fatal):", err);
+      }
+
+      log("All startup tasks completed");
+    })();
+  },
+);
