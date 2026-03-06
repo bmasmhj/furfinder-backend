@@ -3625,30 +3625,6 @@ function setupErrorHandler(app2) {
   });
 }
 (async () => {
-  try {
-    const schemaPaths = [
-      path.join(__dirname, "schema.sql"),
-      path.resolve(process.cwd(), "server", "schema.sql")
-    ];
-    let schemaApplied = false;
-    for (const schemaPath of schemaPaths) {
-      if (fs.existsSync(schemaPath)) {
-        const schemaSql = fs.readFileSync(schemaPath, "utf-8");
-        const pool2 = (await Promise.resolve().then(() => (init_db(), db_exports))).default;
-        await pool2.query(schemaSql);
-        log("Database schema applied successfully from " + schemaPath);
-        schemaApplied = true;
-        break;
-      }
-    }
-    if (!schemaApplied) {
-      log("Warning: schema.sql not found, skipping schema init");
-    }
-    const { runProductionSeed: runProductionSeed2 } = await Promise.resolve().then(() => (init_production_seed(), production_seed_exports));
-    await runProductionSeed2();
-  } catch (err) {
-    console.error("Schema/seed init error (non-fatal):", err);
-  }
   setupCors(app);
   setupBodyParsing(app);
   setupRequestLogging(app);
@@ -3658,8 +3634,6 @@ function setupErrorHandler(app2) {
   configureExpoAndLanding(app);
   const server = await registerRoutes(app);
   setupErrorHandler(app);
-  const { scheduleBatchMatch: scheduleBatchMatch2 } = await Promise.resolve().then(() => (init_batch_match(), batch_match_exports));
-  scheduleBatchMatch2();
   const port = parseInt(process.env.PORT || "5000", 10);
   server.listen(
     {
@@ -3669,6 +3643,38 @@ function setupErrorHandler(app2) {
     },
     () => {
       log(`express server serving on port ${port}`);
+      (async () => {
+        try {
+          const schemaPaths = [
+            path.join(__dirname, "schema.sql"),
+            path.resolve(process.cwd(), "server", "schema.sql")
+          ];
+          let schemaApplied = false;
+          for (const sp of schemaPaths) {
+            if (fs.existsSync(sp)) {
+              const schemaSql = fs.readFileSync(sp, "utf-8");
+              const pool2 = (await Promise.resolve().then(() => (init_db(), db_exports))).default;
+              await pool2.query(schemaSql);
+              log("Database schema applied successfully from " + sp);
+              schemaApplied = true;
+              break;
+            }
+          }
+          if (!schemaApplied) {
+            log("Warning: schema.sql not found, skipping schema init");
+          }
+          const { runProductionSeed: runProductionSeed2 } = await Promise.resolve().then(() => (init_production_seed(), production_seed_exports));
+          await runProductionSeed2();
+        } catch (err) {
+          console.error("Schema/seed init error (non-fatal):", err);
+        }
+        try {
+          const { scheduleBatchMatch: scheduleBatchMatch2 } = await Promise.resolve().then(() => (init_batch_match(), batch_match_exports));
+          scheduleBatchMatch2();
+        } catch (err) {
+          console.error("BatchMatch schedule error (non-fatal):", err);
+        }
+      })();
     }
   );
 })();

@@ -274,31 +274,6 @@ function setupErrorHandler(app: express.Application) {
 }
 
 (async () => {
-  try {
-    const schemaPaths = [
-      path.join(__dirname, "schema.sql"),
-      path.resolve(process.cwd(), "server", "schema.sql"),
-    ];
-    let schemaApplied = false;
-    for (const schemaPath of schemaPaths) {
-      if (fs.existsSync(schemaPath)) {
-        const schemaSql = fs.readFileSync(schemaPath, "utf-8");
-        const pool = (await import("./db")).default;
-        await pool.query(schemaSql);
-        log("Database schema applied successfully from " + schemaPath);
-        schemaApplied = true;
-        break;
-      }
-    }
-    if (!schemaApplied) {
-      log("Warning: schema.sql not found, skipping schema init");
-    }
-    const { runProductionSeed } = await import("./production-seed");
-    await runProductionSeed();
-  } catch (err) {
-    console.error("Schema/seed init error (non-fatal):", err);
-  }
-
   setupCors(app);
   setupBodyParsing(app);
   setupRequestLogging(app);
@@ -313,9 +288,6 @@ function setupErrorHandler(app: express.Application) {
 
   setupErrorHandler(app);
 
-  const { scheduleBatchMatch } = await import("./batch-match");
-  scheduleBatchMatch();
-
   const port = parseInt(process.env.PORT || "5000", 10);
   server.listen(
     {
@@ -325,6 +297,40 @@ function setupErrorHandler(app: express.Application) {
     },
     () => {
       log(`express server serving on port ${port}`);
+
+      (async () => {
+        try {
+          const schemaPaths = [
+            path.join(__dirname, "schema.sql"),
+            path.resolve(process.cwd(), "server", "schema.sql"),
+          ];
+          let schemaApplied = false;
+          for (const sp of schemaPaths) {
+            if (fs.existsSync(sp)) {
+              const schemaSql = fs.readFileSync(sp, "utf-8");
+              const pool = (await import("./db")).default;
+              await pool.query(schemaSql);
+              log("Database schema applied successfully from " + sp);
+              schemaApplied = true;
+              break;
+            }
+          }
+          if (!schemaApplied) {
+            log("Warning: schema.sql not found, skipping schema init");
+          }
+          const { runProductionSeed } = await import("./production-seed");
+          await runProductionSeed();
+        } catch (err) {
+          console.error("Schema/seed init error (non-fatal):", err);
+        }
+
+        try {
+          const { scheduleBatchMatch } = await import("./batch-match");
+          scheduleBatchMatch();
+        } catch (err) {
+          console.error("BatchMatch schedule error (non-fatal):", err);
+        }
+      })();
     },
   );
 })();
