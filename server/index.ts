@@ -275,12 +275,23 @@ function setupErrorHandler(app: express.Application) {
 
 (async () => {
   try {
-    const schemaPath = path.join(__dirname, "schema.sql");
-    if (fs.existsSync(schemaPath)) {
-      const schemaSql = fs.readFileSync(schemaPath, "utf-8");
-      const pool = (await import("./db")).default;
-      await pool.query(schemaSql);
-      log("Database schema applied successfully");
+    const schemaPaths = [
+      path.join(__dirname, "schema.sql"),
+      path.resolve(process.cwd(), "server", "schema.sql"),
+    ];
+    let schemaApplied = false;
+    for (const schemaPath of schemaPaths) {
+      if (fs.existsSync(schemaPath)) {
+        const schemaSql = fs.readFileSync(schemaPath, "utf-8");
+        const pool = (await import("./db")).default;
+        await pool.query(schemaSql);
+        log("Database schema applied successfully from " + schemaPath);
+        schemaApplied = true;
+        break;
+      }
+    }
+    if (!schemaApplied) {
+      log("Warning: schema.sql not found, skipping schema init");
     }
     const { runProductionSeed } = await import("./production-seed");
     await runProductionSeed();
@@ -291,6 +302,10 @@ function setupErrorHandler(app: express.Application) {
   setupCors(app);
   setupBodyParsing(app);
   setupRequestLogging(app);
+
+  app.get("/api/healthcheck", (_req: Request, res: Response) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
 
   configureExpoAndLanding(app);
 
