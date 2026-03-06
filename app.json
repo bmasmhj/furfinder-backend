@@ -7,7 +7,7 @@
     "icon": "./assets/store/app-icon-512.png",
     "scheme": "thefurfinder",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/store/app-icon-512.png",
       "resizeMode": "contain",
