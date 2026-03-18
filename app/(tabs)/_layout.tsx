@@ -1,48 +1,37 @@
 import { useEffect } from "react";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs, router } from "expo-router";
-import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import { Platform, StyleSheet, useColorScheme, View, ActivityIndicator } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
 import { useTheme } from '@/hooks/useTheme';
 import { useConsent } from "@/lib/consent-context";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="map">
-        <Icon sf={{ default: "map", selected: "map.fill" }} />
-        <Label>Map</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="report">
-        <Icon sf={{ default: "plus.circle", selected: "plus.circle.fill" }} />
-        <Label>Report</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="happy-tails">
-        <Icon sf={{ default: "heart.circle", selected: "heart.circle.fill" }} />
-        <Label>Reunited</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="my-reports">
-        <Icon sf={{ default: "pawprint", selected: "pawprint.fill" }} />
-        <Label>My Pets</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
-function ClassicTabLayout() {
+export default function TabLayout() {
   const Colors = useTheme();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isWeb = Platform.OS === "web";
   const isIOS = Platform.OS === "ios";
+  const { hasConsented, isLoading } = useConsent();
+
+  useEffect(() => {
+    if (!isLoading && !hasConsented) {
+      router.replace('/consent');
+    }
+  }, [isLoading, hasConsented]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (!hasConsented) {
+    return null;
+  }
 
   return (
     <Tabs
@@ -121,32 +110,4 @@ function ClassicTabLayout() {
       />
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  const Colors = useTheme();
-  const { hasConsented, isLoading } = useConsent();
-
-  useEffect(() => {
-    if (!isLoading && !hasConsented) {
-      router.replace('/consent');
-    }
-  }, [isLoading, hasConsented]);
-
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
-
-  if (!hasConsented) {
-    return null;
-  }
-
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
 }
