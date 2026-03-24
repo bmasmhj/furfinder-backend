@@ -32,98 +32,6 @@ const SERVICE_ICONS: Record<VetShelter['type'], keyof typeof Ionicons.glyphMap> 
   rescue: 'heart',
 };
 
-function WebMapFallback({ reports, showServices }: { reports: PetReport[]; showServices: boolean }) {
-  return (
-    <ScrollView style={styles.webFallback} contentContainerStyle={{ paddingBottom: 100 }}>
-      <View style={styles.webFallbackHeader}>
-        <Ionicons name="map" size={48} color={Colors.primary} />
-        <Text style={styles.webFallbackTitle}>Map View</Text>
-        <Text style={styles.webFallbackSubtitle}>
-          Interactive map is available on the mobile app. Browse reported pets below:
-        </Text>
-      </View>
-      {reports.map((report) => (
-        <Pressable
-          key={report.id}
-          onPress={() => router.push({ pathname: '/pet/[id]', params: { id: report.id } })}
-          style={({ pressed }) => [styles.webListItem, pressed && { opacity: 0.8 }]}
-        >
-          <View style={[styles.webListIcon, { backgroundColor: getStatusColor(report.status) + '20' }]}>
-            <MaterialCommunityIcons
-              name={getPetTypeIcon(report.petType) as any}
-              size={22}
-              color={getStatusColor(report.status)}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.webListName}>
-              {report.petName === 'Unknown' ? report.breed : report.petName}
-            </Text>
-            <Text style={styles.webListMeta}>{report.locationName} · {formatDate(report.createdAt)}</Text>
-          </View>
-          <View style={[styles.webListBadge, { backgroundColor: getStatusColor(report.status) }]}>
-            <Text style={styles.webListBadgeText}>{getStatusLabel(report.status)}</Text>
-          </View>
-        </Pressable>
-      ))}
-
-      {showServices && (
-        <>
-          <View style={styles.webServicesHeader}>
-            <Ionicons name="medical" size={24} color={SERVICE_COLORS.vet} />
-            <Text style={styles.webServicesTitle}>Nearby Services</Text>
-          </View>
-          {VET_SHELTERS.map((service) => (
-            <View key={service.id} style={styles.webServiceCard}>
-              <View style={[styles.webServiceIcon, { backgroundColor: SERVICE_COLORS[service.type] + '20' }]}>
-                <Ionicons
-                  name={SERVICE_ICONS[service.type]}
-                  size={20}
-                  color={SERVICE_COLORS[service.type]}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={styles.webServiceRow}>
-                  <Text style={styles.webServiceName}>{service.name}</Text>
-                  <View style={[styles.webServiceBadge, { backgroundColor: SERVICE_COLORS[service.type] }]}>
-                    <Text style={styles.webServiceBadgeText}>{service.type.toUpperCase()}</Text>
-                  </View>
-                </View>
-                <Text style={styles.webServiceAddress}>{service.address}</Text>
-                <Pressable onPress={() => Linking.openURL(`tel:${service.phone}`)}>
-                  <Text style={styles.webServicePhone}>{service.phone}</Text>
-                </Pressable>
-                <Text style={styles.webServiceHours}>{service.hours}</Text>
-              </View>
-            </View>
-          ))}
-        </>
-      )}
-    </ScrollView>
-  );
-}
-
-function Legend({ variant = 'dark' }: { variant?: 'dark' | 'light' }) {
-  const items = [
-    { color: Colors.lost, label: 'Lost' },
-    { color: Colors.found, label: 'Found' },
-    { color: SERVICE_COLORS.vet, label: 'Vet' },
-    { color: SERVICE_COLORS.shelter, label: 'Shelter' },
-    { color: SERVICE_COLORS.rescue, label: 'Rescue' },
-  ];
-
-  return (
-    <View style={styles.legend}>
-      {items.map((item) => (
-        <View key={item.label} style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-          <Text style={[styles.legendLabel, variant === 'light' && { color: Colors.textSecondary }]}>{item.label}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 export default function MapScreen() {
   const Colors = useTheme();
   const styles = getStyles(Colors);
@@ -163,6 +71,96 @@ export default function MapScreen() {
     setShowServices(prev => !prev);
   };
 
+  const renderWebMapFallback = (webReports: PetReport[], webShowServices: boolean) => (
+    <ScrollView style={styles.webFallback} contentContainerStyle={{ paddingBottom: 100 }}>
+      <View style={styles.webFallbackHeader}>
+        <Ionicons name="map" size={48} color={Colors.primary} />
+        <Text style={styles.webFallbackTitle}>Map View</Text>
+        <Text style={styles.webFallbackSubtitle}>
+          Interactive map is available on the mobile app. Browse reported pets below:
+        </Text>
+      </View>
+      {webReports.map((report) => (
+        <Pressable
+          key={report.id}
+          onPress={() => router.push({ pathname: '/pet/[id]', params: { id: report.id } })}
+          style={({ pressed }) => [styles.webListItem, pressed && { opacity: 0.8 }]}
+        >
+          <View style={[styles.webListIcon, { backgroundColor: getStatusColor(report.status) + '20' }]}>
+            <MaterialCommunityIcons
+              name={getPetTypeIcon(report.petType) as any}
+              size={22}
+              color={getStatusColor(report.status)}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.webListName}>
+              {report.petName === 'Unknown' ? report.breed : report.petName}
+            </Text>
+            <Text style={styles.webListMeta}>{report.locationName} · {formatDate(report.createdAt)}</Text>
+          </View>
+          <View style={[styles.webListBadge, { backgroundColor: getStatusColor(report.status) }]}>
+            <Text style={styles.webListBadgeText}>{getStatusLabel(report.status)}</Text>
+          </View>
+        </Pressable>
+      ))}
+
+      {webShowServices && (
+        <>
+          <View style={styles.webServicesHeader}>
+            <Ionicons name="medical" size={24} color={SERVICE_COLORS.vet} />
+            <Text style={styles.webServicesTitle}>Nearby Services</Text>
+          </View>
+          {VET_SHELTERS.map((service) => (
+            <View key={service.id} style={styles.webServiceCard}>
+              <View style={[styles.webServiceIcon, { backgroundColor: SERVICE_COLORS[service.type] + '20' }]}>
+                <Ionicons
+                  name={SERVICE_ICONS[service.type]}
+                  size={20}
+                  color={SERVICE_COLORS[service.type]}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.webServiceRow}>
+                  <Text style={styles.webServiceName}>{service.name}</Text>
+                  <View style={[styles.webServiceBadge, { backgroundColor: SERVICE_COLORS[service.type] }]}>
+                    <Text style={styles.webServiceBadgeText}>{service.type.toUpperCase()}</Text>
+                  </View>
+                </View>
+                <Text style={styles.webServiceAddress}>{service.address}</Text>
+                <Pressable onPress={() => Linking.openURL(`tel:${service.phone}`)}>
+                  <Text style={styles.webServicePhone}>{service.phone}</Text>
+                </Pressable>
+                <Text style={styles.webServiceHours}>{service.hours}</Text>
+              </View>
+            </View>
+          ))}
+        </>
+      )}
+    </ScrollView>
+  );
+
+  const renderLegend = (variant: 'dark' | 'light' = 'dark') => {
+    const items = [
+      { color: Colors.lost, label: 'Lost' },
+      { color: Colors.found, label: 'Found' },
+      { color: SERVICE_COLORS.vet, label: 'Vet' },
+      { color: SERVICE_COLORS.shelter, label: 'Shelter' },
+      { color: SERVICE_COLORS.rescue, label: 'Rescue' },
+    ];
+
+    return (
+      <View style={styles.legend}>
+        {items.map((item) => (
+          <View key={item.label} style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+            <Text style={[styles.legendLabel, variant === 'light' && { color: Colors.textSecondary }]}>{item.label}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   if (isWeb) {
     return (
       <View style={[styles.container, { paddingTop: webTopPadding }]}>
@@ -184,8 +182,8 @@ export default function MapScreen() {
             />
           </Pressable>
         </View>
-        <Legend variant="light" />
-        <WebMapFallback reports={filteredReports} showServices={showServices} />
+        {renderLegend('light')}
+        {renderWebMapFallback(filteredReports, showServices)}
       </View>
     );
   }
@@ -288,7 +286,7 @@ export default function MapScreen() {
 
       <View style={[styles.countOverlay, { bottom: insets.bottom + 100 }]}>
         <Text style={styles.countText}>{filteredReports.length} pets nearby</Text>
-        <Legend />
+        {renderLegend()}
       </View>
     </View>
   );
