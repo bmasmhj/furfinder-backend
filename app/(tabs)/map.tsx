@@ -10,6 +10,7 @@ import { getStatusColor, getStatusLabel, getPetTypeIcon, formatDate } from '@/li
 import FilterBar from '@/components/FilterBar';
 import { PetReport, VetShelter } from '@/lib/types';
 import { NativeMapView, NativeMarker, NativeCallout } from '@/components/MapViewNative';
+import WebMapView from '@/components/WebMapView';
 import { VET_SHELTERS } from '@/lib/vet-shelters';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
@@ -161,6 +162,33 @@ export default function MapScreen() {
     );
   };
 
+  const webMapMarkers = useMemo(() => {
+    const petMarkers = filteredReports
+      .filter(r => r.latitude && r.longitude)
+      .map(r => ({
+        id: r.id,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        title: r.petName === 'Unknown' ? r.breed : r.petName,
+        subtitle: `${getStatusLabel(r.status)} · ${r.locationName}`,
+        color: getStatusColor(r.status),
+        type: 'pet' as const,
+      }));
+    const serviceMarkers = showServices
+      ? VET_SHELTERS.map(s => ({
+          id: s.id,
+          latitude: s.latitude,
+          longitude: s.longitude,
+          title: s.name,
+          subtitle: `${s.type.toUpperCase()} · ${s.address}`,
+          color: SERVICE_COLORS[s.type],
+          type: 'service' as const,
+          serviceType: s.type,
+        }))
+      : [];
+    return [...petMarkers, ...serviceMarkers];
+  }, [filteredReports, showServices]);
+
   if (isWeb) {
     return (
       <View style={[styles.container, { paddingTop: webTopPadding }]}>
@@ -183,7 +211,13 @@ export default function MapScreen() {
           </Pressable>
         </View>
         {renderLegend('light')}
-        {renderWebMapFallback(filteredReports, showServices)}
+        <WebMapView
+          markers={webMapMarkers}
+          initialLatitude={INITIAL_REGION.latitude}
+          initialLongitude={INITIAL_REGION.longitude}
+          initialZoom={13}
+          onMarkerPress={handleMarkerPress}
+        />
       </View>
     );
   }
