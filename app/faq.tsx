@@ -103,6 +103,8 @@ const FAQ_DATA: FAQItem[] = [
 const CATEGORIES = [...new Set(FAQ_DATA.map(item => item.category))];
 
 function FAQAccordion({ item, index }: { item: FAQItem; index: number }) {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const [isOpen, setIsOpen] = useState(false);
 
   return (

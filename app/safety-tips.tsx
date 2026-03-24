@@ -62,9 +62,14 @@ const categories = [
   },
 ];
 
-function TipCard({ category, index }: { category: typeof categories[number]; index: number }) {
-  return (
-    <Animated.View entering={FadeInUp.duration(400).delay(index * 100)}>
+export default function SafetyTipsScreen() {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
+  const insets = useSafeAreaInsets();
+  const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+
+  const renderTipCard = (category: typeof categories[number], index: number) => (
+    <Animated.View entering={FadeInUp.duration(400).delay(index * 100)} key={index}>
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={[styles.categoryIcon, { backgroundColor: category.bgColor }]}>
@@ -96,13 +101,6 @@ function TipCard({ category, index }: { category: typeof categories[number]; ind
       </View>
     </Animated.View>
   );
-}
-
-export default function SafetyTipsScreen() {
-  const Colors = useTheme();
-  const styles = getStyles(Colors);
-  const insets = useSafeAreaInsets();
-  const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
   return (
     <View style={styles.container}>
@@ -128,9 +126,7 @@ export default function SafetyTipsScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + (Platform.OS === 'web' ? 34 : 0) + 20 }]}
         showsVerticalScrollIndicator={false}
       >
-        {categories.map((category, index) => (
-          <TipCard key={index} category={category} index={index} />
-        ))}
+        {categories.map((category, index) => renderTipCard(category, index))}
 
         <Animated.View entering={FadeInUp.duration(400).delay(categories.length * 100)}>
           <LinearGradient

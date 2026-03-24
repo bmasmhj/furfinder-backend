@@ -16,6 +16,8 @@ import EmptyState from '@/components/EmptyState';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 function StoryCard({ report, index }: { report: PetReport; index: number }) {
+  const Colors = useTheme();
+  const styles = getStyles(Colors);
   const { toggleLike } = usePets();
 
   const photos = report.photoUris && report.photoUris.length > 0
