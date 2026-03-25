@@ -7,6 +7,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
+import { NativeMapView, NativeMarker } from '@/components/MapViewNative';
+import WebMapView from '@/components/WebMapView';
 import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { useSubscription } from '@/lib/subscription-context';
@@ -56,6 +58,7 @@ export default function ReportFormScreen() {
   const [contactName, setContactName] = useState(prefillProfile?.ownerName || '');
   const [contactPhone, setContactPhone] = useState(prefillProfile?.ownerPhone || '');
   const [showContactPublic, setShowContactPublic] = useState(true);
+  const [hasDetectedLocation, setHasDetectedLocation] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -138,7 +141,54 @@ export default function ReportFormScreen() {
     setPhotoUris(prev => prev.filter((_, i) => i !== index));
   };
 
-  const detectLocation = async () => {
+  const reverseGeocodeWeb = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const resp = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await resp.json();
+      if (data?.address) {
+        const a = data.address;
+        const name = [a.suburb || a.neighbourhood, a.city || a.town || a.village, a.state].filter(Boolean).join(', ');
+        return name || 'Current Location';
+      }
+      return 'Current Location';
+    } catch {
+      return 'Current Location';
+    }
+  };
+
+  const detectLocationWeb = async () => {
+    setIsLocating(true);
+    try {
+      if (!navigator?.geolocation) {
+        Alert.alert('Error', 'Geolocation is not supported by your browser. Please enter the location manually.');
+        setIsLocating(false);
+        return;
+      }
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 300000,
+        });
+      });
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      setLatitude(lat);
+      setLongitude(lng);
+      setHasDetectedLocation(true);
+      const name = await reverseGeocodeWeb(lat, lng);
+      setLocationName(name);
+    } catch {
+      Alert.alert('Error', 'Could not detect location. Please enter it manually.');
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
+  const detectLocationNative = async () => {
     setIsLocating(true);
     try {
       const servicesEnabled = await Location.hasServicesEnabledAsync();
@@ -188,6 +238,7 @@ export default function ReportFormScreen() {
 
       setLatitude(loc.coords.latitude);
       setLongitude(loc.coords.longitude);
+      setHasDetectedLocation(true);
 
       try {
         const geocode = await Location.reverseGeocodeAsync({
@@ -208,6 +259,14 @@ export default function ReportFormScreen() {
       Alert.alert('Error', 'Could not detect location. Please enter it manually.');
     } finally {
       setIsLocating(false);
+    }
+  };
+
+  const detectLocation = () => {
+    if (Platform.OS === 'web') {
+      detectLocationWeb();
+    } else {
+      detectLocationNative();
     }
   };
 
@@ -445,6 +504,43 @@ export default function ReportFormScreen() {
             placeholder="Or enter location manually"
             placeholderTextColor={Colors.textLight}
           />
+        )}
+        {hasDetectedLocation && locationName && (
+          <View style={styles.mapPreview}>
+            {Platform.OS === 'web' ? (
+              <WebMapView
+                markers={[{
+                  id: 'pin',
+                  latitude,
+                  longitude,
+                  title: 'Pet Location',
+                  subtitle: locationName,
+                  color: Colors.primary,
+                  type: 'pet',
+                }]}
+                initialLatitude={latitude}
+                initialLongitude={longitude}
+                initialZoom={15}
+                style={{ width: '100%', height: '100%' }}
+              />
+            ) : (
+              <NativeMapView
+                style={{ width: '100%', height: '100%' }}
+                region={{
+                  latitude,
+                  longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+              >
+                <NativeMarker coordinate={{ latitude, longitude }} />
+              </NativeMapView>
+            )}
+          </View>
         )}
 
         {isLost && (
@@ -741,6 +837,14 @@ const getStyles = (Colors: any) => StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.primary,
     borderStyle: 'dashed',
+  },
+  mapPreview: {
+    height: 180,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   locationBtnText: {
     fontSize: 14,
