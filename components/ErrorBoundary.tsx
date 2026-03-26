@@ -1,6 +1,6 @@
 import React, { Component, ComponentType, PropsWithChildren } from "react";
+import { reportErrorToBackend } from "@/lib/error-report";
 import { ErrorFallback, ErrorFallbackProps } from "@/components/ErrorFallback";
-import { getApiUrl } from "@/lib/query-client";
 
 export type ErrorBoundaryProps = PropsWithChildren<{
   FallbackComponent?: ComponentType<ErrorFallbackProps>;
@@ -34,19 +34,7 @@ export class ErrorBoundary extends Component<
     if (typeof this.props.onError === "function") {
       this.props.onError(error, info.componentStack);
     }
-    try {
-      const baseUrl = getApiUrl();
-      const url = new URL("/api/errors/report", baseUrl).toString();
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: error.message,
-          stack: (error.stack || "") + "\n\nComponent Stack:" + info.componentStack,
-          source: "frontend-crash",
-        }),
-      }).catch(() => {});
-    } catch {}
+    reportErrorToBackend(error, "frontend-crash", info);
   }
 
   resetError = (): void => {

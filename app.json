@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.petreunite.app",
-      "buildNumber": "2",
+      "buildNumber": "6",
       "infoPlist": {
         "NSCameraUsageDescription": "The Fur Finder needs access to your camera to take photos of lost or found pets.",
         "NSPhotoLibraryUsageDescription": "The Fur Finder needs access to your photo library to upload pet photos for reports and profiles.",

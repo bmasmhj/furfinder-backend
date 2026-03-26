@@ -8,6 +8,7 @@ import { ActivityIndicator, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { reportErrorToBackend } from "@/lib/error-report";
 import { queryClient, getApiUrl } from "@/lib/query-client";
 import { PetProvider } from "@/lib/pet-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
@@ -22,23 +23,7 @@ import {
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
 
-function reportErrorToBackend(error: unknown, source: string) {
-  try {
-    const err = error instanceof Error ? error : new Error(String(error));
-    const baseUrl = getApiUrl();
-    const url = new URL("/api/errors/report", baseUrl).toString();
-    globalThis.fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: err.message,
-        stack: err.stack || "",
-        source,
-      }),
-    }).catch(() => {});
-  } catch {}
-}
-
+// Standardize global error handling for both JS errors and unhandled promise rejections
 const ErrorUtils = (globalThis as any).ErrorUtils;
 if (ErrorUtils && typeof ErrorUtils.setGlobalHandler === "function") {
   const originalHandler = ErrorUtils.getGlobalHandler?.();
@@ -47,6 +32,18 @@ if (ErrorUtils && typeof ErrorUtils.setGlobalHandler === "function") {
     if (originalHandler) {
       originalHandler(error, isFatal);
     }
+  });
+}
+
+// Global promise rejection handling (especially for non-native/web or generic cases)
+if (typeof (globalThis as any).onunhandledrejection !== "undefined" || Platform.OS === "web") {
+  (globalThis as any).onunhandledrejection = (id: any, error: any) => {
+    reportErrorToBackend(error || id, "frontend-unhandled-rejection");
+  };
+} else if ((global as any).Promise && (global as any).Promise.onUnhandledRejection) {
+  // Catch for environments with Promise specific unhandled trackers
+  (global as any).Promise.onUnhandledRejection((id: any, error: any) => {
+    reportErrorToBackend(error || id, "frontend-unhandled-rejection");
   });
 }
 
