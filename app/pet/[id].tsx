@@ -15,6 +15,7 @@ import { Comment, TimelineEvent, PetReport } from '@/lib/types';
 import { getStatusColor, getStatusBg, getStatusLabel, getPetTypeIcon, getSizeLabel, formatDate } from '@/lib/helpers';
 import { getApiUrl } from '@/lib/query-client';
 import { fetch } from 'expo/fetch';
+import ImageViewer from '@/components/ImageViewer';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -50,6 +51,16 @@ export default function PetDetailScreen() {
   const [showReunionInput, setShowReunionInput] = useState(false);
   const [reunionMessage, setReunionMessage] = useState('');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
+
+  const openViewer = (index: number) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setViewerIndex(index);
+    setViewerVisible(true);
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -284,6 +295,12 @@ export default function PetDetailScreen() {
 
   return (
     <View style={styles.container}>
+      <ImageViewer
+        visible={viewerVisible}
+        images={photos}
+        initialIndex={viewerIndex}
+        onClose={() => setViewerVisible(false)}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + (Platform.OS === 'web' ? 34 : 0) + 100 }}
@@ -300,7 +317,9 @@ export default function PetDetailScreen() {
                 style={styles.photoGallery}
               >
                 {photos.map((uri, index) => (
-                  <Image key={index} source={{ uri }} style={styles.heroImage} contentFit="cover" />
+                  <Pressable key={index} onPress={() => openViewer(index)}>
+                    <Image source={{ uri }} style={styles.heroImage} contentFit="cover" />
+                  </Pressable>
                 ))}
               </ScrollView>
               {photos.length > 1 && (

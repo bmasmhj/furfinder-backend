@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, Platform, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +10,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useTheme } from '@/hooks/useTheme';
 import { usePets } from '@/lib/pet-context';
 import { getPetTypeIcon, getSizeLabel, formatDate } from '@/lib/helpers';
+import ImageViewer from '@/components/ImageViewer';
 
 export default function MyPetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -74,17 +76,38 @@ export default function MyPetDetailScreen() {
     });
   };
 
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerImages, setViewerImages] = useState<string[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+
+  const openViewer = (images: string[], index: number) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setViewerImages(images);
+    setViewerIndex(index);
+    setViewerVisible(true);
+  };
+
   const heroPhoto = profile.photoUris.length > 0 ? profile.photoUris[0] : null;
 
   return (
     <View style={styles.container}>
+      <ImageViewer
+        visible={viewerVisible}
+        images={viewerImages}
+        initialIndex={viewerIndex}
+        onClose={() => setViewerVisible(false)}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + (Platform.OS === 'web' ? 34 : 0) + 100 }}
       >
         <View style={styles.imageSection}>
           {heroPhoto ? (
-            <Image source={{ uri: heroPhoto }} style={styles.heroImage} contentFit="cover" />
+            <Pressable onPress={() => openViewer(profile.photoUris, 0)}>
+              <Image source={{ uri: heroPhoto }} style={styles.heroImage} contentFit="cover" />
+            </Pressable>
           ) : (
             <LinearGradient
               colors={['#E0F2FE', '#BAE6FD']}
@@ -125,12 +148,13 @@ export default function MyPetDetailScreen() {
           {profile.photoUris.length > 1 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photosRow}>
               {profile.photoUris.map((uri, index) => (
-                <Image
-                  key={index}
-                  source={{ uri }}
-                  style={styles.thumbPhoto}
-                  contentFit="cover"
-                />
+                <Pressable key={index} onPress={() => openViewer(profile.photoUris, index)}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.thumbPhoto}
+                    contentFit="cover"
+                  />
+                </Pressable>
               ))}
             </ScrollView>
           )}
@@ -166,12 +190,14 @@ export default function MyPetDetailScreen() {
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.biometricRow}>
                 {profile.biometricPhotoUris.map((uri, index) => (
-                  <View key={index} style={styles.biometricThumb}>
-                    <Image source={{ uri }} style={styles.biometricImage} contentFit="cover" />
-                    <View style={styles.biometricBadge}>
-                      <MaterialCommunityIcons name="fingerprint" size={10} color="#fff" />
+                  <Pressable key={index} onPress={() => openViewer(profile.biometricPhotoUris!, index)}>
+                    <View style={styles.biometricThumb}>
+                      <Image source={{ uri }} style={styles.biometricImage} contentFit="cover" />
+                      <View style={styles.biometricBadge}>
+                        <MaterialCommunityIcons name="fingerprint" size={10} color="#fff" />
+                      </View>
                     </View>
-                  </View>
+                  </Pressable>
                 ))}
               </ScrollView>
             </View>
