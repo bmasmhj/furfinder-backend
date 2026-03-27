@@ -1,10 +1,17 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
+
+const isExpoGoAndroid = Platform.OS === 'android' && Constants.appOwnership === 'expo';
+let Notifications: typeof import('expo-notifications') | null = null;
+if (!isExpoGoAndroid) {
+  try {
+    Notifications = require('expo-notifications');
+  } catch {}
+}
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -47,10 +54,7 @@ if (typeof (globalThis as any).onunhandledrejection !== "undefined" || Platform.
   });
 }
 
-const isExpoGo = Constants.appOwnership === 'expo';
-const skipNotifications = Platform.OS === 'android' && isExpoGo;
-
-if (!skipNotifications) {
+if (Notifications) {
   try {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
@@ -72,8 +76,7 @@ function RootLayoutNav() {
   const { isAuthenticated, isLoading, token } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated || !token || Platform.OS === 'web') return;
-    if (Platform.OS === 'android' && Constants.appOwnership === 'expo') return;
+    if (!isAuthenticated || !token || Platform.OS === 'web' || !Notifications) return;
     (async () => {
       try {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
