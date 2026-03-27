@@ -1,0 +1,4 @@
+ignoredBuiltDependencies:
+  - dtrace-provider
+  - esbuild
+  - unrs-resolver
