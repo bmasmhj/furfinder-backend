@@ -47,17 +47,22 @@ if (typeof (globalThis as any).onunhandledrejection !== "undefined" || Platform.
   });
 }
 
-try {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
-  });
-} catch {}
+const isExpoGo = Constants.appOwnership === 'expo';
+const skipNotifications = Platform.OS === 'android' && isExpoGo;
+
+if (!skipNotifications) {
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  } catch {}
+}
 
 try {
   SplashScreen.preventAutoHideAsync();
@@ -68,6 +73,7 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (!isAuthenticated || !token || Platform.OS === 'web') return;
+    if (Platform.OS === 'android' && Constants.appOwnership === 'expo') return;
     (async () => {
       try {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
