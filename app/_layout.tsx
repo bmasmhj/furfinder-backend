@@ -1,17 +1,10 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Platform, View } from "react-native";
-
-const isExpoGoAndroid = Platform.OS === 'android' && Constants.appOwnership === 'expo';
-let Notifications: typeof import('expo-notifications') | null = null;
-if (!isExpoGoAndroid) {
-  try {
-    Notifications = require('expo-notifications');
-  } catch {}
-}
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -30,11 +23,13 @@ import {
   Poppins_700Bold,
 } from "@expo-google-fonts/poppins";
 
-// Standardize global error handling for both JS errors and unhandled promise rejections
-const ErrorUtils = (globalThis as any).ErrorUtils;
-if (ErrorUtils && typeof ErrorUtils.setGlobalHandler === "function") {
-  const originalHandler = ErrorUtils.getGlobalHandler?.();
-  ErrorUtils.setGlobalHandler((error: any, isFatal?: boolean) => {
+const _isExpoGo = Constants.appOwnership === 'expo';
+const _skipPush = Platform.OS === 'android' && _isExpoGo;
+
+const ErrorUtilsGlobal = (globalThis as any).ErrorUtils;
+if (ErrorUtilsGlobal && typeof ErrorUtilsGlobal.setGlobalHandler === "function") {
+  const originalHandler = ErrorUtilsGlobal.getGlobalHandler?.();
+  ErrorUtilsGlobal.setGlobalHandler((error: any, isFatal?: boolean) => {
     reportErrorToBackend(error, isFatal ? "frontend-fatal" : "frontend-js-error");
     if (originalHandler) {
       originalHandler(error, isFatal);
@@ -42,19 +37,17 @@ if (ErrorUtils && typeof ErrorUtils.setGlobalHandler === "function") {
   });
 }
 
-// Global promise rejection handling (especially for non-native/web or generic cases)
 if (typeof (globalThis as any).onunhandledrejection !== "undefined" || Platform.OS === "web") {
   (globalThis as any).onunhandledrejection = (id: any, error: any) => {
     reportErrorToBackend(error || id, "frontend-unhandled-rejection");
   };
 } else if ((global as any).Promise && (global as any).Promise.onUnhandledRejection) {
-  // Catch for environments with Promise specific unhandled trackers
   (global as any).Promise.onUnhandledRejection((id: any, error: any) => {
     reportErrorToBackend(error || id, "frontend-unhandled-rejection");
   });
 }
 
-if (Notifications) {
+if (!_skipPush) {
   try {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
@@ -76,7 +69,7 @@ function RootLayoutNav() {
   const { isAuthenticated, isLoading, token } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated || !token || Platform.OS === 'web' || !Notifications) return;
+    if (!isAuthenticated || !token || Platform.OS === 'web' || _skipPush) return;
     (async () => {
       try {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -260,9 +253,16 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      try { SplashScreen.hideAsync(); } catch {}
     }
   }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      try { SplashScreen.hideAsync(); } catch {}
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, []);
 
   if (!fontsLoaded && !fontError) return null;
 
