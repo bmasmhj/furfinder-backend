@@ -5,6 +5,8 @@ import { registerRoutes } from "./routes";
 import { sendErrorToDiscord } from "./discord-errors";
 import * as fs from "fs";
 import * as path from "path";
+import dotenv from "dotenv";
+
 
 const app = express();
 const log = console.log;
@@ -15,6 +17,8 @@ declare module "http" {
   }
 }
 
+// config dotenv
+dotenv.config();
 function setupCors(app: express.Application) {
   app.use((req, res, next) => {
     const origins = new Set<string>();
@@ -22,6 +26,9 @@ function setupCors(app: express.Application) {
     if (process.env.REPLIT_DEV_DOMAIN) {
       origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
     }
+
+    origins.add(`http://${process.env.WEB_APP_DOMAIN}`);
+
 
     if (process.env.REPLIT_DOMAINS) {
       process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
@@ -277,7 +284,7 @@ function setupErrorHandler(app: express.Application) {
 }
 
 const httpServer = createServer(app);
-const port = parseInt(process.env.PORT || "5000", 10);
+const port = parseInt(process.env.PORT || "3000", 10);
 
 setupCors(app);
 setupBodyParsing(app);
@@ -298,8 +305,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 httpServer.listen(
   {
     port,
-    host: "0.0.0.0",
-    reusePort: true,
+    host: "localhost",
   },
   () => {
     log(`express server serving on port ${port}`);

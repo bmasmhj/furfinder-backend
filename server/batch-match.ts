@@ -1,11 +1,11 @@
-import OpenAI from 'openai';
+// import OpenAI from 'openai';
 import pool from './db';
 import { sendPushNotification } from './push';
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+// const openai = new OpenAI({
+//   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+//   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+// });
 
 const PRIMARY_RADIUS_KM = 10;
 const EXTENDED_RADIUS_KM = 50;
@@ -163,47 +163,53 @@ export async function runBatchMatch(): Promise<BatchRunResult> {
       }
 
       try {
-        const completion = await openai.chat.completions.create({
-          model: 'gpt-5.2',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an AI pet matching system running an admin batch scan. Match the lost pet against each found candidate using breed, color, markings, size, photos, and location. This is a probabilistic match — never claim certainty.
-
-Return JSON: {"matches": [{"id": "<found_report_id>", "confidence": <0-100>, "reason": "<1-2 sentence explanation>"}]}
-Only include matches with confidence >= ${CONFIDENCE_THRESHOLD}. Confidence scale: 90+=near certain, 70-89=strong, 50-69=moderate. Return ONLY valid JSON.`,
-            },
-            { role: 'user', content: userContent },
-          ],
-          response_format: { type: 'json_object' },
-          max_completion_tokens: 1024,
-        });
-
-        const raw = completion.choices[0]?.message?.content || '{"matches":[]}';
-        let parsed: { matches: Array<{ id: string; confidence: number; reason: string }> };
-        try {
-          parsed = JSON.parse(raw);
-        } catch {
-          parsed = { matches: [] };
+        return {
+          processed,
+          newMatches,
+          startedAt,
+          finishedAt: new Date().toISOString(),
         }
+//         const completion = await openai.chat.completions.create({
+//           model: 'gpt-5.2',
+//           messages: [
+//             {
+//               role: 'system',
+//               content: `You are an AI pet matching system running an admin batch scan. Match the lost pet against each found candidate using breed, color, markings, size, photos, and location. This is a probabilistic match — never claim certainty.
 
-        for (const m of parsed.matches || []) {
-          if (m.confidence < CONFIDENCE_THRESHOLD) continue;
-          try {
-            const insertResult = await pool.query(
-              `INSERT INTO admin_match_queue (lost_report_id, found_report_id, confidence, reason)
-               VALUES ($1, $2, $3, $4)
-               ON CONFLICT (lost_report_id, found_report_id) DO NOTHING
-               RETURNING id`,
-              [lost.id, m.id, Math.min(100, Math.max(0, m.confidence)), m.reason]
-            );
-            if ((insertResult.rowCount ?? 0) > 0) newMatches++;
-          } catch (err) {
-            console.error('[BatchMatch] Insert error:', err);
-          }
-        }
+// Return JSON: {"matches": [{"id": "<found_report_id>", "confidence": <0-100>, "reason": "<1-2 sentence explanation>"}]}
+// Only include matches with confidence >= ${CONFIDENCE_THRESHOLD}. Confidence scale: 90+=near certain, 70-89=strong, 50-69=moderate. Return ONLY valid JSON.`,
+//             },
+//             { role: 'user', content: userContent },
+//           ],
+//           response_format: { type: 'json_object' },
+//           max_completion_tokens: 1024,
+//         });
 
-        await new Promise(resolve => setTimeout(resolve, AI_DELAY_MS));
+        // const raw = completion.choices[0]?.message?.content || '{"matches":[]}';
+        // let parsed: { matches: Array<{ id: string; confidence: number; reason: string }> };
+        // try {
+        //   parsed = JSON.parse(raw);
+        // } catch {
+        //   parsed = { matches: [] };
+        // }
+
+        // for (const m of parsed.matches || []) {
+        //   if (m.confidence < CONFIDENCE_THRESHOLD) continue;
+        //   try {
+        //     const insertResult = await pool.query(
+        //       `INSERT INTO admin_match_queue (lost_report_id, found_report_id, confidence, reason)
+        //        VALUES ($1, $2, $3, $4)
+        //        ON CONFLICT (lost_report_id, found_report_id) DO NOTHING
+        //        RETURNING id`,
+        //       [lost.id, m.id, Math.min(100, Math.max(0, m.confidence)), m.reason]
+        //     );
+        //     if ((insertResult.rowCount ?? 0) > 0) newMatches++;
+        //   } catch (err) {
+        //     console.error('[BatchMatch] Insert error:', err);
+        //   }
+        // }
+
+        // await new Promise(resolve => setTimeout(resolve, AI_DELAY_MS));
       } catch (err) {
         console.error(`[BatchMatch] AI error for lost report ${lost.id}:`, err);
         await new Promise(resolve => setTimeout(resolve, AI_DELAY_MS));

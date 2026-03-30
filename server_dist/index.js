@@ -147,7 +147,6 @@ __export(batch_match_exports, {
   runBatchMatch: () => runBatchMatch,
   scheduleBatchMatch: () => scheduleBatchMatch
 });
-import OpenAI from "openai";
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -257,44 +256,12 @@ CANDIDATE ${i + 1} (id: ${c.id}) \u2014 FOUND ${c.pet_type} "${c.pet_name || "un
         }
       }
       try {
-        const completion = await openai.chat.completions.create({
-          model: "gpt-5.2",
-          messages: [
-            {
-              role: "system",
-              content: `You are an AI pet matching system running an admin batch scan. Match the lost pet against each found candidate using breed, color, markings, size, photos, and location. This is a probabilistic match \u2014 never claim certainty.
-
-Return JSON: {"matches": [{"id": "<found_report_id>", "confidence": <0-100>, "reason": "<1-2 sentence explanation>"}]}
-Only include matches with confidence >= ${CONFIDENCE_THRESHOLD}. Confidence scale: 90+=near certain, 70-89=strong, 50-69=moderate. Return ONLY valid JSON.`
-            },
-            { role: "user", content: userContent }
-          ],
-          response_format: { type: "json_object" },
-          max_completion_tokens: 1024
-        });
-        const raw = completion.choices[0]?.message?.content || '{"matches":[]}';
-        let parsed;
-        try {
-          parsed = JSON.parse(raw);
-        } catch {
-          parsed = { matches: [] };
-        }
-        for (const m of parsed.matches || []) {
-          if (m.confidence < CONFIDENCE_THRESHOLD) continue;
-          try {
-            const insertResult = await db_default.query(
-              `INSERT INTO admin_match_queue (lost_report_id, found_report_id, confidence, reason)
-               VALUES ($1, $2, $3, $4)
-               ON CONFLICT (lost_report_id, found_report_id) DO NOTHING
-               RETURNING id`,
-              [lost.id, m.id, Math.min(100, Math.max(0, m.confidence)), m.reason]
-            );
-            if ((insertResult.rowCount ?? 0) > 0) newMatches++;
-          } catch (err) {
-            console.error("[BatchMatch] Insert error:", err);
-          }
-        }
-        await new Promise((resolve3) => setTimeout(resolve3, AI_DELAY_MS));
+        return {
+          processed,
+          newMatches,
+          startedAt,
+          finishedAt: (/* @__PURE__ */ new Date()).toISOString()
+        };
       } catch (err) {
         console.error(`[BatchMatch] AI error for lost report ${lost.id}:`, err);
         await new Promise((resolve3) => setTimeout(resolve3, AI_DELAY_MS));
@@ -347,19 +314,14 @@ function scheduleBatchMatch() {
   }
   scheduleNext();
 }
-var openai, PRIMARY_RADIUS_KM, EXTENDED_RADIUS_KM, CONFIDENCE_THRESHOLD, MAX_LOST_PER_RUN, MAX_FOUND_POOL, CANDIDATES_PER_REPORT, AI_DELAY_MS, lastRunResult, batchRunning;
+var PRIMARY_RADIUS_KM, EXTENDED_RADIUS_KM, MAX_LOST_PER_RUN, MAX_FOUND_POOL, CANDIDATES_PER_REPORT, AI_DELAY_MS, lastRunResult, batchRunning;
 var init_batch_match = __esm({
   "server/batch-match.ts"() {
     "use strict";
     init_db();
     init_push();
-    openai = new OpenAI({
-      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
-    });
     PRIMARY_RADIUS_KM = 10;
     EXTENDED_RADIUS_KM = 50;
-    CONFIDENCE_THRESHOLD = 50;
     MAX_LOST_PER_RUN = 40;
     MAX_FOUND_POOL = 300;
     CANDIDATES_PER_REPORT = 10;
@@ -570,7 +532,6 @@ import { createServer } from "node:http";
 init_db();
 import * as path from "path";
 import express from "express";
-import OpenAI2 from "openai";
 import rateLimit from "express-rate-limit";
 
 // server/auth.ts
@@ -866,6 +827,55 @@ function moderateContent(text) {
 // server/routes.ts
 init_push();
 init_batch_match();
+
+// server/discord-errors.ts
+function createSender() {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!webhookUrl) {
+    return () => {
+    };
+  }
+  return async (error, context = {}) => {
+    try {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const title = (err.message || "Unknown error").slice(0, 256);
+      const stack = (err.stack || "No stack trace").slice(0, 4e3);
+      const fields = [
+        { name: "Source", value: context.source || "unknown", inline: true },
+        { name: "Timestamp", value: (/* @__PURE__ */ new Date()).toISOString(), inline: true }
+      ];
+      if (context.method) {
+        fields.push({ name: "Method", value: context.method, inline: true });
+      }
+      if (context.path) {
+        fields.push({ name: "Path", value: context.path, inline: true });
+      }
+      if (context.screen) {
+        fields.push({ name: "Screen", value: context.screen, inline: true });
+      }
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          embeds: [
+            {
+              title,
+              description: `\`\`\`
+${stack}
+\`\`\``,
+              color: 16711680,
+              fields
+            }
+          ]
+        })
+      });
+    } catch {
+    }
+  };
+}
+var sendErrorToDiscord = createSender();
+
+// server/routes.ts
 var authLimiter = rateLimit({
   windowMs: 15 * 60 * 1e3,
   max: 10,
@@ -886,10 +896,6 @@ var writeLimiter = rateLimit({
   message: { message: "Too many requests. Please slow down and try again shortly." },
   standardHeaders: true,
   legacyHeaders: false
-});
-var openai2 = new OpenAI2({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL
 });
 function getDistance2(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -915,12 +921,6 @@ function getProfilePhotos(profile) {
 }
 function getProfileBiometricPhotos(profile) {
   return (profile.biometricPhotoUris || []).filter((p) => p && (p.startsWith("data:") || p.startsWith("http")));
-}
-function buildImageContent(photoUri, detail = "high") {
-  return {
-    type: "image_url",
-    image_url: { url: photoUri, detail }
-  };
 }
 function mapReportRow(row, isOwner, likedByMe) {
   return {
@@ -988,7 +988,21 @@ async function getOrgAnimalCandidates(petType, excludeOrgId) {
   const result = await db_default.query(query, params);
   return result.rows;
 }
+var errorReportLimiter = rateLimit({
+  windowMs: 60 * 1e3,
+  max: 10,
+  message: { message: "Too many error reports. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false
+});
 async function registerRoutes(app2) {
+  app2.post("/api/errors/report", errorReportLimiter, (req, res) => {
+    const { message, stack, source, screen } = req.body;
+    const err = new Error(message || "Unknown frontend error");
+    err.stack = stack || err.stack;
+    sendErrorToDiscord(err, { source: source || "frontend", screen });
+    res.status(200).json({ ok: true });
+  });
   app2.use("/store-assets", express.static(path.resolve(process.cwd(), "assets", "store")));
   app2.use("/app-assets", express.static(path.resolve(process.cwd(), "assets")));
   app2.get("/download-assets", (_req, res) => {
@@ -1131,49 +1145,6 @@ async function registerRoutes(app2) {
       const candidateList = visionCandidates.map(
         (c, i) => `${i + 1}. (${c.type}:${c.id}) ${c.summary} | Has ${c.photos.length} photo(s)`
       ).join("\n");
-      const userContent = [];
-      if (hasPhotos) {
-        userContent.push({
-          type: "text",
-          text: `TARGET PET (the pet we are trying to match):
-${targetSummary}
-
-Target pet photo(s):`
-        });
-        for (const photo of targetPhotos.slice(0, 3)) {
-          userContent.push(buildImageContent(photo));
-        }
-        for (let i = 0; i < visionCandidates.length; i++) {
-          const c = visionCandidates[i];
-          if (c.photos.length > 0) {
-            userContent.push({
-              type: "text",
-              text: `
-CANDIDATE ${i + 1} (${c.type}:${c.id}) \u2014 ${c.summary}
-Candidate ${i + 1} photo(s):`
-            });
-            for (const photo of c.photos.slice(0, 3)) {
-              userContent.push(buildImageContent(photo));
-            }
-          } else {
-            userContent.push({
-              type: "text",
-              text: `
-CANDIDATE ${i + 1} (${c.type}:${c.id}) \u2014 ${c.summary}
-(No photo available)`
-            });
-          }
-        }
-      } else {
-        userContent.push({
-          type: "text",
-          text: `Target pet:
-${targetSummary}
-
-Candidates:
-${candidateList}`
-        });
-      }
       const systemPrompt = hasPhotos ? `You are an expert veterinary-grade AI pet identification system. You perform rigorous visual and textual analysis to match lost and found pets with the highest possible accuracy.
 
 VISUAL ANALYSIS PROTOCOL (primary \u2014 most important when photos are available):
@@ -1241,23 +1212,7 @@ Note: "org_animal" candidates are animals currently in the care of verified part
 
 Only include candidates with confidence >= 30. Return at most 10 matches.
 Return ONLY valid JSON, no markdown formatting.`;
-      const completion = await openai2.chat.completions.create({
-        model: "gpt-5.2",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent }
-        ],
-        response_format: { type: "json_object" },
-        max_completion_tokens: 8192
-      });
-      const content = completion.choices[0]?.message?.content || '{"matches":[]}';
-      let parsed;
-      try {
-        parsed = JSON.parse(content);
-      } catch {
-        parsed = { matches: [] };
-      }
-      const matches = (parsed.matches || parsed.results || []).filter((m) => m.confidence >= 30).sort((a, b) => b.confidence - a.confidence).slice(0, 10);
+      const matches = [];
       res.json({ matches });
       if (report.status === "found") {
         notifyMatchedReportOwners(matches, req.user?.id || null).catch(
@@ -1268,259 +1223,6 @@ Return ONLY valid JSON, no markdown formatting.`;
     } catch (error) {
       console.error("Match error:", error);
       return res.status(500).json({ error: "Failed to find matches" });
-    }
-  });
-  app2.post("/api/scan-post", aiLimiter, async (req, res) => {
-    try {
-      const { postText, url, reports, profiles } = req.body;
-      if (!postText && !url) {
-        return res.status(400).json({ error: "Post text or URL is required" });
-      }
-      let contentToAnalyze = postText || "";
-      if (url && !postText) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 1e4);
-          const response = await fetch(url, {
-            signal: controller.signal,
-            headers: {
-              "User-Agent": "Mozilla/5.0 (compatible; TheFurFinder/1.0)"
-            }
-          });
-          clearTimeout(timeout);
-          const html = await response.text();
-          contentToAnalyze = html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 5e3);
-        } catch (fetchErr) {
-          if (!postText) {
-            return res.status(400).json({
-              error: "Could not fetch that URL. Try copying and pasting the post text instead."
-            });
-          }
-        }
-      }
-      if (!contentToAnalyze.trim()) {
-        return res.status(400).json({ error: "No content to analyze" });
-      }
-      const extractionResult = await openai2.chat.completions.create({
-        model: "gpt-5.2",
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert AI system that extracts comprehensive pet information from social media posts (Facebook, Instagram, Nextdoor, Gumtree, community boards, etc.) about lost or found pets in Australia.
-
-Extract ALL available details from the post text with maximum accuracy. Infer breed from descriptions when not explicitly stated (e.g., "fluffy white small dog" could suggest Maltese, Bichon, or Pomeranian). For Australian posts, recognise common location formats (suburb names, state abbreviations).
-
-If a detail is not mentioned and cannot be reasonably inferred, use "unknown".
-
-Return a JSON object with:
-- "isRelevant": boolean - true if this appears to be about a lost or found pet, false otherwise
-- "status": "lost" or "found" (also consider "missing", "escaped", "stray", "wandering" as indicators)
-- "petType": one of "dog", "cat", "bird", "rabbit", "other"
-- "petName": the pet's name if mentioned
-- "breed": breed if mentioned or can be inferred from description
-- "size": "small", "medium", or "large" (infer from breed if not stated)
-- "color": detailed color/coloring description including pattern (e.g., "tan and white bicolor" not just "brown")
-- "markings": ALL distinguishing markings mentioned \u2014 spots, patches, scars, collar color, tag details, microchipped status
-- "description": a comprehensive cleaned-up summary of the pet including age, temperament, medical conditions, and any behavioural traits
-- "locationName": full location/area \u2014 suburb, city, state if available
-- "contactInfo": any contact info (phone, email, social media handle) from the post
-- "reward": reward amount if mentioned (number only, no currency symbol)
-- "postSummary": a 2-3 sentence summary capturing all key details for matching purposes
-
-Return ONLY valid JSON, no markdown.`
-          },
-          {
-            role: "user",
-            content: contentToAnalyze
-          }
-        ],
-        response_format: { type: "json_object" },
-        max_completion_tokens: 8192
-      });
-      const extractedContent = extractionResult.choices[0]?.message?.content || "{}";
-      let extracted;
-      try {
-        extracted = JSON.parse(extractedContent);
-      } catch {
-        return res.status(500).json({ error: "Could not parse the post content" });
-      }
-      if (!extracted.isRelevant) {
-        return res.json({
-          extracted,
-          matches: [],
-          message: "This doesn't appear to be about a lost or found pet."
-        });
-      }
-      const allCandidates = [];
-      const filteredReports = (reports || []).filter((r) => {
-        if (extracted.petType !== "unknown" && r.petType !== extracted.petType) return false;
-        if (extracted.status === "lost") return r.status === "found";
-        if (extracted.status === "found") return r.status === "lost";
-        return true;
-      });
-      for (const r of filteredReports) {
-        allCandidates.push({
-          type: "report",
-          id: r.id,
-          summary: `[App Report] ${r.status.toUpperCase()} ${r.petType} named "${r.petName}", breed: ${r.breed}, size: ${r.size}, color: ${r.color}, markings: "${r.markings}", location: ${r.locationName}, date: ${r.lastSeenDate}, description: "${r.description}"`,
-          photos: getReportPhotos(r)
-        });
-      }
-      const filteredProfiles = (profiles || []).filter((p) => {
-        if (extracted.petType !== "unknown" && p.petType !== extracted.petType) return false;
-        return true;
-      });
-      for (const p of filteredProfiles) {
-        const profilePhotos = getProfilePhotos(p);
-        const biometricPhotos = getProfileBiometricPhotos(p);
-        allCandidates.push({
-          type: "profile",
-          id: p.id,
-          summary: `[Registered Pet] ${p.petType} named "${p.petName}", breed: ${p.breed}, size: ${p.size}, color: ${p.color}, markings: "${p.markings}", suburb: ${p.suburb}, microchip: ${p.microchipNumber || "none"}${biometricPhotos.length > 0 ? `, has ${biometricPhotos.length} biometric ID scan(s)` : ""}`,
-          photos: [...profilePhotos, ...biometricPhotos]
-        });
-      }
-      if (extracted.petType && extracted.petType !== "unknown") {
-        const orgAnimals = await getOrgAnimalCandidates(extracted.petType);
-        for (const oa of orgAnimals) {
-          const photos = Array.isArray(oa.photo_uris) ? oa.photo_uris : typeof oa.photo_uris === "string" ? JSON.parse(oa.photo_uris) : [];
-          const orgLabel = oa.org_type === "vet" ? "Vet Clinic" : oa.org_type === "rescue" ? "Rescue Group" : "Shelter";
-          allCandidates.push({
-            type: "org_animal",
-            id: oa.id,
-            summary: `[${orgLabel}: ${oa.org_name}] ${oa.pet_type} named "${oa.pet_name}", breed: ${oa.breed}, size: ${oa.size}, color: ${oa.color}, markings: "${oa.markings}", intake: ${oa.intake_type}, microchip: ${oa.microchip_number || "none"}, description: "${oa.description}"`,
-            photos: photos.slice(0, 3)
-          });
-        }
-      }
-      if (allCandidates.length === 0) {
-        return res.json({ extracted, matches: [] });
-      }
-      const scanCandidates = allCandidates.slice(0, MAX_VISION_CANDIDATES);
-      const hasPhotos = scanCandidates.some((c) => c.photos.length > 0);
-      const postSummary = `${extracted.status?.toUpperCase() || "UNKNOWN"} ${extracted.petType || "pet"} named "${extracted.petName || "unknown"}", breed: ${extracted.breed || "unknown"}, size: ${extracted.size || "unknown"}, color: ${extracted.color || "unknown"}, markings: "${extracted.markings || "none"}", location: ${extracted.locationName || "unknown"}, description: "${extracted.description || ""}"`;
-      const userContent = [];
-      if (hasPhotos) {
-        userContent.push({
-          type: "text",
-          text: `PET FROM ONLINE POST:
-${postSummary}
-
-APP DATABASE CANDIDATES WITH PHOTOS:`
-        });
-        for (let i = 0; i < scanCandidates.length; i++) {
-          const c = scanCandidates[i];
-          if (c.photos.length > 0) {
-            userContent.push({
-              type: "text",
-              text: `
-CANDIDATE ${i + 1} (${c.type}:${c.id}) \u2014 ${c.summary}
-Photo(s):`
-            });
-            for (const photo of c.photos.slice(0, 3)) {
-              userContent.push(buildImageContent(photo));
-            }
-          } else {
-            userContent.push({
-              type: "text",
-              text: `
-CANDIDATE ${i + 1} (${c.type}:${c.id}) \u2014 ${c.summary}
-(No photo)`
-            });
-          }
-        }
-      } else {
-        const candidateList = scanCandidates.map(
-          (c, i) => `${i + 1}. (${c.type}:${c.id}) ${c.summary}`
-        ).join("\n");
-        userContent.push({
-          type: "text",
-          text: `Online post pet info:
-${postSummary}
-
-App database candidates:
-${candidateList}`
-        });
-      }
-      const scanSystemPrompt = hasPhotos ? `You are an expert veterinary-grade AI pet identification system. Match pets from online social media posts against existing reports and registered profiles in a lost & found database.
-
-VISUAL ANALYSIS PROTOCOL (primary when photos available):
-1. BIOMETRIC FEATURES:
-   - Nose print: ridge patterns, nostril shape, pigmentation
-   - Eyes: iris color, shape, spacing, heterochromia
-   - Facial geometry: muzzle, forehead, jaw, ear set angle
-2. COAT ANALYSIS:
-   - Color distribution: exact patch locations, transitions, gradients
-   - Pattern: solid, bicolor, tricolor, tabby, brindle, merle, tuxedo
-   - Unique markings: spots, patches, stripes with exact body position
-3. DISTINGUISHING FEATURES:
-   - Scars, collar/harness, ear notches, tail shape
-   - Body build and proportions
-
-TEXT ANALYSIS (secondary):
-- Breed match (exact or compatible cross-breeds)
-- Color and markings alignment with photos
-- Size category, geographic proximity, timeline
-- Description and behavioural details
-
-SCORING:
-- 90-100: Virtually certain \u2014 biometric/visual features confirm identity
-- 80-89: Very strong \u2014 multiple unique features match
-- 65-79: Good \u2014 visually similar, text aligns
-- 50-64: Moderate \u2014 breed/color match, limited distinguishing evidence
-- 35-49: Weak but worth reviewing
-- Below 25: Do not include
-
-Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
-- "id": candidate id
-- "type": "report", "profile", or "org_animal"
-- "confidence": 0-100
-- "reason": 2-3 sentence explanation citing specific visual features compared
-
-Note: "org_animal" candidates are animals in the care of verified partner organisations (vet clinics, shelters, rescue groups).
-
-Only include candidates with confidence >= 25. Return at most 10.
-Return ONLY valid JSON, no markdown.` : `You are an expert AI pet matching system. Match pets from online social media posts against existing reports and registered profiles.
-
-Analyse with rigorous attention:
-- Breed: exact match is strongest; consider cross-breed compatibility
-- Color: compare primary/secondary colors, pattern descriptions
-- Markings: specific locations (face blaze, chest patch, paw markings)
-- Size: must be same category
-- Geographic proximity: location name matching, suburb/area overlap
-- Description: behavioural traits, age, distinctive features
-
-Return a JSON object with "matches" array sorted by confidence (highest first). Each match:
-- "id": candidate id
-- "type": "report", "profile", or "org_animal"
-- "confidence": 0-100
-- "reason": 2-3 sentence explanation citing specific matching factors
-
-Note: "org_animal" candidates are animals in the care of verified partner organisations (vet clinics, shelters, rescue groups).
-
-Only include candidates with confidence >= 25. Return at most 10.
-Return ONLY valid JSON, no markdown.`;
-      const matchResult = await openai2.chat.completions.create({
-        model: "gpt-5.2",
-        messages: [
-          { role: "system", content: scanSystemPrompt },
-          { role: "user", content: userContent }
-        ],
-        response_format: { type: "json_object" },
-        max_completion_tokens: 8192
-      });
-      const matchContent = matchResult.choices[0]?.message?.content || '{"matches":[]}';
-      let matchParsed;
-      try {
-        matchParsed = JSON.parse(matchContent);
-      } catch {
-        matchParsed = { matches: [] };
-      }
-      const matches = (matchParsed.matches || matchParsed.results || []).filter((m) => m.confidence >= 25).sort((a, b) => b.confidence - a.confidence).slice(0, 10);
-      return res.json({ extracted, matches });
-    } catch (error) {
-      console.error("Scan post error:", error);
-      return res.status(500).json({ error: "Failed to analyze the post" });
     }
   });
   app2.post("/api/quick-snap-match", aiLimiter, optionalAuth, async (req, res) => {
@@ -1576,34 +1278,6 @@ Return ONLY valid JSON, no markdown.`;
         return res.json({ matches: [] });
       }
       const visionCandidates = candidates.slice(0, MAX_VISION_CANDIDATES);
-      const userContent = [];
-      userContent.push({
-        type: "text",
-        text: `QUICK SNAP PHOTO \u2014 A photo taken by someone who spotted a pet and wants to identify it:
-`
-      });
-      userContent.push(buildImageContent(photoUri));
-      for (let i = 0; i < visionCandidates.length; i++) {
-        const c = visionCandidates[i];
-        if (c.photos.length > 0) {
-          userContent.push({
-            type: "text",
-            text: `
-CANDIDATE ${i + 1} (${c.type}:${c.id}) \u2014 ${c.summary}
-Candidate photo(s):`
-          });
-          for (const photo of c.photos.slice(0, 3)) {
-            userContent.push(buildImageContent(photo));
-          }
-        } else {
-          userContent.push({
-            type: "text",
-            text: `
-CANDIDATE ${i + 1} (${c.type}:${c.id}) \u2014 ${c.summary}
-(No photo available)`
-          });
-        }
-      }
       const snapSystemPrompt = `You are an expert veterinary-grade AI pet identification system specializing in visual biometric matching. A person has spotted a pet in the wild and taken a quick photo. Your critical task is to determine if this pet matches any lost pet reports or registered pet profiles using the highest standard of visual analysis.
 
 BIOMETRIC IDENTIFICATION PROTOCOL (highest priority \u2014 treat like forensic analysis):
@@ -1662,23 +1336,7 @@ Note: "org_animal" candidates are animals in the care of verified partner organi
 
 Only include confidence >= 30. Return at most 10 matches.
 Return ONLY valid JSON, no markdown.`;
-      const completion = await openai2.chat.completions.create({
-        model: "gpt-5.2",
-        messages: [
-          { role: "system", content: snapSystemPrompt },
-          { role: "user", content: userContent }
-        ],
-        response_format: { type: "json_object" },
-        max_completion_tokens: 8192
-      });
-      const content = completion.choices[0]?.message?.content || '{"matches":[]}';
-      let parsed;
-      try {
-        parsed = JSON.parse(content);
-      } catch {
-        parsed = { matches: [] };
-      }
-      const matches = (parsed.matches || parsed.results || []).filter((m) => m.confidence >= 30).sort((a, b) => b.confidence - a.confidence).slice(0, 10);
+      const matches = [];
       res.json({ matches });
       notifyMatchedReportOwners(matches, req.user?.id || null).catch(
         (err) => console.error("[QuickSnap] notifyMatchedReportOwners error:", err)
@@ -3418,14 +3076,17 @@ Return ONLY valid JSON, no markdown.`;
 // server/index.ts
 import * as fs from "fs";
 import * as path2 from "path";
+import dotenv from "dotenv";
 var app = express2();
 var log = console.log;
+dotenv.config();
 function setupCors(app2) {
   app2.use((req, res, next) => {
     const origins = /* @__PURE__ */ new Set();
     if (process.env.REPLIT_DEV_DOMAIN) {
       origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
     }
+    origins.add(`http://${process.env.WEB_APP_DOMAIN}`);
     if (process.env.REPLIT_DOMAINS) {
       process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
         origins.add(`https://${d.trim()}`);
@@ -3610,6 +3271,7 @@ function setupErrorHandler(app2) {
     const status = error.status || error.statusCode || 500;
     const message = error.message || "Internal Server Error";
     console.error("Internal Server Error:", err);
+    sendErrorToDiscord(err, { source: "backend", method: _req.method, path: _req.path });
     if (res.headersSent) {
       return next(err);
     }
@@ -3617,7 +3279,7 @@ function setupErrorHandler(app2) {
   });
 }
 var httpServer = createServer(app);
-var port = parseInt(process.env.PORT || "5000", 10);
+var port = parseInt(process.env.PORT || "3000", 10);
 setupCors(app);
 setupBodyParsing(app);
 setupRequestLogging(app);
@@ -3634,8 +3296,7 @@ app.use((req, res, next) => {
 httpServer.listen(
   {
     port,
-    host: "0.0.0.0",
-    reusePort: true
+    host: "localhost"
   },
   () => {
     log(`express server serving on port ${port}`);
@@ -3687,3 +3348,11 @@ httpServer.listen(
     })();
   }
 );
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+  sendErrorToDiscord(err, { source: "backend-uncaughtException" });
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled Rejection:", reason);
+  sendErrorToDiscord(reason, { source: "backend-unhandledRejection" });
+});
