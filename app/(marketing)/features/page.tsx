@@ -1,140 +1,80 @@
-import { Metadata } from 'next';
-import Header from '@/components/marketing/Header';
-import Footer from '@/components/marketing/Footer';
+import type { Metadata } from 'next'
+import Header from '@/components/marketing/Header'
+import Footer from '@/components/marketing/Footer'
+import { MarketingSection } from '@/components/marketing/MarketingPrimitives'
+import { appFeatureSections, featureCards } from '@/components/marketing/site-content'
 
 export const metadata: Metadata = {
-  title: 'Features - Pet Reunite AI',
-  description: 'Explore the powerful features that make Pet Reunite AI the leading pet matching platform.',
-};
+  title: 'Features - The Fur Finder',
+  description: 'Explore the feature set behind The Fur Finder lost and found pet platform.',
+}
 
 export default function FeaturesPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen bg-[#fafafa] text-[#1a1a2e]">
       <Header />
-
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-gradient-to-br from-brand-50 to-white py-16 px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-5xl font-bold text-neutral-900 mb-6">Powerful Features for Pet Reunification</h1>
-            <p className="text-xl text-neutral-600">Advanced tools designed to help you find your pet faster.</p>
-          </div>
+      <main>
+        <section className="bg-[linear-gradient(180deg,#fff_0%,#fff5f3_100%)] px-6 py-20 text-center md:px-8">
+          <span className="inline-flex rounded-full bg-[#eef2ff] px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#6366f1]">
+            Feature Overview
+          </span>
+          <h1 className="mx-auto mt-5 max-w-4xl text-4xl font-extrabold tracking-[-0.05em] md:text-6xl">
+            A complete toolkit for lost and found pet recovery.
+          </h1>
+          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#6b7280]">
+            This page condenses the supporting `app-features.html` template into a web-friendly version while preserving the same priorities: reporting speed, AI matching, map search, and rescue collaboration.
+          </p>
         </section>
 
-        {/* Features Grid */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-          <div className="mx-auto max-w-6xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {/* Feature 1 */}
-              <div className="flex flex-col justify-center">
-                <div className="text-5xl mb-4">🖼️</div>
-                <h3 className="text-2xl font-bold text-neutral-900 mb-4">AI-Powered Photo Matching</h3>
-                <p className="text-neutral-600 leading-relaxed">
-                  Our advanced computer vision AI analyzes pet photos to identify key features like breed, color patterns, and distinctive marks. This enables accurate matching with found pets in real time.
-                </p>
-              </div>
-              <div className="bg-brand-50 rounded-xl h-64 flex items-center justify-center text-6xl">
-                📸
-              </div>
-
-              {/* Feature 2 */}
-              <div className="bg-brand-50 rounded-xl h-64 flex items-center justify-center text-6xl order-2 md:order-1">
-                📍
-              </div>
-              <div className="flex flex-col justify-center order-1 md:order-2">
-                <div className="text-5xl mb-4">📍</div>
-                <h3 className="text-2xl font-bold text-neutral-900 mb-4">Location-Based Alerts</h3>
-                <p className="text-neutral-600 leading-relaxed">
-                  Get instant notifications when pets are reported in your area. Our geographic matching ensures you see the most relevant reports near your pet&apos;s last known location.
-                </p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="flex flex-col justify-center">
-                <div className="text-5xl mb-4">💬</div>
-                <h3 className="text-2xl font-bold text-neutral-900 mb-4">Direct Messaging</h3>
-                <p className="text-neutral-600 leading-relaxed">
-                  Communicate securely with other pet owners and coordinators. Share additional photos, medical records, and reunion plans directly through our platform.
-                </p>
-              </div>
-              <div className="bg-brand-50 rounded-xl h-64 flex items-center justify-center text-6xl">
-                💭
-              </div>
-
-              {/* Feature 4 */}
-              <div className="bg-brand-50 rounded-xl h-64 flex items-center justify-center text-6xl order-2 md:order-1">
-                📱
-              </div>
-              <div className="flex flex-col justify-center order-1 md:order-2">
-                <div className="text-5xl mb-4">📱</div>
-                <h3 className="text-2xl font-bold text-neutral-900 mb-4">Mobile-First Experience</h3>
-                <p className="text-neutral-600 leading-relaxed">
-                  Report a missing pet in seconds using our mobile app. Browse matches, upload photos, and stay connected to your pet&apos;s search on the go.
-                </p>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="flex flex-col justify-center">
-                <div className="text-5xl mb-4">🔐</div>
-                <h3 className="text-2xl font-bold text-neutral-900 mb-4">Verified Community</h3>
-                <p className="text-neutral-600 leading-relaxed">
-                  All members are verified to ensure safety and authenticity. Reunite with confidence knowing you&apos;re connecting with trustworthy community members.
-                </p>
-              </div>
-              <div className="bg-brand-50 rounded-xl h-64 flex items-center justify-center text-6xl">
-                ✅
-              </div>
-            </div>
+        <MarketingSection eyebrow="Highlights" title="Core product capabilities" description="The same public homepage features are expanded here for people who want a more complete picture." centered>
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {featureCards.map((feature) => (
+              <article key={feature.title} className="rounded-2xl border border-[#e5e7eb] bg-white p-6">
+                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${feature.iconClassName}`}>
+                  {feature.icon}
+                </div>
+                <h2 className="text-lg font-semibold">{feature.title}</h2>
+                <p className="mt-2 text-sm leading-7 text-[#6b7280]">{feature.description}</p>
+              </article>
+            ))}
           </div>
-        </section>
+        </MarketingSection>
 
-        {/* Comparison */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-neutral-50">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-12 text-center">Why Choose Pet Reunite AI?</h2>
-            <div className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-brand-50 border-b border-neutral-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left font-semibold text-neutral-900">Feature</th>
-                    <th className="px-6 py-4 text-center font-semibold text-neutral-900">Pet Reunite AI</th>
-                    <th className="px-6 py-4 text-center font-semibold text-neutral-900">Social Media</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-neutral-200">
-                    <td className="px-6 py-4 text-neutral-900">AI Photo Matching</td>
-                    <td className="px-6 py-4 text-center text-green-600 font-bold">✓</td>
-                    <td className="px-6 py-4 text-center text-neutral-400">✗</td>
-                  </tr>
-                  <tr className="border-b border-neutral-200">
-                    <td className="px-6 py-4 text-neutral-900">Location-Based Search</td>
-                    <td className="px-6 py-4 text-center text-green-600 font-bold">✓</td>
-                    <td className="px-6 py-4 text-center text-neutral-400">✗</td>
-                  </tr>
-                  <tr className="border-b border-neutral-200">
-                    <td className="px-6 py-4 text-neutral-900">24/7 Active Matching</td>
-                    <td className="px-6 py-4 text-center text-green-600 font-bold">✓</td>
-                    <td className="px-6 py-4 text-center text-neutral-400">✗</td>
-                  </tr>
-                  <tr className="border-b border-neutral-200">
-                    <td className="px-6 py-4 text-neutral-900">Direct Messaging</td>
-                    <td className="px-6 py-4 text-center text-green-600 font-bold">✓</td>
-                    <td className="px-6 py-4 text-center text-green-600">✓</td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 text-neutral-900">Verified Community</td>
-                    <td className="px-6 py-4 text-center text-green-600 font-bold">✓</td>
-                    <td className="px-6 py-4 text-center text-neutral-400">✗</td>
-                  </tr>
-                </tbody>
-              </table>
+        <section className="border-y border-[#f3f4f6] bg-[#fff]">
+          <div className="mx-auto max-w-5xl px-6 py-16 md:px-8 md:py-20">
+            <div className="space-y-10">
+              {appFeatureSections.map((section) => (
+                <section key={section.title} className="rounded-3xl border border-[#ececec] bg-[#fff] p-8">
+                  <h2 className="text-2xl font-bold tracking-[-0.02em] text-[#1a1a2e]">{section.title}</h2>
+                  {section.intro ? <p className="mt-4 text-[15px] leading-8 text-[#4a4a6a]">{section.intro}</p> : null}
+                  {section.highlight ? (
+                    <div
+                      className={`mt-5 rounded-r-xl border-l-4 px-5 py-4 text-sm leading-7 ${
+                        section.highlight.tone === 'teal'
+                          ? 'border-[#2cbcb6] bg-[#e8f8f7] text-[#225b59]'
+                          : 'border-[#ff6b4a] bg-[#fff5f3] text-[#6a4b45]'
+                      }`}
+                    >
+                      <strong>{section.highlight.title}:</strong> {section.highlight.body}
+                    </div>
+                  ) : null}
+                  {section.items ? (
+                    <div className="mt-6 space-y-5">
+                      {section.items.map((item) => (
+                        <div key={item.title}>
+                          <h3 className="text-base font-semibold text-[#1a1a2e]">{item.title}</h3>
+                          <p className="mt-2 text-sm leading-7 text-[#6b7280]">{item.body}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+              ))}
             </div>
           </div>
         </section>
       </main>
-
       <Footer />
     </div>
-  );
+  )
 }

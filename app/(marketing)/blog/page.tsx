@@ -1,124 +1,68 @@
-import { Metadata } from 'next';
-import Header from '@/components/marketing/Header';
-import Footer from '@/components/marketing/Footer';
-import Link from 'next/link';
+import type { Metadata } from 'next'
+import Header from '@/components/marketing/Header'
+import Footer from '@/components/marketing/Footer'
+import { MarketingSection } from '@/components/marketing/MarketingPrimitives'
 
 export const metadata: Metadata = {
-  title: 'Blog - Pet Reunite AI',
-  description: 'Success stories, tips, and news from the Pet Reunite AI community.',
-};
+  title: 'Stories & Updates - The Fur Finder',
+  description: 'Stories, product updates, and practical advice from The Fur Finder.',
+}
+
+const posts = [
+  {
+    category: 'Success Story',
+    date: 'February 2026',
+    title: 'How one local sighting turned into a reunion in under 48 hours',
+    excerpt:
+      'A missing dog report, a shelter intake, and one AI-assisted match came together quickly because everything lived in the same workflow.',
+  },
+  {
+    category: 'Product',
+    date: 'January 2026',
+    title: 'Why map search and AI matching work better together',
+    excerpt:
+      'The best reunification tools are not just smart, they are situational. Radius, timing, and visual clues matter together.',
+  },
+  {
+    category: 'Pet Safety',
+    date: 'January 2026',
+    title: 'What to do in the first hour after your pet goes missing',
+    excerpt:
+      'A calm checklist for owners who need to act fast without bouncing between scattered apps, groups, and phone calls.',
+  },
+]
 
 export default function BlogPage() {
-  const posts = [
-    {
-      id: 1,
-      title: 'Max\'s Journey Home: A Heartwarming Reunion',
-      excerpt: 'How a golden retriever found his way back to his family in just 48 hours using Pet Reunite AI.',
-      date: 'April 5, 2024',
-      category: 'Success Stories',
-    },
-    {
-      id: 2,
-      title: 'Tips for Protecting Your Pet During Travel',
-      excerpt: 'Essential safety tips and preventative measures to keep your pet safe while traveling.',
-      date: 'April 1, 2024',
-      category: 'Pet Safety',
-    },
-    {
-      id: 3,
-      title: 'How AI is Revolutionizing Pet Search & Rescue',
-      excerpt: 'An inside look at how computer vision and machine learning are improving reunification rates.',
-      date: 'March 28, 2024',
-      category: 'Technology',
-    },
-    {
-      id: 4,
-      title: 'Luna\'s Recovery: When Found Pets Need Extra Care',
-      excerpt: 'Tips for caring for recently found pets and preparing them for reunion with their owners.',
-      date: 'March 25, 2024',
-      category: 'Pet Care',
-    },
-    {
-      id: 5,
-      title: 'Building Trust in Your Pet Community',
-      excerpt: 'How to create safe, supportive connections with other pet owners in your neighborhood.',
-      date: 'March 20, 2024',
-      category: 'Community',
-    },
-    {
-      id: 6,
-      title: 'Spring Pet Safety: Preparing for Warm Weather',
-      excerpt: 'Seasonal tips for keeping your pets safe and healthy as temperatures rise.',
-      date: 'March 15, 2024',
-      category: 'Pet Safety',
-    },
-  ];
-
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen bg-[#fafafa] text-[#1a1a2e]">
       <Header />
-
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-gradient-to-br from-brand-50 to-white py-16 px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-5xl font-bold text-neutral-900 mb-6">Pet Reunite Blog</h1>
-            <p className="text-xl text-neutral-600">Success stories, tips, and insights from our community.</p>
-          </div>
+      <main>
+        <section className="bg-[linear-gradient(180deg,#fff_0%,#fff5f3_100%)] px-6 py-20 text-center md:px-8">
+          <span className="inline-flex rounded-full bg-[#fff1ed] px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#ff6b4a]">
+            Stories & Updates
+          </span>
+          <h1 className="mt-5 text-4xl font-extrabold tracking-[-0.05em] md:text-6xl">Stories from the search, the rescue, and the reunion.</h1>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#6b7280]">
+            This page replaces the generic blog placeholder with content that feels closer to the product and community the templates describe.
+          </p>
         </section>
 
-        {/* Blog Posts */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-          <div className="mx-auto max-w-4xl">
-            <div className="space-y-8">
-              {posts.map((post) => (
-                <article key={post.id} className="border-b border-neutral-200 pb-8 last:border-0">
-                  <div className="mb-3 flex items-center gap-3">
-                    <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-sm font-medium text-brand-700">
-                      {post.category}
-                    </span>
-                    <span className="text-sm text-neutral-500">{post.date}</span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-neutral-900 mb-3 hover:text-brand-600 transition">
-                    <Link href={`/blog/${post.id}`}>
-                      {post.title}
-                    </Link>
-                  </h2>
-                  <p className="text-neutral-600 mb-4">{post.excerpt}</p>
-                  <Link href={`/blog/${post.id}`} className="text-brand-600 font-medium hover:text-brand-700 transition">
-                    Read More →
-                  </Link>
-                </article>
-              ))}
-            </div>
+        <MarketingSection title="Latest articles" description="A compact editorial layout that matches the homepage visual system.">
+          <div className="space-y-5">
+            {posts.map((post) => (
+              <article key={post.title} className="rounded-3xl border border-[#e5e7eb] bg-white p-8">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <span className="rounded-full bg-[#fff1ed] px-3 py-1 font-medium text-[#ff6b4a]">{post.category}</span>
+                  <span className="text-[#9ca3af]">{post.date}</span>
+                </div>
+                <h2 className="mt-4 text-2xl font-bold tracking-[-0.02em] text-[#1a1a2e]">{post.title}</h2>
+                <p className="mt-3 max-w-3xl text-sm leading-8 text-[#6b7280]">{post.excerpt}</p>
+              </article>
+            ))}
           </div>
-        </section>
-
-        {/* Newsletter */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-brand-50">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold text-neutral-900 mb-4">Stay Updated</h2>
-            <p className="text-neutral-600 mb-8">
-              Get the latest pet reunification stories, safety tips, and community updates delivered to your inbox.
-            </p>
-            <form className="flex gap-3">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="flex-1 rounded-lg border border-neutral-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-600"
-              />
-              <button
-                type="submit"
-                className="rounded-lg bg-brand-600 px-6 py-3 font-medium text-white hover:bg-brand-700 transition"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </section>
+        </MarketingSection>
       </main>
-
       <Footer />
     </div>
-  );
+  )
 }
