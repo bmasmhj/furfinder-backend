@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 255 255 255;
+  --foreground: 0 0 0;
+  --primary: 59 130 246;
+  --secondary: 107 114 128;
+  --accent: 220 38 38;
+  --muted: 229 231 235;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 17 24 39;
+    --foreground: 243 244 246;
+    --primary: 96 165 250;
+    --secondary: 156 163 175;
+    --accent: 248 113 113;
+    --muted: 55 65 81;
+  }
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-sans font-semibold tracking-tight;
+}
+
+h1 {
+  @apply text-4xl;
+}
+
+h2 {
+  @apply text-3xl;
+}
+
+h3 {
+  @apply text-2xl;
+}
+
+h4 {
+  @apply text-xl;
+}
+
+h5 {
+  @apply text-lg;
+}
+
+h6 {
+  @apply text-base;
+}
+
+p {
+  @apply text-base leading-relaxed;
+}
+
+a {
+  @apply text-primary hover:underline;
+}
+
+/* Buttons */
+button {
+  @apply transition-colors duration-200;
+}
+
+/* Form inputs */
+input,
+textarea,
+select {
+  @apply transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary;
+}
