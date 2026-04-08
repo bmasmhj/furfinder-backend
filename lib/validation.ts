@@ -1,3 +1,28 @@
+// Helper for login validation
+export function validateLoginData(data: unknown) {
+  try {
+    const parsed = loginSchema.parse(data)
+    return { success: true, data: parsed }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error }
+    }
+    return { success: false, error }
+  }
+}
+
+// Helper for register validation
+export function validateRegisterData(data: unknown) {
+  try {
+    const parsed = registerSchema.parse(data)
+    return { success: true, data: parsed }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error }
+    }
+    return { success: false, error }
+  }
+}
 import { z } from 'zod'
 
 // Auth Schemas

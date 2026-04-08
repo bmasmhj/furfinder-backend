@@ -42,3 +42,4 @@ yarn-error.*
 .local
 .config
 attached_assets/
+.next/

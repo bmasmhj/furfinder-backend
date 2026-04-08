@@ -1,3 +1,5 @@
+// Alias for compatibility with route imports
+export const db = { query, queryOne, queryMany, execute, closePool };
 import { Pool, QueryResult } from '@neondatabase/serverless'
 
 let pool: Pool | null = null

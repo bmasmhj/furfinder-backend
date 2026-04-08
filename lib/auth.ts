@@ -1,3 +1,5 @@
+// Alias for compatibility with route imports
+export const generateToken = createToken;
 import jwt from 'jsonwebtoken'
 import bcryptjs from 'bcryptjs'
 import { headers } from 'next/headers'

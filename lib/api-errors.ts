@@ -1,3 +1,5 @@
+// Alias for compatibility with route imports
+export const handleApiError = handleError;
 import { NextResponse } from 'next/server'
 
 export interface ApiErrorResponse {
