@@ -37,8 +37,11 @@ export function formatDistance(lat1: number, lon1: number, lat2: number, lon2: n
   return R * c
 }
 
-export function cn(...classes: (string | false | undefined)[]): string {
-  return classes.filter(Boolean).join(' ')
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }
 
 export function truncate(text: string, length: number): string {

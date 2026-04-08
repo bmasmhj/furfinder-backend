@@ -1,105 +1,53 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
-@theme {
-  --brand-50: #f0fdfa;
-  --brand-100: #ccfbf1;
-  --brand-200: #99f6e4;
-  --brand-300: #5eeead4;
-  --brand-400: #2dd4bf;
-  --brand-500: #14b8a6;
-  --brand-600: #0d9488;
-  --brand-700: #0f766e;
-  --brand-800: #134e4a;
-  --brand-900: #134734;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --muted: 221.2 63.6% 97.8%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 20 100% 50%;
+    --accent-foreground: 222.2 47.6% 11.2%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --primary: 20 100% 50%;
+    --primary-foreground: 222.2 47.6% 11.2%;
+    --ring: 20 100% 50%;
+    --radius: 0.5rem;
+  }
 
-  --neutral-50: #fafafa;
-  --neutral-100: #f5f5f5;
-  --neutral-200: #e5e7eb;
-  --neutral-300: #d1d5db;
-  --neutral-400: #9ca3af;
-  --neutral-500: #6b7280;
-  --neutral-600: #4b5563;
-  --neutral-700: #374151;
-  --neutral-800: #1f2937;
-  --neutral-900: #0f172a;
-
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --success: #22c55e;
-  --warning: #fb923c;
-  --error: #ef4444;
-  --info: #3b82f6;
-}
-
-@supports (selector(:dark)) {
-  :dark {
-    --background: #0f172a;
-    --foreground: #fafafa;
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.3% 65.1%;
+    --accent: 20 100% 50%;
+    --accent-foreground: 222.2 47.6% 11.2%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --primary: 20 100% 50%;
+    --primary-foreground: 222.2 47.6% 11.2%;
+    --ring: 20 100% 50%;
   }
 }
 
-* {
-  @apply border-border;
-}
-
-body {
-  @apply bg-background text-foreground antialiased;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* Typography */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  @apply font-sans font-semibold tracking-tight;
-}
-
-h1 {
-  @apply text-4xl;
-}
-
-h2 {
-  @apply text-3xl;
-}
-
-h3 {
-  @apply text-2xl;
-}
-
-h4 {
-  @apply text-xl;
-}
-
-h5 {
-  @apply text-lg;
-}
-
-h6 {
-  @apply text-base;
-}
-
-p {
-  @apply text-base leading-relaxed;
-}
-
-a {
-  @apply text-primary hover:underline;
-}
-
-/* Buttons */
-button {
-  @apply transition-colors duration-200;
-}
-
-/* Form inputs */
-input,
-textarea,
-select {
-  @apply transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
 }
