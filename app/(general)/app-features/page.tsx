@@ -11,8 +11,7 @@ export const metadata: Metadata = {
 
 export default function AppFeaturesPage() {
   return (
-    <div className="min-h-screen bg-white text-[#2d3436]">
-      <Header />
+    <div className="section">
       <main className="mx-auto max-w-5xl px-6 py-16 md:px-8">
         <div className="border-b-4 border-[#ff6b4a] pb-8 text-center">
           <h1 className="text-4xl font-bold tracking-[-0.03em] text-[#ff6b4a]">The Fur Finder</h1>
@@ -63,7 +62,6 @@ export default function AppFeaturesPage() {
           </a>
         </MarketingSection>
       </main>
-      <Footer />
     </div>
   )
 }

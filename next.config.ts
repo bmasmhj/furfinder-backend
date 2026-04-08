@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: 'export',
   images: {
-    unoptimized: false,
+    unoptimized: true,
     domains: ['localhost', 'vercel.com'],
     formats: ['image/avif', 'image/webp'],
   },

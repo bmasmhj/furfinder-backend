@@ -14,7 +14,7 @@ export function MarketingSection({
   id?: string
   eyebrow?: string
   eyebrowTone?: 'coral' | 'teal' | 'purple'
-  title: string
+  title?: string
   description?: string
   centered?: boolean
   className?: string
@@ -28,7 +28,7 @@ export function MarketingSection({
         : 'bg-[#fff1ed] text-[#ff6b4a]'
 
   return (
-    <section id={id} className={`mx-auto max-w-6xl px-6 py-16 md:px-8 md:py-20 ${className}`}>
+    <section id={id} className={`mx-auto max-w-6xl  py-16  ${className}`}>
       <div className={centered ? 'text-center' : ''}>
         {eyebrow ? (
           <span

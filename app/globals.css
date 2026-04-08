@@ -287,7 +287,6 @@
 
 /* ── SHARED SECTION ──────────────────────────────────────── */
 .section {
-  max-width: 1040px;
   margin: 0 auto;
   padding: 80px 24px
 }
