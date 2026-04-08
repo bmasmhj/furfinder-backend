@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { verifyPassword, generateToken } from '@/lib/auth';
 import { validateLoginData } from '@/lib/validation';
 import { ApiError, handleApiError } from '@/lib/api-errors';
+import { ZodError } from 'zod';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +13,13 @@ export async function POST(request: NextRequest) {
     const validation = validateLoginData(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        {
+          error: 'Invalid input',
+          details:
+            validation.error instanceof ZodError
+              ? validation.error.issues
+              : [{ message: validation.error.message }],
+        },
         { status: 400 }
       );
     }

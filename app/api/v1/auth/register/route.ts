@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { hashPassword, generateToken } from '@/lib/auth';
 import { validateRegisterData } from '@/lib/validation';
 import { ApiError, handleApiError } from '@/lib/api-errors';
+import { ZodError } from 'zod';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,12 +13,18 @@ export async function POST(request: NextRequest) {
     const validation = validateRegisterData(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
+        {
+          error: 'Invalid input',
+          details:
+            validation.error instanceof ZodError
+              ? validation.error.issues
+              : [{ message: validation.error.message }],
+        },
         { status: 400 }
       );
     }
 
-    const { email, password, full_name } = validation.data;
+    const { email, password, display_name } = validation.data;
 
     // Check if user exists
     const existingUser = await db.query(
@@ -37,7 +44,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO users (email, password_hash, full_name, created_at)
        VALUES ($1, $2, $3, NOW())
        RETURNING id, email, full_name, created_at`,
-      [email, hashedPassword, full_name]
+      [email, hashedPassword, display_name]
     );
 
     const user = result.rows[0];

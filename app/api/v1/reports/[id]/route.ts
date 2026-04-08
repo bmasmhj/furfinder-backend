@@ -3,14 +3,19 @@ import { db } from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 import { ApiError, handleApiError } from '@/lib/api-errors';
 
+type ReportRouteContext = {
+  params: Promise<{ id: string }>;
+};
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: ReportRouteContext
 ) {
   try {
+    const { id } = await context.params;
     const result = await db.query(
       'SELECT * FROM reports WHERE id = $1',
-      [params.id]
+      [id]
     );
 
     if (result.rows.length === 0) {
@@ -25,9 +30,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: ReportRouteContext
 ) {
   try {
+    const { id } = await context.params;
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new ApiError('Unauthorized', 401);
@@ -51,7 +57,7 @@ export async function PUT(
            updated_at = NOW()
        WHERE id = $8 AND user_id = $9
        RETURNING *`,
-      [pet_name, breed, color, description, location_lat, location_lon, status, params.id, decoded.userId]
+      [pet_name, breed, color, description, location_lat, location_lon, status, id, decoded.userId]
     );
 
     if (result.rows.length === 0) {
@@ -66,9 +72,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: ReportRouteContext
 ) {
   try {
+    const { id } = await context.params;
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new ApiError('Unauthorized', 401);
@@ -79,7 +86,7 @@ export async function DELETE(
 
     const result = await db.query(
       'DELETE FROM reports WHERE id = $1 AND user_id = $2 RETURNING id',
-      [params.id, decoded.userId]
+      [id, decoded.userId]
     );
 
     if (result.rows.length === 0) {

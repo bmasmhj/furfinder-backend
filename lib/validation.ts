@@ -1,13 +1,28 @@
+import { z } from 'zod'
+
+type ValidationSuccess<T> = {
+  success: true
+  data: T
+}
+
+type ValidationFailure = {
+  success: false
+  error: z.ZodError | Error
+}
+
 // Helper for login validation
 export function validateLoginData(data: unknown) {
   try {
     const parsed = loginSchema.parse(data)
-    return { success: true, data: parsed }
+    return { success: true, data: parsed } as ValidationSuccess<z.infer<typeof loginSchema>>
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error }
+      return { success: false, error } as ValidationFailure
     }
-    return { success: false, error }
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error('Validation failed'),
+    } as ValidationFailure
   }
 }
 
@@ -15,15 +30,17 @@ export function validateLoginData(data: unknown) {
 export function validateRegisterData(data: unknown) {
   try {
     const parsed = registerSchema.parse(data)
-    return { success: true, data: parsed }
+    return { success: true, data: parsed } as ValidationSuccess<z.infer<typeof registerSchema>>
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error }
+      return { success: false, error } as ValidationFailure
     }
-    return { success: false, error }
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error('Validation failed'),
+    } as ValidationFailure
   }
 }
-import { z } from 'zod'
 
 // Auth Schemas
 export const registerSchema = z.object({

@@ -193,6 +193,7 @@ export interface PaginatedResponse<T> {
 // Auth Types
 export interface TokenPayload {
   sub: string
+  userId: string
   email: string
   iat: number
   exp: number

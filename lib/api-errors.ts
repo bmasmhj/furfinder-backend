@@ -10,14 +10,42 @@ export interface ApiErrorResponse {
 }
 
 export class ApiError extends Error {
+  public statusCode: number
+  public code: string
+  public details?: any
+
+  constructor(statusCode: number, code: string, message: string, details?: any)
+  constructor(message: string, statusCode?: number, code?: string, details?: any)
   constructor(
-    public statusCode: number,
-    public code: string,
-    public message: string,
-    public details?: any
+    statusCodeOrMessage: number | string,
+    codeOrStatusCode?: string | number,
+    messageOrCode?: string,
+    details?: any
   ) {
+    const statusCode =
+      typeof statusCodeOrMessage === 'number'
+        ? statusCodeOrMessage
+        : typeof codeOrStatusCode === 'number'
+          ? codeOrStatusCode
+          : 500
+
+    const message =
+      typeof statusCodeOrMessage === 'string'
+        ? statusCodeOrMessage
+        : messageOrCode ?? 'An unexpected error occurred'
+
+    const code =
+      typeof statusCodeOrMessage === 'number'
+        ? typeof codeOrStatusCode === 'string'
+          ? codeOrStatusCode
+          : ERROR_CODES.INTERNAL_ERROR
+        : messageOrCode ?? ERROR_CODES.INTERNAL_ERROR
+
     super(message)
     this.name = 'ApiError'
+    this.statusCode = statusCode
+    this.code = code
+    this.details = details
   }
 }
 

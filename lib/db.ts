@@ -1,6 +1,6 @@
 // Alias for compatibility with route imports
 export const db = { query, queryOne, queryMany, execute, closePool };
-import { Pool, QueryResult } from '@neondatabase/serverless'
+import { Pool, QueryResult, type QueryResultRow } from '@neondatabase/serverless'
 
 let pool: Pool | null = null
 
@@ -14,7 +14,7 @@ function getPool(): Pool {
   return pool
 }
 
-export async function query<T = any>(
+export async function query<T extends QueryResultRow = QueryResultRow>(
   sql: string,
   params: any[] = []
 ): Promise<QueryResult<T>> {
@@ -28,7 +28,7 @@ export async function query<T = any>(
   }
 }
 
-export async function queryOne<T = any>(
+export async function queryOne<T extends QueryResultRow = QueryResultRow>(
   sql: string,
   params: any[] = []
 ): Promise<T | null> {
@@ -36,7 +36,7 @@ export async function queryOne<T = any>(
   return result.rows[0] || null
 }
 
-export async function queryMany<T = any>(
+export async function queryMany<T extends QueryResultRow = QueryResultRow>(
   sql: string,
   params: any[] = []
 ): Promise<T[]> {
