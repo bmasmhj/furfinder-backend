@@ -214,7 +214,7 @@ curl -X POST http://localhost:3000/api/v1/auth/register \
   -d '{
     "email": "user@example.com",
     "password": "password123",
-    "full_name": "John Doe"
+    "display_name": "John Doe"
   }'
 
 # Create a report

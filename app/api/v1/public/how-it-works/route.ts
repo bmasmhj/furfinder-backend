@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { withCORS } from '../../withCORS';
 
-export async function GET(request: NextRequest) {
+export const GET = withCORS(async function GET(request: NextRequest) {
   try {
     const steps = await db.queryMany(
       'SELECT * FROM how_it_works_steps WHERE is_active = true ORDER BY step_number ASC'
@@ -14,4 +15,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

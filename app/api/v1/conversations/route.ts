@@ -3,7 +3,28 @@ import { db } from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 import { ApiError, handleApiError } from '@/lib/api-errors';
 
-export async function GET(request: NextRequest) {
+// CORS middleware for Next.js API route
+function withCORS(handler: any) {
+  return async (request: NextRequest, ...args: any[]) => {
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
+    const response = await handler(request, ...args);
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return response;
+  };
+}
+
+export const GET = withCORS(async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -15,8 +36,8 @@ export async function GET(request: NextRequest) {
 
     const result = await db.query(
       `SELECT c.*, 
-              u1.full_name as user1_name,
-              u2.full_name as user2_name
+              u1.display_name as user1_name,
+              u2.display_name as user2_name
        FROM conversations c
        JOIN users u1 ON c.user1_id = u1.id
        JOIN users u2 ON c.user2_id = u2.id
@@ -29,9 +50,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withCORS(async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -55,4 +76,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

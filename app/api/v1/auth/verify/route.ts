@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Get user from database
     const result = await db.query(
-      'SELECT id, email, full_name FROM users WHERE id = $1',
+      'SELECT id, email, display_name FROM users WHERE id = $1',
       [decoded.userId]
     );
 
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         user: {
           id: user.id,
           email: user.email,
-          full_name: user.full_name,
+          display_name: user.display_name,
         },
         valid: true,
       },

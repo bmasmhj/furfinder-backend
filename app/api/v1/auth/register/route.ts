@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
 
     // Create user
     const result = await db.query(
-      `INSERT INTO users (email, password_hash, full_name, created_at)
+      `INSERT INTO users (email, password_hash, display_name, created_at)
        VALUES ($1, $2, $3, NOW())
-       RETURNING id, email, full_name, created_at`,
+       RETURNING id, email, display_name, created_at`,
       [email, hashedPassword, display_name]
     );
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         user: {
           id: user.id,
           email: user.email,
-          full_name: user.full_name,
+          display_name: user.display_name,
         },
         token,
       },

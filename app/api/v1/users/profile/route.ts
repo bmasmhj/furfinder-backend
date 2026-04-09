@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const decoded = verifyToken(token);
 
     const result = await db.query(
-      `SELECT id, email, full_name, phone, address, city, state, country, avatar_url, bio, created_at, updated_at
+      `SELECT id, email, display_name, phone, address, city, state, country, avatar_url, bio, created_at, updated_at
        FROM users WHERE id = $1`,
       [decoded.userId]
     );
@@ -40,11 +40,11 @@ export async function PUT(request: NextRequest) {
     const decoded = verifyToken(token);
 
     const body = await request.json();
-    const { full_name, phone, address, city, state, country, avatar_url, bio } = body;
+    const { display_name, phone, address, city, state, country, avatar_url, bio } = body;
 
     const result = await db.query(
       `UPDATE users 
-       SET full_name = COALESCE($1, full_name),
+       SET display_name = COALESCE($1, display_name),
            phone = COALESCE($2, phone),
            address = COALESCE($3, address),
            city = COALESCE($4, city),
@@ -54,8 +54,8 @@ export async function PUT(request: NextRequest) {
            bio = COALESCE($8, bio),
            updated_at = NOW()
        WHERE id = $9
-       RETURNING id, email, full_name, phone, address, city, state, country, avatar_url, bio, created_at, updated_at`,
-      [full_name, phone, address, city, state, country, avatar_url, bio, decoded.userId]
+       RETURNING id, email, display_name, phone, address, city, state, country, avatar_url, bio, created_at, updated_at`,
+      [display_name, phone, address, city, state, country, avatar_url, bio, decoded.userId]
     );
 
     return NextResponse.json({ user: result.rows[0] }, { status: 200 });

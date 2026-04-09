@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Find user
     const result = await db.query(
-      'SELECT id, email, password_hash, full_name FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, display_name FROM users WHERE email = $1',
       [email]
     );
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         user: {
           id: user.id,
           email: user.email,
-          full_name: user.full_name,
+          display_name: user.display_name,
         },
         token,
       },
