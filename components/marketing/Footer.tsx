@@ -43,8 +43,8 @@ export default function Footer() {
               <Link href="/#faq" className="block transition hover:text-[#ff6b4a]">
                 FAQ
               </Link>
-              <Link href="/app-features" className="block transition hover:text-[#ff6b4a]">
-                Full Feature List
+              <Link href="/features" className="block transition hover:text-[#ff6b4a]">
+                Feature List
               </Link>
               <Link href="/about" className="block transition hover:text-[#ff6b4a]">
                 Our Story
