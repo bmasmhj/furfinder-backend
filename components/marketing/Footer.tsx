@@ -1,5 +1,5 @@
-import Link from 'next/link'
-import { appStoreUrl, playStoreUrl } from '@/components/marketing/site-content'
+import Link from "next/link";
+import { appStoreUrl, playStoreUrl } from "@/components/marketing/site-content";
 
 export default function Footer() {
   return (
@@ -12,56 +12,100 @@ export default function Footer() {
               <span>The Fur Finder</span>
             </div>
             <p className="mt-3 max-w-sm text-sm leading-7 text-[#6b7280]">
-              Australia&apos;s AI-powered lost and found pets platform. Reuniting pets with their families, one report at a time.
+              Australia&apos;s AI-powered lost and found pets platform.
+              Reuniting pets with their families, one report at a time.
             </p>
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-white">App</h4>
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+              App
+            </h4>
             <div className="space-y-2 text-sm">
-              <Link href={appStoreUrl} target="_blank" rel="noreferrer" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href={appStoreUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 App Store
               </Link>
-              <Link href={playStoreUrl} target="_blank" rel="noreferrer" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href={playStoreUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 Google Play
               </Link>
-              <Link href="/features" className="block transition hover:text-[#ff6b4a]">
-                Features
-              </Link>
-              <Link href="/#pricing" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href="/pricing"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 Pricing
               </Link>
             </div>
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-white">Resources</h4>
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+              Resources
+            </h4>
             <div className="space-y-2 text-sm">
-              <Link href="/#how-it-works" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href="/how-it-works"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 How It Works
               </Link>
-              <Link href="/#faq" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href="/faq"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 FAQ
               </Link>
-              <Link href="/app-features" className="block transition hover:text-[#ff6b4a]">
-                Full Feature List
+              <Link
+                href="/blog"
+                className="block transition hover:text-[#ff6b4a]"
+              >
+                Blog
               </Link>
-              <Link href="/about" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href="/reunited-stories"
+                className="block transition hover:text-[#ff6b4a]"
+              >
+                Reunited Stories
+              </Link>
+              <Link
+                href="/about"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 Our Story
               </Link>
             </div>
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-white">Legal</h4>
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+              Legal
+            </h4>
             <div className="space-y-2 text-sm">
-              <Link href="/privacy-policy" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href="/privacy-policy"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 Privacy Policy
               </Link>
-              <Link href="/terms-of-use" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href="/terms-of-use"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 Terms of Use
               </Link>
-              <Link href="/delete-account" className="block transition hover:text-[#ff6b4a]">
+              <Link
+                href="/delete-account"
+                className="block transition hover:text-[#ff6b4a]"
+              >
                 Delete Account
               </Link>
             </div>
@@ -71,18 +115,27 @@ export default function Footer() {
         <div className="mt-12 flex flex-col gap-3 border-t border-[#1f1f1f] pt-7 text-xs text-[#4b5563] sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; 2026 The Fur Finder. Made with love in Australia.</p>
           <div className="flex gap-5">
-            <Link href="/privacy-policy" className="transition hover:text-[#ff6b4a]">
+            <Link
+              href="/privacy-policy"
+              className="transition hover:text-[#ff6b4a]"
+            >
               Privacy
             </Link>
-            <Link href="/terms-of-use" className="transition hover:text-[#ff6b4a]">
+            <Link
+              href="/terms-of-use"
+              className="transition hover:text-[#ff6b4a]"
+            >
               Terms
             </Link>
-            <Link href="/delete-account" className="transition hover:text-[#ff6b4a]">
+            <Link
+              href="/delete-account"
+              className="transition hover:text-[#ff6b4a]"
+            >
               Delete Account
             </Link>
           </div>
         </div>
       </div>
     </footer>
-  )
+  );
 }

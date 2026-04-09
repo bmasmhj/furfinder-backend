@@ -63,6 +63,19 @@
     @apply bg-background text-foreground antialiased;
     font-family: Poppins, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
+
+  .bg-surface {
+    background-color: #FAFAFA;
+  }
+  
+  .bg-surface-secondary {
+    background-color: #F9FAFB;
+  }
+
+  .card-bg {
+    background-color: #FFFFFF;
+    border-color: #E5E7EB;
+  }
 }
 
 /* ── NAV ─────────────────────────────────────────────────── */
@@ -106,17 +119,33 @@
 }
 
 .nav-links a {
-  font-size: 13px;
+  position: relative;
+  font-size: 14px;
   font-weight: 500;
-  color: #cbcbcb;
-  transition: color .2s;
-  white-space: nowrap
+  color: #1a1a2e;
+  padding: 8px 0;
+  transition: color 0.2s;
 }
 
-.nav-links a:hover {
-  color: #FF6B4A
+.nav-link:hover {
+  color: #ff6b4a;
 }
 
+.nav-link--active {
+  color: #ff6b4a !important;
+  font-weight: 700;
+}
+
+.nav-link--active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #ff6b4a;
+  border-radius: 2px;
+}
 .nav-cta {
   background: #FF6B4A;
   color: #fff !important;
@@ -128,6 +157,87 @@
 
 .nav-cta:hover {
   background: #e5553a
+}
+
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+}
+
+
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+}
+
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 80%;
+  max-width: 300px;
+  height: 100%;
+  background: white;
+  z-index: 1000;
+  transition: right 0.3s ease-in-out;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+  padding: 80px 24px 40px;
+}
+
+.mobile-drawer--open {
+  right: 0;
+}
+
+.mobile-drawer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mobile-nav-link {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.mobile-nav-link--active {
+  color: #ff6b4a;
+}
+
+.mobile-nav-cta {
+  margin-top: 20px;
+  background: #ff6b4a;
+  color: white;
+  text-align: center;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+/* ── LOADER ────────────────────────────────────────────── */
+#nprogress .bar {
+  background: #ff6b4a !important;
+  height: 3px !important;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px #ff6b4a, 0 0 5px #ff6b4a !important;
 }
 
 /* ── HERO ────────────────────────────────────────────────── */
@@ -1097,6 +1207,10 @@ details[open] .faq-icon {
   .nav-links a:not(.nav-cta) {
     display: none
   }
+  
+  .nav-hamburger {
+    display: flex;
+  }
 
   .hero {
     padding: 48px 20px 64px
@@ -1444,4 +1558,46 @@ details[open] .faq-icon {
   .footer-legal a {
     color: #333
   }
+}
+@media(prefers-color-scheme:dark) {
+  .bg-surface { background-color: #0d0d0d !important; }
+  .bg-surface-secondary { background-color: #111111 !important; }
+  .card-bg, .story-card-preview, .blog-card { background-color: #1a1a1a !important; border-color: #2a2a2a !important; }
+  .faq-preview-section { background-color: #111 !important; }
+  .text-muted { color: #888 !important; }
+  .text-heading { color: #f0f0f0 !important; }
+  h1, h2, h3, h4 { color: #f0f0f0 !important; }
+  p, span:not(.accent):not(.paw) { color: #888; }
+}
+
+@media(prefers-color-scheme:dark) {
+  /* Global catch-alls for text hierarchy */
+  h1, h2, h3, h4, h5, h6 { color: #f3f4f6 !important; }
+  p, li, span:not(.accent):not(.paw) { color: #9ca3af !important; }
+  
+  /* Layout backgrounds */
+  .bg-white, .bg-[#fafafa], .bg-[#f9fafb], .bg-[#f8f9fa] { 
+    background-color: #0d0d0d !important; 
+  }
+  
+  /* Borders */
+  .border, .border-b, .border-t, .border-[#e5e7eb], .border-[#f3f4f6] {
+    border-color: #2a2a2a !important;
+  }
+  
+  /* Link hover states */
+  a:hover { color: #ff6b4a !important; }
+
+  /* Cards and details */
+  details, .rounded-3xl, .rounded-2xl {
+    background-color: #1a1a1a !important;
+    border-color: #2a2a2a !important;
+  }
+  
+  summary {
+    color: #f3f4f6 !important;
+  }
+
+  /* Specific landing-page-module overrides if scoped globally */
+  .landing-page_page__ { background-color: #0d0d0d !important; }
 }

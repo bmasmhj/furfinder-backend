@@ -1120,3 +1120,40 @@
   }
 }
 
+
+@media (prefers-color-scheme: dark) {
+  .page {
+    background: #0d0d0d;
+    color: #e0e0e0;
+  }
+  .navWrap {
+    background: rgba(13, 13, 13, 0.92);
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+  }
+  .navLogo { color: #f0f0f0; }
+  .navLinks a { color: #c7c7c7; }
+  .hero {
+    background: linear-gradient(180deg, #111 0%, #1a1210 50%, #101e1d 100%);
+  }
+  .hero h1 { color: #f0f0f0; }
+  .sectionTitle { color: #f0f0f0; }
+  .sectionDesc { color: #888; }
+  .featureCard, .whoCard, .stepCard, .planCard {
+    background: #1a1a2e;
+    border-color: #2d2d4a;
+  }
+  .featureCard h3, .whoCard h3, .stepCard h3, .planCard h3 { color: #f0f0f0; }
+  .featureCard p, .whoCard p, .stepCard p, .planCard p { color: #888; }
+  .whoBg, .faqBg {
+    background: #111;
+    border-color: #1a1a1a;
+  }
+  .btnSecondary {
+    background: #1a1a1a;
+    color: #e0e0e0;
+    border-color: #2a2a2a;
+  }
+  .ctaSection {
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+  }
+}
