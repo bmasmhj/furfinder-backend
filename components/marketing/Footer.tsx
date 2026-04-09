@@ -37,17 +37,17 @@ export default function Footer() {
           <div>
             <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-white">Resources</h4>
             <div className="space-y-2 text-sm">
-              <Link href="/#how-it-works" className="block transition hover:text-[#ff6b4a]">
+              <Link href="/how-it-works" className="block transition hover:text-[#ff6b4a]">
                 How It Works
               </Link>
-              <Link href="/#faq" className="block transition hover:text-[#ff6b4a]">
+              <Link href="/faq" className="block transition hover:text-[#ff6b4a]">
                 FAQ
               </Link>
-              <Link href="/features" className="block transition hover:text-[#ff6b4a]">
-                Feature List
+              <Link href="/blog" className="block transition hover:text-[#ff6b4a]">
+                Blog
               </Link>
-              <Link href="/about" className="block transition hover:text-[#ff6b4a]">
-                Our Story
+              <Link href="/reunited-stories" className="block transition hover:text-[#ff6b4a]">
+                Reunited Stories
               </Link>
             </div>
           </div>
