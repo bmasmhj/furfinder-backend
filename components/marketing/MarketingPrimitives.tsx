@@ -37,10 +37,10 @@ export function MarketingSection({
             {eyebrow}
           </span>
         ) : null}
-        <h2 className="text-3xl font-bold tracking-[-0.03em] text-[#1a1a2e] md:text-4xl">{title}</h2>
+        <h2 className="text-3xl font-bold tracking-[-0.03em] md:text-4xl">{title}</h2>
         {description ? (
           <p
-            className={`mt-3 text-[15px] leading-7 text-[#6b7280] ${
+            className={`mt-3 text-[15px] leading-7 ${
               centered ? 'mx-auto max-w-2xl' : 'max-w-2xl'
             }`}
           >
@@ -66,9 +66,9 @@ export function DownloadButton({
 }) {
   const className =
     variant === 'secondary'
-      ? 'border border-[#e5e7eb] bg-white text-[#1a1a2e] hover:border-[#ff6b4a] hover:text-[#ff6b4a]'
+      ? 'border card-bg text-foreground hover:border-[#ff6b4a] hover:text-[#ff6b4a]'
       : variant === 'ghost'
-        ? 'bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]'
+        ? 'bg-surface-secondary text-foreground hover:bg-surface'
         : 'bg-[#ff6b4a] text-white shadow-[0_10px_30px_rgba(255,107,74,0.25)] hover:bg-[#e5553a]'
 
   const props = external
@@ -105,7 +105,7 @@ export function LegalPageLayout({
       : 'from-[#ff6b4a] to-[#ff8a6e]'
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#1a1a2e]">
+    <div className="min-h-screen bg-surface">
       <div className={`bg-gradient-to-br ${bgClass} px-6 py-12 text-center`}>
         <h1 className="text-3xl font-bold text-white">{title}</h1>
         <p className="mt-2 text-sm text-white/90">{subtitle}</p>
@@ -121,8 +121,8 @@ export function LegalPageLayout({
 export function LegalSection({ title, body }: { title: string; body: string }) {
   return (
     <section>
-      <h2 className="text-xl font-semibold text-[#1a1a2e]">{title}</h2>
-      <p className="mt-3 whitespace-pre-line text-[15px] leading-8 text-[#4a4a6a]">{body}</p>
+      <h2 className="text-xl font-semibold">{title}</h2>
+      <p className="mt-3 whitespace-pre-line text-[15px] leading-8">{body}</p>
     </section>
   )
 }

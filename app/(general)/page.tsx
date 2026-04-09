@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "./landing-page.module.css";
-import Header from "@/components/marketing/Header";
 import HeroSection from "@/components/marketing/Hero";
 import WhoisitFor from "@/components/marketing/WhoIsItFor";
 
@@ -15,47 +14,45 @@ const appStoreUrl = "https://apps.apple.com/app/id6759967208";
 const playStoreUrl =
   "https://play.google.com/store/apps/details?id=com.petreunite.app";
 
-const faqItems = [
-  [
-    "Is The Fur Finder free to use?",
-    "Yes — downloading the app and posting lost or found reports is completely free, no credit card required. Premium ($4.99/month) unlocks AI photo matching, post scanning, and biometric identification for those who want the full toolkit.",
-  ],
-  [
-    "How does the AI photo matching work?",
-    "When you upload a photo of your pet, our AI analyses it for visual characteristics — coat colour and patterns, facial features, markings, and body shape. It then compares these against every found pet report within your search radius and returns a ranked list of potential matches with a confidence percentage and written explanation.",
-  ],
-  [
-    "I've found a stray — what should I do?",
-    'Open the app, tap "Report Found Pet", take a few photos, and drop a pin on the map where you found them. Our AI will immediately check it against all active lost reports in the area. You can also use the Quick Snap feature to photograph the pet and run a biometric scan to see if their owner has registered them. In the meantime, check if the pet is microchipped at your nearest vet — it\'s free.',
-  ],
-  [
-    "My pet is lost right now — what do I do first?",
-    "Stay calm, then: 1) Post a lost report in the app immediately with the best photos you have. 2) Share the report to your local Facebook and community groups. 3) Contact nearby vets and shelters — the app's directory makes this easy. 4) Use the app's printable flyer feature to create posters you can put up in the area. 5) Enable area alerts so you're notified if someone finds a pet matching your description nearby.",
-  ],
-  [
-    "What types of pets are supported?",
-    "Dogs, cats, birds, rabbits, reptiles, small animals (guinea pigs, hamsters, ferrets), and any other pet. When creating a report, simply select the pet type from the list — the AI matching adapts its analysis accordingly.",
-  ],
-  [
-    "Is my personal information kept private?",
-    "Yes. Your phone number is optional and hidden from public view by default — you choose whether to show it. All messages between users happen inside the app so neither party needs to share personal contact details. We do not sell your data to third parties. You can read our full Privacy Policy for details.",
-  ],
-  [
-    "I found my pet — how do I close my report?",
-    'Open your report, tap the "Mark as Reunited" button, and optionally share a short reunion message. Your report will move to the Happy Tails section, celebrating your reunion and giving hope to others. The report is no longer shown as active in the search.',
-  ],
-  [
-    "Can vets, shelters, and rescues use the app?",
-    "Absolutely — and it's free. Organisations can register as a partner, list animals currently in their care, and have those animals automatically included in AI matching results. When a lost pet's owner runs a match, your shelter's animals appear in the results if they're a match. Register through the app under Settings → Register as Partner.",
-  ],
-];
+async function getFaqs() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${baseUrl}/api/v1/public/faqs?limit=4`, {
+      next: { revalidate: 3600 },
+    })
+    if (!response.ok) return []
+    const result = await response.json()
+    return result.data || []
+  } catch (error) {
+    console.error('Error fetching FAQs:', error)
+    return []
+  }
+}
 
-export default function HomePage() {
+async function getFeaturedStories() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${baseUrl}/api/v1/public/reunited-stories?featured=true&limit=3`, {
+      next: { revalidate: 3600 },
+    })
+    if (!response.ok) return []
+    const result = await response.json()
+    return result.data || []
+  } catch (error) {
+    console.error('Error fetching stories:', error)
+    return []
+  }
+}
+
+export default async function HomePage() {
+  const [faqs, stories] = await Promise.all([getFaqs(), getFeaturedStories()]);
+
   return (
     <div className={styles.page}>
       <HeroSection />
-      <div className="mission-band">
-        <p>
+      
+      <div className="mission-band ">
+        <p className="!text-white"> 
           <strong>Every minute counts.</strong> We built The Fur Finder because
           too many lost pets never make it home — not for lack of love, but for
           lack of the right tools. We're changing that.
@@ -63,6 +60,75 @@ export default function HomePage() {
       </div>
 
       <WhoisitFor />
+
+      {/* Reunited Stories Preview */}
+      {stories.length > 0 && (
+        <section className="section bg-surface">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex justify-between items-end mb-10">
+              <div>
+                <span className="section-label teal">Success Stories</span>
+                <h2 className="section-title">Recently Reunited</h2>
+              </div>
+              <Link href="/reunited-stories" className="text-[#ff6b4a] font-semibold hover:underline hidden md:block">
+                View All Stories →
+              </Link>
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-3">
+              {stories.map((story: any) => (
+                <div key={story.id} className="story-card-preview card-bg border rounded-2xl overflow-hidden hover:shadow-lg transition-all">
+                  {story.image_url && (
+                    <div className="h-48 overflow-hidden">
+                      <img src={story.image_url} alt={story.pet_name} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <h3 className="font-bold text-lg mb-2">{story.pet_name}&apos;s Journey</h3>
+                    <p className="text-[#6b7280] text-sm line-clamp-3 mb-4">{story.story_content}</p>
+                    <span className="text-xs font-medium text-[#ff6b4a] uppercase tracking-wider">{story.pet_type}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-8 text-center md:hidden">
+               <Link href="/reunited-stories" className="btn-secondary w-full">View All Stories</Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FAQ Preview */}
+      <section className="section faq-preview-section bg-surface-secondary">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <span className="section-label">Common Questions</span>
+          <h2 className="section-title">Got questions? We have answers.</h2>
+          <p className="section-desc mb-12">Here are some of the most frequently asked questions about The Fur Finder.</p>
+          
+          <div className="faq-list mb-12 text-left">
+            {faqs.length > 0 ? (
+              faqs.map((faq: any) => (
+                <details key={faq.id} className="card-bg border rounded-xl mb-3">
+                  <summary className="p-5 font-semibold cursor-pointer list-none flex justify-between items-center">
+                    {faq.question}
+                    <span className="text-[#ff6b4a]">+</span>
+                  </summary>
+                  <div className="px-5 pb-5 text-[#6b7280] text-sm border-t border-[#f3f4f6] pt-4 leading-relaxed">
+                    {faq.answer}
+                  </div>
+                </details>
+              ))
+            ) : (
+              <p className="text-center text-[#6b7280]">Loading questions...</p>
+            )}
+          </div>
+          
+          <Link href="/faq" className="btn-secondary inline-flex">
+            View All FAQs
+          </Link>
+        </div>
+      </section>
 
       <section className={styles.ctaSection} id="download">
         <h2>Download The Fur Finder — Free</h2>

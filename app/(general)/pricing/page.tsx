@@ -28,7 +28,7 @@ export default async function Pricing() {
   const plans = await getPricingPlans()
 
   return (
-    <section className="pricing-bg" id="pricing">
+    <section className="pricing-bg max-w-7xl m-auto" id="pricing">
       <div className="section centered">
         <h2 className="section-title">Simple, honest pricing</h2>
         <p className="section-desc">
@@ -37,13 +37,14 @@ export default async function Pricing() {
 
         {plans.length > 0 ? (
           <>
-            <div className="pricing-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
               {plans.map((plan: any) => (
                 <div
                   key={plan.id}
-                  className={`plan-card ${plan.is_popular ? 'featured' : ''}`}
+                  className={`plan-card ${plan.is_popular ? 'featured' : ''} flex flex-col justify-between`}
                 >
-                  {plan.is_popular && (
+                  <div>
+                    {plan.is_popular && (
                     <div className="plan-badge">Most Popular</div>
                   )}
                   <div className="plan-name">{plan.name}</div>
@@ -51,11 +52,11 @@ export default async function Pricing() {
                     {plan.name.toLowerCase() === 'free' ? (
                       'Free'
                     ) : (
-                      <>
+                      <h3 className='text-6xl'>
                         <sup>$</sup>
-                        {plan.price}
+                        {plan.price_aud}
                         <span>/{plan.billing_period}</span>
-                      </>
+                      </h3>
                     )}
                   </div>
                   <div className="plan-yearly">{plan.description}</div>
@@ -71,6 +72,7 @@ export default async function Pricing() {
                       </div>
                     ))
                   ) : null}
+                  </div>
 
                   <a
                     href="https://apps.apple.com/app/id6759967208"
@@ -89,7 +91,7 @@ export default async function Pricing() {
                 </div>
               ))}
             </div>
-            <p className="pricing-note">
+            <p className="pricing-note !mt-16">
               Subscriptions managed securely via the App Store &amp; Google Play. Cancel anytime.
             </p>
           </>

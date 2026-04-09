@@ -43,3 +43,4 @@ yarn-error.*
 .config
 attached_assets/
 .next/
+.env.development
