@@ -26,7 +26,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { title, description, icon, order_index, is_published } = await request.json();
+    const { title, description, icon_name, icon_url, display_order, is_active } = await request.json();
 
     const feature = await db.queryOne('SELECT * FROM features WHERE id = $1', [id]);
     if (!feature) {
@@ -35,16 +35,17 @@ export async function PUT(
 
     const result = await db.queryOne(
       `UPDATE features 
-       SET title = $1, description = $2, icon = $3, order_index = $4, 
-           is_published = $5, updated_at = NOW()
-       WHERE id = $6
+       SET title = $1, description = $2, icon_name = $3, icon_url = $4, 
+           display_order = $5, is_active = $6, updated_at = NOW()
+       WHERE id = $7
        RETURNING *`,
       [
         title || feature.title,
         description || feature.description,
-        icon || feature.icon,
-        order_index !== undefined ? order_index : feature.order_index,
-        is_published !== undefined ? is_published : feature.is_published,
+        icon_name || feature.icon_name,
+        icon_url || feature.icon_url,
+        display_order !== undefined ? display_order : feature.display_order,
+        is_active !== undefined ? is_active : feature.is_active,
         id
       ]
     );

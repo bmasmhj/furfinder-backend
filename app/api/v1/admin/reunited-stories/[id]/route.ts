@@ -26,7 +26,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { pet_name, pet_type, story_title, story_content, image_url, reunited_date, is_featured } = await request.json();
+    const { pet_name, pet_type, owner_name, story_title, story_content, before_image_url, after_image_url, reunion_date, featured_on_homepage } = await request.json();
 
     const story = await db.queryOne('SELECT * FROM reunited_stories WHERE id = $1', [id]);
     if (!story) {
@@ -35,18 +35,20 @@ export async function PUT(
 
     const result = await db.queryOne(
       `UPDATE reunited_stories 
-       SET pet_name = $1, pet_type = $2, story_title = $3, story_content = $4, 
-           image_url = $5, reunited_date = $6, is_featured = $7, updated_at = NOW()
-       WHERE id = $8
+       SET pet_name = $1, pet_type = $2, owner_name = $3, story_title = $4, story_content = $5, 
+           before_image_url = $6, after_image_url = $7, reunion_date = $8, featured_on_homepage = $9, updated_at = NOW()
+       WHERE id = $10
        RETURNING *`,
       [
         pet_name || story.pet_name,
         pet_type || story.pet_type,
+        owner_name || story.owner_name,
         story_title || story.story_title,
         story_content || story.story_content,
-        image_url || story.image_url,
-        reunited_date || story.reunited_date,
-        is_featured !== undefined ? is_featured : story.is_featured,
+        before_image_url || story.before_image_url,
+        after_image_url || story.after_image_url,
+        reunion_date || story.reunion_date,
+        featured_on_homepage !== undefined ? featured_on_homepage : story.featured_on_homepage,
         id
       ]
     );

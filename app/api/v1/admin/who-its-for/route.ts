@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const items = await db.queryMany(
-      'SELECT * FROM who_its_for WHERE is_published = true ORDER BY order_index ASC'
+      'SELECT * FROM who_its_for_segments ORDER BY display_order ASC'
     );
     return NextResponse.json({ data: items }, { status: 200 });
   } catch (error) {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, icon, order_index, is_published } = await request.json();
+    const { title, description, icon_name, icon_url, display_order, is_active } = await request.json();
 
     if (!title || !description) {
       return NextResponse.json(
@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await db.queryOne(
-      `INSERT INTO who_its_for (title, description, icon, order_index, is_published)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO who_its_for_segments (title, description, icon_name, icon_url, display_order, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [title, description, icon, order_index || 0, is_published !== false]
+      [title, description, icon_name, icon_url, display_order || 0, is_active !== false]
     );
 
     return NextResponse.json({ data: result }, { status: 201 });

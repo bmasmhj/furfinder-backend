@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const pricing = await db.queryMany(
-      'SELECT * FROM pricing WHERE is_published = true ORDER BY order_index ASC'
+      'SELECT * FROM pricing_plans WHERE is_active = true ORDER BY display_order ASC'
     );
     return NextResponse.json({ data: pricing }, { status: 200 });
   } catch (error) {
@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, description, price, billing_period, features, is_popular, order_index, is_published } = await request.json();
+    const { name, description, price_aud, billing_period, features, is_popular, display_order, is_active } = await request.json();
 
-    if (!name || !price || !billing_period || !features) {
+    if (!name || !price_aud || !billing_period || !features) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await db.queryOne(
-      `INSERT INTO pricing (name, description, price, billing_period, features, is_popular, order_index, is_published)
+      `INSERT INTO pricing_plans (name, description, price_aud, billing_period, features, is_popular, display_order, is_active)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [name, description, price, billing_period, JSON.stringify(features), is_popular || false, order_index || 0, is_published !== false]
+      [name, description, price_aud, billing_period, JSON.stringify(features), is_popular || false, display_order || 0, is_active !== false]
     );
 
     return NextResponse.json({ data: result }, { status: 201 });

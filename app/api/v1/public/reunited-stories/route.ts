@@ -8,11 +8,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '12', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
-    let query = 'SELECT * FROM reunited_stories';
+    let query = 'SELECT * FROM reunited_stories WHERE is_published = true';
     const params: any[] = [];
 
     if (featured === 'true') {
-      query += ' WHERE is_featured = true';
+      query += ' AND featured_on_homepage = true';
     }
 
     const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');

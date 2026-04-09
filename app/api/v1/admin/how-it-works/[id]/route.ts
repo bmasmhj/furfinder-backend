@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const step = await db.queryOne('SELECT * FROM how_it_works WHERE id = $1', [id]);
+    const step = await db.queryOne('SELECT * FROM how_it_works_steps WHERE id = $1', [id]);
 
     if (!step) {
       return NextResponse.json({ error: 'Step not found' }, { status: 404 });
@@ -26,26 +26,26 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { step_number, title, description, image_url, order_index, is_published } = await request.json();
+    const { step_number, title, description, icon_name, icon_url, is_active } = await request.json();
 
-    const step = await db.queryOne('SELECT * FROM how_it_works WHERE id = $1', [id]);
+    const step = await db.queryOne('SELECT * FROM how_it_works_steps WHERE id = $1', [id]);
     if (!step) {
       return NextResponse.json({ error: 'Step not found' }, { status: 404 });
     }
 
     const result = await db.queryOne(
-      `UPDATE how_it_works 
-       SET step_number = $1, title = $2, description = $3, image_url = $4, 
-           order_index = $5, is_published = $6, updated_at = NOW()
+      `UPDATE how_it_works_steps 
+       SET step_number = $1, title = $2, description = $3, icon_name = $4, 
+           icon_url = $5, is_active = $6, updated_at = NOW()
        WHERE id = $7
        RETURNING *`,
       [
         step_number || step.step_number,
         title || step.title,
         description || step.description,
-        image_url || step.image_url,
-        order_index !== undefined ? order_index : step.order_index,
-        is_published !== undefined ? is_published : step.is_published,
+        icon_name || step.icon_name,
+        icon_url || step.icon_url,
+        is_active !== undefined ? is_active : step.is_active,
         id
       ]
     );
@@ -64,12 +64,12 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const step = await db.queryOne('SELECT * FROM how_it_works WHERE id = $1', [id]);
+    const step = await db.queryOne('SELECT * FROM how_it_works_steps WHERE id = $1', [id]);
     if (!step) {
       return NextResponse.json({ error: 'Step not found' }, { status: 404 });
     }
 
-    await db.execute('DELETE FROM how_it_works WHERE id = $1', [id]);
+    await db.execute('DELETE FROM how_it_works_steps WHERE id = $1', [id]);
     return NextResponse.json({ message: 'Step deleted successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting step:', error);

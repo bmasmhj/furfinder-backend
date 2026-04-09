@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const items = await db.queryMany(
-      'SELECT * FROM who_its_for WHERE is_published = true ORDER BY order_index ASC'
+      'SELECT * FROM who_its_for_segments WHERE is_active = true ORDER BY display_order ASC'
     );
     return NextResponse.json({ data: items }, { status: 200 });
   } catch (error) {

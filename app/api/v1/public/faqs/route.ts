@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
 
-    let query = 'SELECT * FROM faqs WHERE is_published = true';
+    let query = 'SELECT * FROM faqs WHERE is_active = true';
     const params: any[] = [];
 
     if (category) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       params.push(category);
     }
 
-    query += ' ORDER BY order_index ASC';
+    query += ' ORDER BY display_order ASC';
 
     const faqs = await db.queryMany(query, params);
 

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       params.push(category);
     }
 
-    query += ' ORDER BY order_index ASC';
+    query += ' ORDER BY display_order ASC';
 
     const faqs = await db.queryMany(query, params);
 

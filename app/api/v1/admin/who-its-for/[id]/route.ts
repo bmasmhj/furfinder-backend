@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const item = await db.queryOne('SELECT * FROM who_its_for WHERE id = $1', [id]);
+    const item = await db.queryOne('SELECT * FROM who_its_for_segments WHERE id = $1', [id]);
 
     if (!item) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
@@ -26,25 +26,26 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const { title, description, icon, order_index, is_published } = await request.json();
+    const { title, description, icon_name, icon_url, display_order, is_active } = await request.json();
 
-    const item = await db.queryOne('SELECT * FROM who_its_for WHERE id = $1', [id]);
+    const item = await db.queryOne('SELECT * FROM who_its_for_segments WHERE id = $1', [id]);
     if (!item) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
 
     const result = await db.queryOne(
-      `UPDATE who_its_for 
-       SET title = $1, description = $2, icon = $3, order_index = $4, 
-           is_published = $5, updated_at = NOW()
-       WHERE id = $6
+      `UPDATE who_its_for_segments 
+       SET title = $1, description = $2, icon_name = $3, icon_url = $4, 
+           display_order = $5, is_active = $6, updated_at = NOW()
+       WHERE id = $7
        RETURNING *`,
       [
         title || item.title,
         description || item.description,
-        icon || item.icon,
-        order_index !== undefined ? order_index : item.order_index,
-        is_published !== undefined ? is_published : item.is_published,
+        icon_name || item.icon_name,
+        icon_url || item.icon_url,
+        display_order !== undefined ? display_order : item.display_order,
+        is_active !== undefined ? is_active : item.is_active,
         id
       ]
     );
@@ -63,12 +64,12 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const item = await db.queryOne('SELECT * FROM who_its_for WHERE id = $1', [id]);
+    const item = await db.queryOne('SELECT * FROM who_its_for_segments WHERE id = $1', [id]);
     if (!item) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
 
-    await db.execute('DELETE FROM who_its_for WHERE id = $1', [id]);
+    await db.execute('DELETE FROM who_its_for_segments WHERE id = $1', [id]);
     return NextResponse.json({ message: 'Item deleted successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting item:', error);

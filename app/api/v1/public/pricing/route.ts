@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const pricing = await db.queryMany(
-      'SELECT * FROM pricing WHERE is_published = true ORDER BY order_index ASC'
+      'SELECT * FROM pricing_plans WHERE is_active = true ORDER BY display_order ASC'
     );
 
     return NextResponse.json({
