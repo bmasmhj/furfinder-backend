@@ -1,38 +1,40 @@
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Pricing - The Fur Finder',
-  description: 'Simple, honest pricing for The Fur Finder. Core app is free, premium unlocks AI-powered features.',
-}
+  title: "Pricing - The Fur Finder",
+  description:
+    "Simple, honest pricing for The Fur Finder. Core app is free, premium unlocks AI-powered features.",
+};
 
 async function getPricingPlans() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/pricing`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/public/pricing`, {
       next: { revalidate: 3600 },
-    })
+    });
 
     if (!response.ok) {
-      return []
+      return [];
     }
 
-    const result = await response.json()
-    return result.data || []
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
-    console.error('Error fetching pricing:', error)
-    return []
+    console.error("Error fetching pricing:", error);
+    return [];
   }
 }
 
 export default async function Pricing() {
-  const plans = await getPricingPlans()
+  const plans = await getPricingPlans();
 
   return (
     <section className="pricing-bg max-w-7xl m-auto" id="pricing">
       <div className="section centered">
         <h2 className="section-title">Simple, honest pricing</h2>
         <p className="section-desc">
-          The core app is completely free. Premium unlocks AI-powered features for those who want every possible advantage finding their pet.
+          The core app is completely free. Premium unlocks AI-powered features
+          for those who want every possible advantage finding their pet.
         </p>
 
         {plans.length > 0 ? (
@@ -41,64 +43,75 @@ export default async function Pricing() {
               {plans.map((plan: any) => (
                 <div
                   key={plan.id}
-                  className={`plan-card ${plan.is_popular ? 'featured' : ''} flex flex-col justify-between`}
+                  className={`plan-card ${plan.is_popular ? "featured" : ""} flex flex-col justify-between`}
                 >
                   <div>
                     {plan.is_popular && (
-                    <div className="plan-badge">Most Popular</div>
-                  )}
-                  <div className="plan-name">{plan.name}</div>
-                  <div className={`plan-price ${plan.name.toLowerCase() === 'free' ? 'free-price' : ''}`}>
-                    {plan.name.toLowerCase() === 'free' ? (
-                      'Free'
-                    ) : (
-                      <h3 className='text-6xl'>
-                        <sup>$</sup>
-                        {plan.price_aud}
-                        <span>/{plan.billing_period}</span>
-                      </h3>
+                      <div className="plan-badge">Most Popular</div>
                     )}
-                  </div>
-                  <div className="plan-yearly">{plan.description}</div>
-                  <div className="plan-divider"></div>
+                    <div className="plan-name">{plan.name}</div>
+                    <div
+                      className={`plan-price ${plan.name.toLowerCase() === "free" ? "free-price" : ""}`}
+                    >
+                      {plan.name.toLowerCase() === "free" ? (
+                        "Free"
+                      ) : (
+                        <h3 className="text-6xl">
+                          <sup>$</sup>
+                          {plan.price_aud}
+                          <span>/{plan.billing_period}</span>
+                        </h3>
+                      )}
+                    </div>
+                    <div className="plan-yearly">{plan.description}</div>
+                    <div className="plan-divider"></div>
 
-                  {Array.isArray(plan.features) ? (
-                    plan.features.map((feature: string, idx: number) => (
-                      <div key={idx} className="plan-feature">
-                        <span className={feature.includes('✓') ? 'plan-check' : 'plan-cross'}>
-                          {feature.includes('✓') ? '✓' : '–'}
-                        </span>
-                        {feature.replace('✓ ', '').replace('– ', '')}
-                      </div>
-                    ))
-                  ) : null}
+                    {Array.isArray(plan.features)
+                      ? plan.features.map((feature: string, idx: number) => (
+                          <div key={idx} className="plan-feature">
+                            <span
+                              className={
+                                feature.includes("✓")
+                                  ? "plan-check"
+                                  : "plan-cross"
+                              }
+                            >
+                              {feature.includes("✓") ? "✓" : "–"}
+                            </span>
+                            {feature.replace("✓ ", "").replace("– ", "")}
+                          </div>
+                        ))
+                      : null}
                   </div>
 
                   <a
                     href="https://apps.apple.com/app/id6759967208"
                     className={`plan-btn ${
-                      plan.name.toLowerCase() === 'free'
-                        ? 'plan-btn-free'
-                        : 'plan-btn-premium'
+                      plan.name.toLowerCase() === "free"
+                        ? "plan-btn-free"
+                        : "plan-btn-premium"
                     }`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {plan.name.toLowerCase() === 'free'
-                      ? 'Get Started Free'
-                      : 'Start Premium Trial'}
+                    {plan.name.toLowerCase() === "free"
+                      ? "Get Started Free"
+                      : "Start Premium Trial"}
                   </a>
                 </div>
               ))}
             </div>
             <p className="pricing-note !mt-16">
-              Subscriptions managed securely via the App Store &amp; Google Play. Cancel anytime.
+              Subscriptions managed securely via the App Store &amp; Google
+              Play. Cancel anytime.
             </p>
           </>
         ) : (
-          <p className="text-center text-[#6b7280]">No pricing plans available at the moment.</p>
+          <p className="text-center text-[#6b7280]">
+            No pricing plans available at the moment.
+          </p>
         )}
       </div>
     </section>
-  )
+  );
 }

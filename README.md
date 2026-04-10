@@ -16,18 +16,21 @@ Pet Reunite AI combines advanced machine learning with a compassionate community
 ## Tech Stack
 
 ### Frontend
+
 - **Next.js 15** - React framework with App Router
 - **TypeScript** - Type-safe JavaScript
 - **Tailwind CSS** - Utility-first CSS framework
 - **React Components** - Reusable, accessible UI components
 
 ### Backend
+
 - **Next.js API Routes** - RESTful API endpoints
 - **Neon PostgreSQL** - Serverless database
 - **JWT Authentication** - Secure token-based auth
 - **bcryptjs** - Password hashing
 
 ### Architecture
+
 - **App Router** - Modern file-based routing
 - **Server Components** - Optimized rendering
 - **Environment Variables** - Secure configuration
@@ -100,22 +103,26 @@ pet-reunite-ai/
 ### Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/yourusername/pet-reunite-ai.git
 cd pet-reunite-ai
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 3. **Set up environment variables**
+
 ```bash
 cp .env.example .env.local
 ```
 
 Edit `.env.local` with your configuration:
+
 ```
 DATABASE_URL=postgresql://user:password@host/pet_reunite
 JWT_SECRET=your-secret-key-here
@@ -124,11 +131,13 @@ NODE_ENV=development
 ```
 
 4. **Run database migration**
+
 ```bash
 npm run db:migrate
 ```
 
 5. **Start development server**
+
 ```bash
 npm run dev
 ```
@@ -138,6 +147,7 @@ Visit http://localhost:3000
 ## Key Features
 
 ### Marketing Pages
+
 - **Landing Page**: Compelling hero section with CTAs
 - **Features Page**: Detailed feature showcase
 - **About Page**: Company story and team
@@ -145,12 +155,14 @@ Visit http://localhost:3000
 - **Contact Page**: Support and inquiry forms
 
 ### Authentication
+
 - **JWT-based Authentication**: Secure token system
 - **Password Hashing**: bcryptjs for security
 - **Protected Routes**: Middleware-based route protection
 - **Token Verification**: Server-side token validation
 
 ### Application Pages
+
 - **Dashboard**: Overview of active reports and matches
 - **Reports Management**: Create, edit, and track pet reports
 - **Match Matching**: AI-powered match suggestions
@@ -158,6 +170,7 @@ Visit http://localhost:3000
 - **Profile Management**: User information and settings
 
 ### API Endpoints
+
 - `/auth/*` - Authentication endpoints
 - `/reports` - CRUD operations for reports
 - `/matches` - Match management
@@ -209,16 +222,16 @@ Full API documentation is available in [API.md](./API.md)
 
 ```bash
 # Register a new user
-curl -X POST http://localhost:3000/api/v1/auth/register \
+curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
     "password": "password123",
-    "full_name": "John Doe"
+    "display_name": "John Doe"
   }'
 
 # Create a report
-curl -X POST http://localhost:3000/api/v1/reports \
+curl -X POST http://localhost:3000/api/reports \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

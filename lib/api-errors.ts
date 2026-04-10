@@ -71,6 +71,7 @@ export function errorResponse(
   return NextResponse.json(
     {
       success: false,
+      message, // Re-added for mobile app compatibility
       error: message,
       code,
       ...(details && { details }),

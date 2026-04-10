@@ -1,32 +1,33 @@
-import type { Metadata } from 'next'
-import { MarketingSection } from '@/components/marketing/MarketingPrimitives'
+import type { Metadata } from "next";
+import { MarketingSection } from "@/components/marketing/MarketingPrimitives";
 
 export const metadata: Metadata = {
-  title: 'Features - The Fur Finder',
-  description: 'Explore the feature set behind The Fur Finder lost and found pet platform.',
-}
+  title: "Features - The Fur Finder",
+  description:
+    "Explore the feature set behind The Fur Finder lost and found pet platform.",
+};
 
 async function getFeatures() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/features`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/public/features`, {
       next: { revalidate: 3600 },
-    })
+    });
 
     if (!response.ok) {
-      return []
+      return [];
     }
 
-    const result = await response.json()
-    return result.data || []
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
-    console.error('Error fetching features:', error)
-    return []
+    console.error("Error fetching features:", error);
+    return [];
   }
 }
 
 export default async function FeaturesPage() {
-  const features = await getFeatures()
+  const features = await getFeatures();
 
   return (
     <div className="min-h-screen">
@@ -35,7 +36,8 @@ export default async function FeaturesPage() {
           A complete toolkit for lost and found pet recovery.
         </h1>
         <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#6b7280]">
-          Every feature is designed with one goal in mind: reuniting lost pets with their families faster.
+          Every feature is designed with one goal in mind: reuniting lost pets
+          with their families faster.
         </p>
       </section>
 
@@ -45,9 +47,7 @@ export default async function FeaturesPage() {
             {features.map((feature: any) => (
               <article key={feature.id} className="feature-card">
                 {feature.icon && (
-                  <div className="feature-icon">
-                    {feature.icon}
-                  </div>
+                  <div className="feature-icon">{feature.icon}</div>
                 )}
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
@@ -55,9 +55,11 @@ export default async function FeaturesPage() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-[#6b7280]">No features available at the moment.</p>
+          <p className="text-center text-[#6b7280]">
+            No features available at the moment.
+          </p>
         )}
       </MarketingSection>
     </div>
-  )
+  );
 }
