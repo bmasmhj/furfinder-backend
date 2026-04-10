@@ -3,7 +3,7 @@ import { generateMetadata } from "../lib/metadata";
 import { Suspense } from "react";
 import ProgressBar from "@/components/common/ProgressBar";
 import "./globals.css";
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -54,6 +54,7 @@ export default function RootLayout({
           <ProgressBar />
         </Suspense>
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
