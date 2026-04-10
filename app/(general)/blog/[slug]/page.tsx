@@ -2,19 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { db } from "@/lib/db";
+
 async function getBlogPost(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/public/blogs/${slug}`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const result = await response.json();
-    return result.data;
+    const blog = await db.queryOne(
+      'SELECT * FROM blogs WHERE slug = $1 AND is_published = true',
+      [slug]
+    );
+    return blog;
   } catch (error) {
     console.error("Error fetching blog post:", error);
     return null;
@@ -23,22 +19,16 @@ async function getBlogPost(slug: string) {
 
 async function getTrendingBlogs() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/public/blogs?limit=3`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      return [];
-    }
-
-    const result = await response.json();
-    return result.data || [];
+    const blogs = await db.queryMany(
+      'SELECT * FROM blogs WHERE is_published = true ORDER BY created_at DESC LIMIT 3'
+    );
+    return blogs || [];
   } catch (error) {
     console.error("Error fetching trending blogs:", error);
     return [];
   }
 }
+
 
 export async function generateMetadata({
   params,

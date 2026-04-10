@@ -8,25 +8,20 @@ export const metadata: Metadata = {
     "Practical advice, stories from the search, and product updates from Australia's AI-powered pet recovery platform.",
 };
 
+import { db } from "@/lib/db";
+
 async function getBlogPosts() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/public/blogs?limit=20`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      console.error("Failed to fetch blogs:", response.status);
-      return [];
-    }
-
-    const result = await response.json();
-    return result.data || [];
+    const blogs = await db.queryMany(
+      'SELECT * FROM blogs WHERE is_published = true ORDER BY created_at DESC LIMIT 20'
+    );
+    return blogs || [];
   } catch (error) {
     console.error("Error fetching blogs:", error);
     return [];
   }
 }
+
 
 export default async function BlogPage() {
   const posts = await getBlogPosts();

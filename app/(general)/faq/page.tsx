@@ -6,24 +6,20 @@ export const metadata: Metadata = {
     "Frequently asked questions about The Fur Finder app and how it helps reunite lost pets with their families.",
 };
 
+import { db } from "@/lib/db";
+
 async function getFaqs() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/public/faqs`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      return [];
-    }
-
-    const result = await response.json();
-    return result.data || [];
+    const faqs = await db.queryMany(
+      'SELECT * FROM faqs WHERE is_published = true ORDER BY order_index ASC'
+    );
+    return faqs || [];
   } catch (error) {
     console.error("Error fetching FAQs:", error);
     return [];
   }
 }
+
 
 export default async function FaqPage() {
   const faqs = await getFaqs();

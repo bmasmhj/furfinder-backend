@@ -8,21 +8,14 @@ export const metadata: Metadata = {
     "Inspiring stories of pets reunited with their families through The Fur Finder.",
 };
 
+import { db } from "@/lib/db";
+
 async function getReunitedStories() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(
-      `${baseUrl}/api/public/reunited-stories?limit=12`,
-      {
-        next: { revalidate: 3600 },
-      },
+    const stories = await db.queryMany(
+      'SELECT * FROM reunited_stories ORDER BY created_at DESC LIMIT 12'
     );
-
-    if (!response.ok) {
-      return { data: [], pagination: {} };
-    }
-
-    return await response.json();
+    return { data: stories, pagination: {} };
   } catch (error) {
     console.error("Error fetching reunited stories:", error);
     return { data: [], pagination: {} };
@@ -31,24 +24,16 @@ async function getReunitedStories() {
 
 async function getFeaturedStories() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(
-      `${baseUrl}/api/public/reunited-stories?featured=true&limit=3`,
-      {
-        next: { revalidate: 3600 },
-      },
+    const stories = await db.queryMany(
+      'SELECT * FROM reunited_stories WHERE is_featured = true ORDER BY created_at DESC LIMIT 3'
     );
-
-    if (!response.ok) {
-      return { data: [] };
-    }
-
-    return await response.json();
+    return { data: stories };
   } catch (error) {
     console.error("Error fetching featured stories:", error);
     return { data: [] };
   }
 }
+
 
 export default async function ReunitedStoriesPage() {
   const [allStories, featuredResult] = await Promise.all([

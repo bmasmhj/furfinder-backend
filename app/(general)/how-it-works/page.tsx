@@ -7,20 +7,20 @@ export const metadata: Metadata = {
     "Learn how The Fur Finder helps reunite lost pets with their families in just three simple steps, powered by AI technology.",
 };
 
+import { db } from "@/lib/db";
+
 async function getHowItWorksSteps() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/public/how-it-works`, {
-      next: { revalidate: 3600 },
-    });
-    if (!response.ok) return [];
-    const result = await response.json();
-    return result.data || [];
+    const steps = await db.queryMany(
+      'SELECT * FROM how_it_works WHERE is_published = true ORDER BY step_number ASC'
+    );
+    return steps || [];
   } catch (error) {
     console.error("Error fetching steps:", error);
     return [];
   }
 }
+
 
 export default async function HowitWorks() {
   const steps = await getHowItWorksSteps();

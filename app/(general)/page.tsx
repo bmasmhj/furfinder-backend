@@ -14,15 +14,14 @@ const appStoreUrl = "https://apps.apple.com/app/id6759967208";
 const playStoreUrl =
   "https://play.google.com/store/apps/details?id=com.petreunite.app";
 
+import { db } from "@/lib/db";
+
 async function getFaqs() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/public/faqs?limit=4`, {
-      next: { revalidate: 3600 },
-    });
-    if (!response.ok) return [];
-    const result = await response.json();
-    return result.data || [];
+    const faqs = await db.queryMany(
+      'SELECT * FROM faqs WHERE is_published = true ORDER BY order_index ASC LIMIT 4'
+    );
+    return faqs || [];
   } catch (error) {
     console.error("Error fetching FAQs:", error);
     return [];
@@ -31,21 +30,16 @@ async function getFaqs() {
 
 async function getFeaturedStories() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(
-      `${baseUrl}/api/public/reunited-stories?featured=true&limit=3`,
-      {
-        next: { revalidate: 3600 },
-      },
+    const stories = await db.queryMany(
+      'SELECT * FROM reunited_stories WHERE is_featured = true ORDER BY created_at DESC LIMIT 3'
     );
-    if (!response.ok) return [];
-    const result = await response.json();
-    return result.data || [];
+    return stories || [];
   } catch (error) {
     console.error("Error fetching stories:", error);
     return [];
   }
 }
+
 
 export default async function HomePage() {
   const [faqs, stories] = await Promise.all([getFaqs(), getFeaturedStories()]);

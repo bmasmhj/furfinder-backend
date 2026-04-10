@@ -7,24 +7,20 @@ export const metadata: Metadata = {
     "Explore the feature set behind The Fur Finder lost and found pet platform.",
 };
 
+import { db } from "@/lib/db";
+
 async function getFeatures() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/public/features`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!response.ok) {
-      return [];
-    }
-
-    const result = await response.json();
-    return result.data || [];
+    const features = await db.queryMany(
+      'SELECT * FROM features WHERE is_published = true ORDER BY order_index ASC'
+    );
+    return features || [];
   } catch (error) {
     console.error("Error fetching features:", error);
     return [];
   }
 }
+
 
 export default async function FeaturesPage() {
   const features = await getFeatures();
