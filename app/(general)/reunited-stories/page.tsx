@@ -1,45 +1,52 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { MarketingSection } from '@/components/marketing/MarketingPrimitives'
+import type { Metadata } from "next";
+import Link from "next/link";
+import { MarketingSection } from "@/components/marketing/MarketingPrimitives";
 
 export const metadata: Metadata = {
-  title: 'Reunited Stories - The Fur Finder',
-  description: 'Inspiring stories of pets reunited with their families through The Fur Finder.',
-}
+  title: "Reunited Stories - The Fur Finder",
+  description:
+    "Inspiring stories of pets reunited with their families through The Fur Finder.",
+};
 
 async function getReunitedStories() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/reunited-stories?limit=12`, {
-      next: { revalidate: 3600 },
-    })
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(
+      `${baseUrl}/api/public/reunited-stories?limit=12`,
+      {
+        next: { revalidate: 3600 },
+      },
+    );
 
     if (!response.ok) {
-      return { data: [], pagination: {} }
+      return { data: [], pagination: {} };
     }
 
-    return await response.json()
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching reunited stories:', error)
-    return { data: [], pagination: {} }
+    console.error("Error fetching reunited stories:", error);
+    return { data: [], pagination: {} };
   }
 }
 
 async function getFeaturedStories() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/reunited-stories?featured=true&limit=3`, {
-      next: { revalidate: 3600 },
-    })
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(
+      `${baseUrl}/api/public/reunited-stories?featured=true&limit=3`,
+      {
+        next: { revalidate: 3600 },
+      },
+    );
 
     if (!response.ok) {
-      return { data: [] }
+      return { data: [] };
     }
 
-    return await response.json()
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching featured stories:', error)
-    return { data: [] }
+    console.error("Error fetching featured stories:", error);
+    return { data: [] };
   }
 }
 
@@ -47,10 +54,10 @@ export default async function ReunitedStoriesPage() {
   const [allStories, featuredResult] = await Promise.all([
     getReunitedStories(),
     getFeaturedStories(),
-  ])
+  ]);
 
-  const stories = allStories.data || []
-  const featuredStories = featuredResult.data || []
+  const stories = allStories.data || [];
+  const featuredStories = featuredResult.data || [];
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#1a1a2e]">
@@ -64,14 +71,15 @@ export default async function ReunitedStoriesPage() {
             Pets Reunited, Families Complete
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#6b7280]">
-            Read inspiring stories of lost pets who found their way home with the help of our community and technology.
+            Read inspiring stories of lost pets who found their way home with
+            the help of our community and technology.
           </p>
         </section>
 
         {/* Featured Stories */}
         {featuredStories.length > 0 && (
-          <MarketingSection 
-            title="Featured Stories" 
+          <MarketingSection
+            title="Featured Stories"
             description="These remarkable reunions show the power of community and technology working together."
           >
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -107,13 +115,16 @@ export default async function ReunitedStoriesPage() {
                       {story.story_content}
                     </p>
                     <p className="text-xs text-[#9ca3af]">
-                      Reunited:{' '}
+                      Reunited:{" "}
                       {story.reunited_date
-                        ? new Date(story.reunited_date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                          })
-                        : 'Recently'}
+                        ? new Date(story.reunited_date).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                            },
+                          )
+                        : "Recently"}
                     </p>
                   </div>
                 </div>
@@ -123,8 +134,8 @@ export default async function ReunitedStoriesPage() {
         )}
 
         {/* All Stories */}
-        <MarketingSection 
-          title="All Stories" 
+        <MarketingSection
+          title="All Stories"
           description="Browse all the heartwarming reunions from our community."
         >
           {stories.length > 0 ? (
@@ -156,13 +167,16 @@ export default async function ReunitedStoriesPage() {
                       {story.story_content}
                     </p>
                     <p className="text-xs text-[#9ca3af]">
-                      Reunited:{' '}
+                      Reunited:{" "}
                       {story.reunited_date
-                        ? new Date(story.reunited_date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                          })
-                        : 'Recently'}
+                        ? new Date(story.reunited_date).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                            },
+                          )
+                        : "Recently"}
                     </p>
                   </div>
                 </div>
@@ -171,12 +185,13 @@ export default async function ReunitedStoriesPage() {
           ) : (
             <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 text-center">
               <p className="text-[#6b7280]">
-                No stories available yet. Be the first to share a reunited story!
+                No stories available yet. Be the first to share a reunited
+                story!
               </p>
             </div>
           )}
         </MarketingSection>
       </main>
     </div>
-  )
+  );
 }

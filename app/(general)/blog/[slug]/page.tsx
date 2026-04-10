@@ -1,56 +1,58 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
 async function getBlogPost(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/blogs/${slug}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/public/blogs/${slug}`, {
       next: { revalidate: 3600 },
-    })
+    });
 
     if (!response.ok) {
-      return null
+      return null;
     }
 
-    const result = await response.json()
-    return result.data
+    const result = await response.json();
+    return result.data;
   } catch (error) {
-    console.error('Error fetching blog post:', error)
-    return null
+    console.error("Error fetching blog post:", error);
+    return null;
   }
 }
 
 async function getTrendingBlogs() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/blogs?limit=3`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/public/blogs?limit=3`, {
       next: { revalidate: 3600 },
-    })
+    });
 
     if (!response.ok) {
-      return []
+      return [];
     }
 
-    const result = await response.json()
-    return result.data || []
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
-    console.error('Error fetching trending blogs:', error)
-    return []
+    console.error("Error fetching trending blogs:", error);
+    return [];
   }
 }
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> }
-): Promise<Metadata> {
-  const { slug } = await params
-  const post = await getBlogPost(slug)
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getBlogPost(slug);
 
   if (!post) {
     return {
-      title: 'Blog Post Not Found',
-      description: 'The blog post you are looking for does not exist.',
-    }
+      title: "Blog Post Not Found",
+      description: "The blog post you are looking for does not exist.",
+    };
   }
 
   return {
@@ -61,21 +63,25 @@ export async function generateMetadata(
       description: post.excerpt,
       url: `/blog/${slug}`,
     },
-  }
+  };
 }
 
-export default async function BlogDetailPage(
-  { params }: { params: Promise<{ slug: string }> }
-) {
-  const { slug } = await params
-  const post = await getBlogPost(slug)
-  const trendingBlogs = await getTrendingBlogs()
+export default async function BlogDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const post = await getBlogPost(slug);
+  const trendingBlogs = await getTrendingBlogs();
 
   if (!post) {
-    notFound()
+    notFound();
   }
 
-  const relatedBlogs = trendingBlogs.filter((b: any) => b.id !== post.id).slice(0, 3)
+  const relatedBlogs = trendingBlogs
+    .filter((b: any) => b.id !== post.id)
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#1a1a2e]">
@@ -93,14 +99,12 @@ export default async function BlogDetailPage(
               <span className="rounded-full bg-[#fff1ed] px-3 py-1 text-sm font-medium text-[#ff6b4a]">
                 {post.category}
               </span>
+              <span className="text-sm text-[#9ca3af]">By {post.author}</span>
               <span className="text-sm text-[#9ca3af]">
-                By {post.author}
-              </span>
-              <span className="text-sm text-[#9ca3af]">
-                {new Date(post.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
+                {new Date(post.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </span>
             </div>
@@ -109,9 +113,7 @@ export default async function BlogDetailPage(
               {post.title}
             </h1>
 
-            <p className="text-lg text-[#6b7280] leading-8">
-              {post.excerpt}
-            </p>
+            <p className="text-lg text-[#6b7280] leading-8">{post.excerpt}</p>
           </div>
 
           {post.image_url && (
@@ -125,13 +127,14 @@ export default async function BlogDetailPage(
           )}
 
           <div className="prose prose-sm md:prose-base max-w-none mb-16 text-[#4b5563] leading-8">
-            {post.content.split('\n').map((paragraph: string, i: number) => (
-              paragraph.trim() && (
-                <p key={i} className="mb-6">
-                  {paragraph}
-                </p>
-              )
-            ))}
+            {post.content.split("\n").map(
+              (paragraph: string, i: number) =>
+                paragraph.trim() && (
+                  <p key={i} className="mb-6">
+                    {paragraph}
+                  </p>
+                ),
+            )}
           </div>
         </article>
 
@@ -169,5 +172,5 @@ export default async function BlogDetailPage(
         </div>
       </main>
     </div>
-  )
+  );
 }

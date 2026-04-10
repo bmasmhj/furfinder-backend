@@ -16,31 +16,34 @@ const playStoreUrl =
 
 async function getFaqs() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/faqs?limit=4`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/public/faqs?limit=4`, {
       next: { revalidate: 3600 },
-    })
-    if (!response.ok) return []
-    const result = await response.json()
-    return result.data || []
+    });
+    if (!response.ok) return [];
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
-    console.error('Error fetching FAQs:', error)
-    return []
+    console.error("Error fetching FAQs:", error);
+    return [];
   }
 }
 
 async function getFeaturedStories() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/reunited-stories?featured=true&limit=3`, {
-      next: { revalidate: 3600 },
-    })
-    if (!response.ok) return []
-    const result = await response.json()
-    return result.data || []
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(
+      `${baseUrl}/api/public/reunited-stories?featured=true&limit=3`,
+      {
+        next: { revalidate: 3600 },
+      },
+    );
+    if (!response.ok) return [];
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
-    console.error('Error fetching stories:', error)
-    return []
+    console.error("Error fetching stories:", error);
+    return [];
   }
 }
 
@@ -50,9 +53,9 @@ export default async function HomePage() {
   return (
     <div className={styles.page}>
       <HeroSection />
-      
+
       <div className="mission-band ">
-        <p className="!text-white"> 
+        <p className="!text-white">
           <strong>Every minute counts.</strong> We built The Fur Finder because
           too many lost pets never make it home — not for lack of love, but for
           lack of the right tools. We're changing that.
@@ -70,30 +73,48 @@ export default async function HomePage() {
                 <span className="section-label teal">Success Stories</span>
                 <h2 className="section-title">Recently Reunited</h2>
               </div>
-              <Link href="/reunited-stories" className="text-[#ff6b4a] font-semibold hover:underline hidden md:block">
+              <Link
+                href="/reunited-stories"
+                className="text-[#ff6b4a] font-semibold hover:underline hidden md:block"
+              >
                 View All Stories →
               </Link>
             </div>
-            
+
             <div className="grid gap-6 md:grid-cols-3">
               {stories.map((story: any) => (
-                <div key={story.id} className="story-card-preview card-bg border rounded-2xl overflow-hidden hover:shadow-lg transition-all">
+                <div
+                  key={story.id}
+                  className="story-card-preview card-bg border rounded-2xl overflow-hidden hover:shadow-lg transition-all"
+                >
                   {story.image_url && (
                     <div className="h-48 overflow-hidden">
-                      <img src={story.image_url} alt={story.pet_name} className="w-full h-full object-cover" />
+                      <img
+                        src={story.image_url}
+                        alt={story.pet_name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   )}
                   <div className="p-6">
-                    <h3 className="font-bold text-lg mb-2">{story.pet_name}&apos;s Journey</h3>
-                    <p className="text-[#6b7280] text-sm line-clamp-3 mb-4">{story.story_content}</p>
-                    <span className="text-xs font-medium text-[#ff6b4a] uppercase tracking-wider">{story.pet_type}</span>
+                    <h3 className="font-bold text-lg mb-2">
+                      {story.pet_name}&apos;s Journey
+                    </h3>
+                    <p className="text-[#6b7280] text-sm line-clamp-3 mb-4">
+                      {story.story_content}
+                    </p>
+                    <span className="text-xs font-medium text-[#ff6b4a] uppercase tracking-wider">
+                      {story.pet_type}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-8 text-center md:hidden">
-               <Link href="/reunited-stories" className="btn-secondary w-full">View All Stories</Link>
+              <Link href="/reunited-stories" className="btn-secondary w-full">
+                View All Stories
+              </Link>
             </div>
           </div>
         </section>
@@ -104,12 +125,18 @@ export default async function HomePage() {
         <div className="max-w-4xl mx-auto px-6 text-center">
           <span className="section-label">Common Questions</span>
           <h2 className="section-title">Got questions? We have answers.</h2>
-          <p className="section-desc mb-12">Here are some of the most frequently asked questions about The Fur Finder.</p>
-          
+          <p className="section-desc mb-12">
+            Here are some of the most frequently asked questions about The Fur
+            Finder.
+          </p>
+
           <div className="faq-list mb-12 text-left">
             {faqs.length > 0 ? (
               faqs.map((faq: any) => (
-                <details key={faq.id} className="card-bg border rounded-xl mb-3">
+                <details
+                  key={faq.id}
+                  className="card-bg border rounded-xl mb-3"
+                >
                   <summary className="p-5 font-semibold cursor-pointer list-none flex justify-between items-center">
                     {faq.question}
                     <span className="text-[#ff6b4a]">+</span>
@@ -123,7 +150,7 @@ export default async function HomePage() {
               <p className="text-center text-[#6b7280]">Loading questions...</p>
             )}
           </div>
-          
+
           <Link href="/faq" className="btn-secondary inline-flex">
             View All FAQs
           </Link>

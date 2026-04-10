@@ -1,13 +1,16 @@
 # The Fur Finder API Documentation
 
 ## Base URL
+
 - Development: `http://localhost:3000`
 - Production: `https://furfinder.app` (example)
 
 ## API Response Format
+
 All endpoints return JSON responses with the following format:
 
 ### Success Response
+
 ```json
 {
   "data": {},
@@ -16,6 +19,7 @@ All endpoints return JSON responses with the following format:
 ```
 
 ### Error Response
+
 ```json
 {
   "error": "Error message",
@@ -30,16 +34,19 @@ All endpoints return JSON responses with the following format:
 ### Blogs
 
 #### Get All Blogs
+
 ```
-GET /api/v1/public/blogs
+GET /api/public/blogs
 ```
 
 **Query Parameters:**
+
 - `category` (optional): Filter blogs by category
 - `limit` (optional, default: 10): Number of results to return
 - `offset` (optional, default: 0): Number of results to skip
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -67,29 +74,38 @@ GET /api/v1/public/blogs
 ```
 
 #### Get Blog by Slug
+
 ```
-GET /api/v1/public/blogs/:slug
+GET /api/public/blogs/:slug
 ```
 
 **Response:**
+
 ```json
 {
-  "data": { /* blog object */ },
-  "related": [ /* 3 related blogs */ ]
+  "data": {
+    /* blog object */
+  },
+  "related": [
+    /* 3 related blogs */
+  ]
 }
 ```
 
 ### FAQs
 
 #### Get All FAQs
+
 ```
-GET /api/v1/public/faqs
+GET /api/public/faqs
 ```
 
 **Query Parameters:**
+
 - `category` (optional): Filter FAQs by category
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -110,11 +126,13 @@ GET /api/v1/public/faqs
 ### Features
 
 #### Get All Features
+
 ```
-GET /api/v1/public/features
+GET /api/public/features
 ```
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -135,11 +153,13 @@ GET /api/v1/public/features
 ### Pricing
 
 #### Get All Pricing Plans
+
 ```
-GET /api/v1/public/pricing
+GET /api/public/pricing
 ```
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -163,11 +183,13 @@ GET /api/v1/public/pricing
 ### How It Works
 
 #### Get All Steps
+
 ```
-GET /api/v1/public/how-it-works
+GET /api/public/how-it-works
 ```
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -189,11 +211,13 @@ GET /api/v1/public/how-it-works
 ### Who It's For
 
 #### Get All Items
+
 ```
-GET /api/v1/public/who-its-for
+GET /api/public/who-its-for
 ```
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -214,16 +238,19 @@ GET /api/v1/public/who-its-for
 ### Reunited Stories
 
 #### Get All Reunited Stories
+
 ```
-GET /api/v1/public/reunited-stories
+GET /api/public/reunited-stories
 ```
 
 **Query Parameters:**
+
 - `featured` (optional): Filter to featured stories only (`featured=true`)
 - `limit` (optional, default: 12): Number of results to return
 - `offset` (optional, default: 0): Number of results to skip
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -256,19 +283,23 @@ GET /api/v1/public/reunited-stories
 ### Admin Blogs
 
 #### Get All Blogs (Admin)
+
 ```
-GET /api/v1/admin/blogs
+GET /api/admin/blogs
 ```
 
 **Query Parameters:**
+
 - `published` (optional): Filter by published status (`published=true`)
 
 #### Create Blog
+
 ```
-POST /api/v1/admin/blogs
+POST /api/admin/blogs
 ```
 
 **Request Body:**
+
 ```json
 {
   "title": "string (required)",
@@ -283,16 +314,19 @@ POST /api/v1/admin/blogs
 ```
 
 #### Get Blog by ID
+
 ```
-GET /api/v1/admin/blogs/:id
+GET /api/admin/blogs/:id
 ```
 
 #### Update Blog
+
 ```
-PUT /api/v1/admin/blogs/:id
+PUT /api/admin/blogs/:id
 ```
 
 **Request Body:** (all fields optional - only changed fields need to be provided)
+
 ```json
 {
   "title": "string",
@@ -307,26 +341,31 @@ PUT /api/v1/admin/blogs/:id
 ```
 
 #### Delete Blog
+
 ```
-DELETE /api/v1/admin/blogs/:id
+DELETE /api/admin/blogs/:id
 ```
 
 ### Admin FAQs
 
 #### Get All FAQs (Admin)
+
 ```
-GET /api/v1/admin/faqs
+GET /api/admin/faqs
 ```
 
 **Query Parameters:**
+
 - `category` (optional): Filter FAQs by category
 
 #### Create FAQ
+
 ```
-POST /api/v1/admin/faqs
+POST /api/admin/faqs
 ```
 
 **Request Body:**
+
 ```json
 {
   "question": "string (required)",
@@ -338,33 +377,39 @@ POST /api/v1/admin/faqs
 ```
 
 #### Get FAQ by ID
+
 ```
-GET /api/v1/admin/faqs/:id
+GET /api/admin/faqs/:id
 ```
 
 #### Update FAQ
+
 ```
-PUT /api/v1/admin/faqs/:id
+PUT /api/admin/faqs/:id
 ```
 
 #### Delete FAQ
+
 ```
-DELETE /api/v1/admin/faqs/:id
+DELETE /api/admin/faqs/:id
 ```
 
 ### Admin Features
 
 #### Get All Features (Admin)
+
 ```
-GET /api/v1/admin/features
+GET /api/admin/features
 ```
 
 #### Create Feature
+
 ```
-POST /api/v1/admin/features
+POST /api/admin/features
 ```
 
 **Request Body:**
+
 ```json
 {
   "title": "string (required)",
@@ -376,33 +421,39 @@ POST /api/v1/admin/features
 ```
 
 #### Get Feature by ID
+
 ```
-GET /api/v1/admin/features/:id
+GET /api/admin/features/:id
 ```
 
 #### Update Feature
+
 ```
-PUT /api/v1/admin/features/:id
+PUT /api/admin/features/:id
 ```
 
 #### Delete Feature
+
 ```
-DELETE /api/v1/admin/features/:id
+DELETE /api/admin/features/:id
 ```
 
 ### Admin Pricing
 
 #### Get All Pricing Plans (Admin)
+
 ```
-GET /api/v1/admin/pricing
+GET /api/admin/pricing
 ```
 
 #### Create Pricing Plan
+
 ```
-POST /api/v1/admin/pricing
+POST /api/admin/pricing
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "string (required)",
@@ -417,33 +468,39 @@ POST /api/v1/admin/pricing
 ```
 
 #### Get Pricing by ID
+
 ```
-GET /api/v1/admin/pricing/:id
+GET /api/admin/pricing/:id
 ```
 
 #### Update Pricing
+
 ```
-PUT /api/v1/admin/pricing/:id
+PUT /api/admin/pricing/:id
 ```
 
 #### Delete Pricing
+
 ```
-DELETE /api/v1/admin/pricing/:id
+DELETE /api/admin/pricing/:id
 ```
 
 ### Admin How It Works
 
 #### Get All Steps (Admin)
+
 ```
-GET /api/v1/admin/how-it-works
+GET /api/admin/how-it-works
 ```
 
 #### Create Step
+
 ```
-POST /api/v1/admin/how-it-works
+POST /api/admin/how-it-works
 ```
 
 **Request Body:**
+
 ```json
 {
   "step_number": number (required),
@@ -456,33 +513,39 @@ POST /api/v1/admin/how-it-works
 ```
 
 #### Get Step by ID
+
 ```
-GET /api/v1/admin/how-it-works/:id
+GET /api/admin/how-it-works/:id
 ```
 
 #### Update Step
+
 ```
-PUT /api/v1/admin/how-it-works/:id
+PUT /api/admin/how-it-works/:id
 ```
 
 #### Delete Step
+
 ```
-DELETE /api/v1/admin/how-it-works/:id
+DELETE /api/admin/how-it-works/:id
 ```
 
 ### Admin Who It's For
 
 #### Get All Items (Admin)
+
 ```
-GET /api/v1/admin/who-its-for
+GET /api/admin/who-its-for
 ```
 
 #### Create Item
+
 ```
-POST /api/v1/admin/who-its-for
+POST /api/admin/who-its-for
 ```
 
 **Request Body:**
+
 ```json
 {
   "title": "string (required)",
@@ -494,36 +557,43 @@ POST /api/v1/admin/who-its-for
 ```
 
 #### Get Item by ID
+
 ```
-GET /api/v1/admin/who-its-for/:id
+GET /api/admin/who-its-for/:id
 ```
 
 #### Update Item
+
 ```
-PUT /api/v1/admin/who-its-for/:id
+PUT /api/admin/who-its-for/:id
 ```
 
 #### Delete Item
+
 ```
-DELETE /api/v1/admin/who-its-for/:id
+DELETE /api/admin/who-its-for/:id
 ```
 
 ### Admin Reunited Stories
 
 #### Get All Reunited Stories (Admin)
+
 ```
-GET /api/v1/admin/reunited-stories
+GET /api/admin/reunited-stories
 ```
 
 **Query Parameters:**
+
 - `featured` (optional): Filter to featured stories only
 
 #### Create Reunited Story
+
 ```
-POST /api/v1/admin/reunited-stories
+POST /api/admin/reunited-stories
 ```
 
 **Request Body:**
+
 ```json
 {
   "pet_name": "string (required)",
@@ -537,18 +607,21 @@ POST /api/v1/admin/reunited-stories
 ```
 
 #### Get Story by ID
+
 ```
-GET /api/v1/admin/reunited-stories/:id
+GET /api/admin/reunited-stories/:id
 ```
 
 #### Update Story
+
 ```
-PUT /api/v1/admin/reunited-stories/:id
+PUT /api/admin/reunited-stories/:id
 ```
 
 #### Delete Story
+
 ```
-DELETE /api/v1/admin/reunited-stories/:id
+DELETE /api/admin/reunited-stories/:id
 ```
 
 ---
@@ -564,6 +637,7 @@ All endpoints return appropriate HTTP status codes:
 - `500 Internal Server Error` - Server error
 
 ### Error Response Format
+
 ```json
 {
   "error": "Error message describing what went wrong",
@@ -590,25 +664,25 @@ The following environment variables are required:
 // Example: Getting blogs in a Server Component
 async function getBlogPosts() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/v1/public/blogs?limit=10`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/public/blogs?limit=10`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
-    })
+    });
 
     if (!response.ok) {
-      return []
+      return [];
     }
 
-    const result = await response.json()
-    return result.data || []
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
-    console.error('Error fetching blogs:', error)
-    return []
+    console.error("Error fetching blogs:", error);
+    return [];
   }
 }
 
 export default async function BlogPage() {
-  const posts = await getBlogPosts()
+  const posts = await getBlogPosts();
   // render posts
 }
 ```

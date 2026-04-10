@@ -1,0 +1,74 @@
+
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth';
+import { handleApiError } from '@/lib/api-errors';
+
+function mapProfileRow(row: any): any {
+  return {
+    id: row.id,
+    petType: row.pet_type,
+    petName: row.pet_name,
+    breed: row.breed,
+    size: row.size,
+    color: row.color,
+    markings: row.markings,
+    photoUris: typeof row.photo_uris === 'string' ? JSON.parse(row.photo_uris) : (row.photo_uris || []),
+    biometricPhotoUris: typeof row.biometric_photo_uris === 'string' ? JSON.parse(row.biometric_photo_uris) : (row.biometric_photo_uris || []),
+    microchipNumber: row.microchip_number,
+    medicalNotes: row.medical_notes,
+    suburb: row.suburb,
+    ownerName: row.owner_name,
+    ownerPhone: row.owner_phone,
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+    updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+  };
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ message: 'Authentication required' }, { status: 401 });
+
+    const result = await db.query(
+      'SELECT * FROM pet_profiles WHERE user_id = $1 ORDER BY created_at DESC',
+      [user.id]
+    );
+
+    return NextResponse.json(result.rows.map(mapProfileRow));
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ message: 'Authentication required' }, { status: 401 });
+
+    const body = await request.json();
+    const { 
+      petType, petName, breed, size, color, markings, 
+      photoUris, biometricPhotoUris, microchipNumber, 
+      medicalNotes, suburb, ownerName, ownerPhone 
+    } = body;
+
+    const result = await db.query(
+      `INSERT INTO pet_profiles (
+        user_id, pet_type, pet_name, breed, size, color, markings, 
+        photo_uris, biometric_photo_uris, microchip_number, medical_notes, 
+        suburb, owner_name, owner_phone
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      RETURNING *`,
+      [
+        user.id, petType, petName, breed || '', size || 'medium', color || '', markings || '',
+        JSON.stringify(photoUris || []), JSON.stringify(biometricPhotoUris || []),
+        microchipNumber || '', medicalNotes || '', suburb || '', ownerName || '', ownerPhone || ''
+      ]
+    );
+
+    return NextResponse.json(mapProfileRow(result.rows[0]), { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
