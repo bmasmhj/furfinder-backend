@@ -4,27 +4,41 @@ import { verifyToken } from '../lib/auth';
 
 const protectedRoutes = ['/dashboard', '/reports', '/matches', '/messages', '/profile'];
 
+const allowedOrigins = [
+  'http://localhost:8081',
+  'http://localhost:3000',
+  'https://app.thefurfinder.com',
+  'https://thefurfinder.com'
+];
+
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const origin = request.headers.get('origin') ?? '';
+  const isAllowedOrigin = allowedOrigins.includes(origin);
 
   // 1. Handle CORS for all API routes
   if (pathname.startsWith('/api')) {
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
+      const response = new NextResponse(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
           'Access-Control-Max-Age': '86400',
         },
       });
+      if (isAllowedOrigin) {
+        response.headers.set('Access-Control-Allow-Origin', origin);
+      }
+      return response;
     }
 
     // Add CORS headers to the response
     const response = NextResponse.next();
-    response.headers.set('Access-Control-Allow-Origin', '*');
+    if (isAllowedOrigin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+    }
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     return response;
