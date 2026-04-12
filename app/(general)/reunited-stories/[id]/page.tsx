@@ -244,14 +244,12 @@ export default async function ReunitedStoryDetailPage({
                 <p className="mb-5 text-sm text-muted-foreground">
                   Post a free report and let our AI scan for matches across Australia.
                 </p>
-                <a
-                  href="https://apps.apple.com/app/id6759967208"
+                <Link
+                  href="/download"
                   className="block w-full rounded-xl bg-primary py-3 text-center text-sm font-semibold text-white transition hover:bg-[#e5553a]"
-                  target="_blank"
-                  rel="noreferrer"
                 >
                   Download The Fur Finder
-                </a>
+                </Link>
               </div>
             </aside>
           </div>

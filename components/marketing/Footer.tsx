@@ -22,11 +22,8 @@ export default function Footer() {
               App
             </h4>
             <div className="space-y-2 text-sm">
-              <Link href={appStoreUrl} target="_blank" rel="noreferrer" className="block text-[#6b7280] transition hover:text-primary">
-                App Store
-              </Link>
-              <Link href={playStoreUrl} target="_blank" rel="noreferrer" className="block text-[#6b7280] transition hover:text-primary">
-                Google Play
+              <Link href="/download" className="block text-[#6b7280] transition hover:text-primary">
+                Download App
               </Link>
               <Link href="/pricing" className="block text-[#6b7280] transition hover:text-primary">
                 Pricing

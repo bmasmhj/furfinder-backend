@@ -129,7 +129,7 @@ export default function Header() {
             </Link>
           ))}
           <Link
-            href="/#download"
+            href="/download"
             className="mt-5 rounded-xl bg-primary py-4 text-center font-bold text-white"
             onClick={() => setMobileOpen(false)}
           >
