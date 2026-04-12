@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingSection } from "@/components/marketing/MarketingPrimitives";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Blog & Stories - The Fur Finder",
   description:
     "Practical advice, stories from the search, and product updates from Australia's AI-powered pet recovery platform.",
 };
-
-import { db } from "@/lib/db";
 
 async function getBlogPosts() {
   try {
@@ -22,74 +21,74 @@ async function getBlogPosts() {
   }
 }
 
-
-
 export default async function BlogPage() {
   const posts = await getBlogPosts();
   const featuredPost = posts.length > 0 ? posts[0] : null;
   const remainingPosts = posts.slice(1);
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-background">
       <main>
         {/* Blog Header */}
-        <section className="bg-surface px-6 py-20 border-b">
-          <div className="max-w-7xl mx-auto">
-            <span className="section-label">Our Blog</span>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#1a1a2e] mt-4 mb-6">
+        <section className="border-b border-border bg-background px-6 py-20">
+          <div className="mx-auto max-w-7xl">
+            <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary">
+              Our Blog
+            </span>
+            <h1 className="mt-4 mb-6 text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">
               Stories, updates &{" "}
-              <span className="text-[#ff6b4a]">pet advice.</span>
+              <span className="text-primary">pet advice.</span>
             </h1>
-            <p className="max-w-2xl text-lg text-[#6b7280] leading-relaxed">
+            <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
               Expert tips on pet safety, heartwarming reunion stories, and the
               latest from The Fur Finder team.
             </p>
           </div>
         </section>
 
-        <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="mx-auto max-w-7xl px-6 py-16">
           {featuredPost && (
             <div className="mb-20">
               <Link
                 href={`/blog/${featuredPost.slug}`}
-                className="group relative block overflow-hidden rounded-3xl card-bg border shadow-sm hover:shadow-xl transition-all duration-300"
+                className="group relative block overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-xl"
               >
                 <div className="grid md:grid-cols-2">
-                  <div className="h-64 md:h-[450px] relative overflow-hidden bg-[#f3f4f6]">
+                  <div className="relative h-64 overflow-hidden bg-muted md:h-[450px]">
                     {featuredPost.image_url ? (
                       <img
                         src={featuredPost.image_url}
                         alt={featuredPost.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-full text-4xl">
+                      <div className="flex h-full items-center justify-center text-4xl">
                         🐾
                       </div>
                     )}
-                    <div className="absolute top-6 left-6">
-                      <span className="bg-[#ff6b4a] text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <div className="absolute left-6 top-6">
+                      <span className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white">
                         Featured Post
                       </span>
                     </div>
                   </div>
-                  <div className="p-8 md:p-12 flex flex-col justify-center">
-                    <div className="flex items-center gap-4 text-sm text-[#9ca3af] mb-4">
-                      <span className="font-semibold text-[#ff6b4a] uppercase tracking-wider">
+                  <div className="flex flex-col justify-center p-8 md:p-12">
+                    <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="font-semibold uppercase tracking-wider text-primary">
                         {featuredPost.category}
                       </span>
                       <span>•</span>
                       <span>
                         {new Date(featuredPost.created_at).toLocaleDateString(
                           "en-US",
-                          { month: "long", day: "numeric", year: "numeric" },
+                          { month: "long", day: "numeric", year: "numeric" }
                         )}
                       </span>
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-[#1a1a2e] mb-6 group-hover:text-[#ff6b4a] transition-colors leading-tight">
+                    <h2 className="mb-6 text-3xl font-bold leading-tight text-foreground transition-colors group-hover:text-primary md:text-4xl">
                       {featuredPost.title}
                     </h2>
-                    <p className="text-[#6b7280] text-lg leading-relaxed mb-8 line-clamp-3">
+                    <p className="mb-8 line-clamp-3 text-lg leading-relaxed text-muted-foreground">
                       {featuredPost.excerpt}
                     </p>
                     <div className="flex items-center gap-3">
@@ -97,14 +96,14 @@ export default async function BlogPage() {
                         <img
                           src={featuredPost.author_image}
                           alt={featuredPost.author_name}
-                          className="w-10 h-10 rounded-full object-cover"
+                          className="h-10 w-10 rounded-full object-cover"
                         />
                       )}
                       <div>
-                        <span className="block text-sm font-bold text-[#1a1a2e]">
+                        <span className="block text-sm font-bold text-foreground">
                           {featuredPost.author_name || "The Fur Finder Team"}
                         </span>
-                        <span className="block text-xs text-[#9ca3af]">
+                        <span className="block text-xs text-muted-foreground">
                           {featuredPost.read_time || "5 min read"}
                         </span>
                       </div>
@@ -116,29 +115,29 @@ export default async function BlogPage() {
           )}
 
           {remainingPosts.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {remainingPosts.map((post: any) => (
                 <Link
                   key={post.id}
                   href={`/blog/${post.slug}`}
-                  className="group flex flex-col card-bg border rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+                  className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-xl"
                 >
-                  <div className="h-56 relative overflow-hidden bg-[#f3f4f6]">
+                  <div className="relative h-56 overflow-hidden bg-muted">
                     {post.image_url ? (
                       <img
                         src={post.image_url}
                         alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-full text-4xl">
+                      <div className="flex h-full items-center justify-center text-4xl">
                         🐾
                       </div>
                     )}
                   </div>
-                  <div className="p-8 flex flex-col flex-grow">
-                    <div className="flex items-center gap-3 text-xs text-[#9ca3af] mb-4">
-                      <span className="font-bold text-[#ff6b4a] uppercase tracking-wider">
+                  <div className="flex flex-grow flex-col p-8">
+                    <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="font-bold uppercase tracking-wider text-primary">
                         {post.category}
                       </span>
                       <span>•</span>
@@ -149,17 +148,17 @@ export default async function BlogPage() {
                         })}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-[#1a1a2e] mb-4 group-hover:text-[#ff6b4a] transition-colors line-clamp-2">
+                    <h3 className="mb-4 line-clamp-2 text-xl font-bold text-foreground transition-colors group-hover:text-primary">
                       {post.title}
                     </h3>
-                    <p className="text-[#6b7280] text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">
+                    <p className="mb-6 line-clamp-3 flex-grow text-sm leading-relaxed text-muted-foreground">
                       {post.excerpt}
                     </p>
-                    <div className="flex items-center justify-between pt-6 border-t border-[#f3f4f6]">
-                      <span className="text-xs font-semibold text-[#1a1a2e]">
+                    <div className="flex items-center justify-between border-t border-border pt-6">
+                      <span className="text-xs font-semibold text-foreground">
                         {post.author_name || "Admin"}
                       </span>
-                      <span className="text-xs text-[#9ca3af]">
+                      <span className="text-xs text-muted-foreground">
                         {post.read_time || "4 min read"}
                       </span>
                     </div>
@@ -169,8 +168,8 @@ export default async function BlogPage() {
             </div>
           ) : (
             !featuredPost && (
-              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-[#d1d5db]">
-                <p className="text-[#6b7280] text-lg">
+              <div className="rounded-3xl border border-dashed border-border bg-card py-20 text-center">
+                <p className="text-lg text-muted-foreground">
                   New stories are coming soon. Stay tuned!
                 </p>
               </div>
@@ -178,7 +177,9 @@ export default async function BlogPage() {
           )}
 
           <div className="mt-16 text-center">
-            <button className="btn-secondary px-8">Load More Posts</button>
+            <button className="inline-flex items-center rounded-xl border border-border bg-card px-8 py-3.5 text-sm font-semibold text-foreground transition-all hover:border-primary hover:text-primary">
+              Load More Posts
+            </button>
           </div>
         </div>
       </main>

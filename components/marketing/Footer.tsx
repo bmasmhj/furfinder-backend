@@ -22,26 +22,13 @@ export default function Footer() {
               App
             </h4>
             <div className="space-y-2 text-sm">
-              <Link
-                href={appStoreUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="block transition hover:text-[#ff6b4a]"
-              >
+              <Link href={appStoreUrl} target="_blank" rel="noreferrer" className="block text-[#6b7280] transition hover:text-primary">
                 App Store
               </Link>
-              <Link
-                href={playStoreUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="block transition hover:text-[#ff6b4a]"
-              >
+              <Link href={playStoreUrl} target="_blank" rel="noreferrer" className="block text-[#6b7280] transition hover:text-primary">
                 Google Play
               </Link>
-              <Link
-                href="/pricing"
-                className="block transition hover:text-[#ff6b4a]"
-              >
+              <Link href="/pricing" className="block text-[#6b7280] transition hover:text-primary">
                 Pricing
               </Link>
             </div>
@@ -52,36 +39,11 @@ export default function Footer() {
               Resources
             </h4>
             <div className="space-y-2 text-sm">
-              <Link
-                href="/how-it-works"
-                className="block transition hover:text-[#ff6b4a]"
-              >
-                How It Works
-              </Link>
-              <Link
-                href="/faq"
-                className="block transition hover:text-[#ff6b4a]"
-              >
-                FAQ
-              </Link>
-              <Link
-                href="/blog"
-                className="block transition hover:text-[#ff6b4a]"
-              >
-                Blog
-              </Link>
-              <Link
-                href="/reunited-stories"
-                className="block transition hover:text-[#ff6b4a]"
-              >
-                Reunited Stories
-              </Link>
-              <Link
-                href="/about"
-                className="block transition hover:text-[#ff6b4a]"
-              >
-                Our Story
-              </Link>
+              <Link href="/how-it-works" className="block text-[#6b7280] transition hover:text-primary">How It Works</Link>
+              <Link href="/faq" className="block text-[#6b7280] transition hover:text-primary">FAQ</Link>
+              <Link href="/blog" className="block text-[#6b7280] transition hover:text-primary">Blog</Link>
+              <Link href="/reunited-stories" className="block text-[#6b7280] transition hover:text-primary">Reunited Stories</Link>
+              <Link href="/about" className="block text-[#6b7280] transition hover:text-primary">Our Story</Link>
             </div>
           </div>
 
@@ -90,24 +52,9 @@ export default function Footer() {
               Legal
             </h4>
             <div className="space-y-2 text-sm">
-              <Link
-                href="/privacy-policy"
-                className="block transition hover:text-[#ff6b4a]"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                href="/terms-of-use"
-                className="block transition hover:text-[#ff6b4a]"
-              >
-                Terms of Use
-              </Link>
-              <Link
-                href="/delete-account"
-                className="block transition hover:text-[#ff6b4a]"
-              >
-                Delete Account
-              </Link>
+              <Link href="/privacy-policy" className="block text-[#6b7280] transition hover:text-primary">Privacy Policy</Link>
+              <Link href="/terms-of-use" className="block text-[#6b7280] transition hover:text-primary">Terms of Use</Link>
+              <Link href="/delete-account" className="block text-[#6b7280] transition hover:text-primary">Delete Account</Link>
             </div>
           </div>
         </div>
@@ -115,24 +62,9 @@ export default function Footer() {
         <div className="mt-12 flex flex-col gap-3 border-t border-[#1f1f1f] pt-7 text-xs text-[#4b5563] sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; 2026 The Fur Finder. Made with love in Australia.</p>
           <div className="flex gap-5">
-            <Link
-              href="/privacy-policy"
-              className="transition hover:text-[#ff6b4a]"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="/terms-of-use"
-              className="transition hover:text-[#ff6b4a]"
-            >
-              Terms
-            </Link>
-            <Link
-              href="/delete-account"
-              className="transition hover:text-[#ff6b4a]"
-            >
-              Delete Account
-            </Link>
+            <Link href="/privacy-policy" className="transition hover:text-primary">Privacy</Link>
+            <Link href="/terms-of-use" className="transition hover:text-primary">Terms</Link>
+            <Link href="/delete-account" className="transition hover:text-primary">Delete Account</Link>
           </div>
         </div>
       </div>

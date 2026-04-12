@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { featureCards } from "@/components/marketing/site-content";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "How It Works - The Fur Finder",
   description:
     "Learn how The Fur Finder helps reunite lost pets with their families in just three simple steps, powered by AI technology.",
 };
-
-import { db } from "@/lib/db";
 
 async function getHowItWorksSteps() {
   try {
@@ -21,20 +20,21 @@ async function getHowItWorksSteps() {
   }
 }
 
-
 export default async function HowitWorks() {
   const steps = await getHowItWorksSteps();
 
   return (
-    <div className="bg-surface">
+    <div className="bg-background">
       {/* Header */}
-      <section className="px-6 py-24 text-center bg-surface-secondary">
-        <div className="max-w-3xl mx-auto">
-          <span className="section-label">The Process</span>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-[#1a1a2e] mt-4 mb-6">
-            Simple steps to <span className="text-[#ff6b4a]">reunite.</span>
+      <section className="bg-muted/50 px-6 py-24 text-center">
+        <div className="mx-auto max-w-3xl">
+          <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary">
+            The Process
+          </span>
+          <h1 className="mt-4 mb-6 text-4xl font-extrabold tracking-tight text-foreground md:text-6xl">
+            Simple steps to <span className="text-primary">reunite.</span>
           </h1>
-          <p className="text-xl text-[#6b7280] leading-relaxed">
+          <p className="text-xl leading-relaxed text-muted-foreground">
             Our technology does the heavy lifting so you can focus on bringing
             your pet home safely.
           </p>
@@ -42,72 +42,72 @@ export default async function HowitWorks() {
       </section>
 
       {/* Main Steps */}
-      <section className="section max-w-7xl mx-auto px-6 py-24">
-        <div className="grid md:grid-cols-3  gap-12">
+      <section className="mx-auto max-w-7xl px-6 py-24">
+        <div className="grid gap-12 md:grid-cols-3">
           {steps.length > 0 ? (
             steps.map((step: any, index: number) => (
               <div
                 key={step.id}
-                className="relative p-8 rounded-3xl border card-bg shadow-sm hover:shadow-md transition-shadow"
+                className="relative rounded-3xl border border-border bg-card p-8 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="w-16 h-16 bg-[#ff6b4a] text-white rounded-2xl flex items-center justify-center text-3xl font-bold mb-8 shadow-lg shadow-[#ff6b4a]/20">
+                <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-3xl font-bold text-white shadow-lg shadow-primary/20">
                   {step.step_number || index + 1}
                 </div>
-                <h3 className="text-2xl font-bold text-[#1a1a2e] mb-4">
+                <h3 className="mb-4 text-2xl font-bold text-foreground">
                   {step.title}
                 </h3>
-                <p className="text-[#6b7280] leading-relaxed">
+                <p className="leading-relaxed text-muted-foreground">
                   {step.description}
                 </p>
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-[60px] -right-8 z-10 text-4xl text-[#ff6b4a]/20">
+                  <div className="absolute -right-8 top-[60px] z-10 hidden text-4xl text-primary/20 lg:block">
                     →
                   </div>
                 )}
               </div>
             ))
           ) : (
-            <div className="col-span-3 text-center text-[#6b7280]">
+            <div className="col-span-3 text-center text-muted-foreground">
               Process details coming soon.
             </div>
           )}
         </div>
       </section>
 
-      {/* Integrated Features Section */}
-      <section className="bg-[#1a1a2e] text-white py-24 px-6 rounded-[40px] md:rounded-[80px] mx-4 md:mx-8 mb-24 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#ff6b4a] opacity-10 blur-[120px] rounded-full -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#2cbcb6] opacity-10 blur-[120px] rounded-full -ml-48 -mb-48"></div>
+      {/* Features Section (Dark) */}
+      <section className="relative mx-4 mb-24 overflow-hidden rounded-[40px] bg-[#1A1A2E] px-6 py-24 text-white md:mx-8 md:rounded-[80px]">
+        <div className="pointer-events-none absolute -mr-48 -mt-48 right-0 top-0 h-96 w-96 rounded-full bg-primary opacity-10 blur-[120px]" />
+        <div className="pointer-events-none absolute -mb-48 -ml-48 bottom-0 left-0 h-96 w-96 rounded-full bg-teal-500 opacity-10 blur-[120px]" />
 
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <span className="section-label !bg-white/10 !text-white">
+        <div className="relative z-10 mx-auto max-w-7xl">
+          <div className="mb-16 text-center">
+            <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-white">
               Smart Features
             </span>
-            <h2 className="text-3xl md:text-5xl font-bold mt-4 mb-6">
+            <h2 className="mt-4 mb-6 text-3xl font-bold md:text-5xl">
               Tools for every step
             </h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl text-lg text-white/60">
               Each feature is designed to support the reunification workflow and
               maximize the chances of a happy ending.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {featureCards.map((feature, i) => (
               <div
                 key={i}
-                className="bg-white/5 border border-white/10 p-8 rounded-3xl backdrop-blur-sm hover:bg-white/10 transition-all group"
+                className="group rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm transition-all hover:bg-white/10"
               >
                 <div
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 ${feature.iconClassName || "bg-white/10"}`}
+                  className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${feature.iconClassName || "bg-white/10"}`}
                 >
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold mb-3 group-hover:text-[#ff6b4a] transition-colors">
+                <h3 className="mb-3 text-xl font-bold transition-colors group-hover:text-primary">
                   {feature.title}
                 </h3>
-                <p className="text-white/60 text-sm leading-relaxed">
+                <p className="text-sm leading-relaxed text-white/60">
                   {feature.description}
                 </p>
               </div>
@@ -116,31 +116,30 @@ export default async function HowitWorks() {
         </div>
       </section>
 
-      {/* Vets and Shelters */}
-      <section className="section max-w-7xl mx-auto px-6 pb-24">
-        <div className="partner-section !bg-[#f0fdfc] border !border-[#2cbcb6]/20 p-12 rounded-[32px] md:flex items-center gap-12">
-          <div className="partner-icon-wrap !bg-[#2cbcb6] !text-white text-5xl !rounded-[24px] mb-8 md:mb-0">
+      {/* Partners */}
+      <section className="mx-auto max-w-7xl px-6 pb-24">
+        <div className="flex flex-col items-center gap-12 rounded-[32px] border border-teal-500/20 bg-gradient-to-br from-teal-50 to-orange-50 p-12 dark:from-teal-950/20 dark:to-orange-950/10 md:flex-row">
+          <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[24px] bg-teal-500 text-5xl text-white">
             🏥
           </div>
           <div>
-            <h2 className="text-3xl font-bold text-[#1a1a2e] mb-4">
+            <h2 className="mb-4 text-3xl font-bold text-foreground">
               Are you a Vet or Shelter?
             </h2>
-            <p className="text-[#6b7280] text-lg mb-8 leading-relaxed">
+            <p className="mb-8 text-lg leading-relaxed text-muted-foreground">
               Register as an official partner to have the animals in your care
               automatically included in AI matching results. Help connect owners
               to their pets faster than ever.
             </p>
             <div className="flex flex-wrap gap-3">
-              <span className="partner-tag !bg-white !border-[#2cbcb6]/30 !text-[#2cbcb6] font-bold">
-                Free Registration
-              </span>
-              <span className="partner-tag !bg-white !border-[#2cbcb6]/30 !text-[#2cbcb6] font-bold">
-                AI Match Integration
-              </span>
-              <span className="partner-tag !bg-white !border-[#2cbcb6]/30 !text-[#2cbcb6] font-bold">
-                Public Directory
-              </span>
+              {["Free Registration", "AI Match Integration", "Public Directory"].map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-teal-500/30 bg-white px-3.5 py-1 text-xs font-bold text-teal-600 dark:bg-teal-950/20 dark:text-teal-400"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
         </div>

@@ -15,25 +15,25 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex w-64 bg-white border-r border-neutral-200 flex-col">
+    <aside className="hidden w-64 flex-col border-r border-border bg-card md:flex">
       <div className="p-6">
-        <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-brand-600">
+        <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-primary">
           <span>🐾</span>
           <span>Pet Reunite</span>
         </Link>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2">
+      <nav className="flex-1 space-y-2 px-4">
         {menuItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${
+              className={`flex items-center gap-3 rounded-lg px-4 py-2 transition ${
                 isActive
-                  ? 'bg-brand-100 text-brand-700 font-semibold'
-                  : 'text-neutral-700 hover:bg-neutral-100'
+                  ? 'bg-primary/10 font-semibold text-primary'
+                  : 'text-muted-foreground hover:bg-muted'
               }`}
             >
               <span className="text-xl">{item.icon}</span>
@@ -43,8 +43,8 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-neutral-200">
-        <button className="w-full text-left px-4 py-2 text-sm text-neutral-600 hover:text-neutral-900 transition">
+      <div className="border-t border-border p-4">
+        <button className="w-full px-4 py-2 text-left text-sm text-muted-foreground transition hover:text-foreground">
           Logout
         </button>
       </div>

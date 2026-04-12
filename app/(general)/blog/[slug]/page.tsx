@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
 import { db } from "@/lib/db";
 
 async function getBlogPost(slug: string) {
@@ -28,8 +27,6 @@ async function getTrendingBlogs() {
     return [];
   }
 }
-
-
 
 export async function generateMetadata({
   params,
@@ -75,23 +72,22 @@ export default async function BlogDetailPage({
     .slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-[#1a1a2e]">
+    <div className="min-h-screen bg-background text-foreground">
       <main>
-        {/* Hero Section */}
         <article className="mx-auto max-w-4xl px-6 py-12 md:py-20">
           <div className="mb-8">
-            <Link href="/blog" className="text-[#ff6b4a] hover:underline">
+            <Link href="/blog" className="text-primary hover:underline">
               ← Back to articles
             </Link>
           </div>
 
           <div className="mb-8">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="rounded-full bg-[#fff1ed] px-3 py-1 text-sm font-medium text-[#ff6b4a]">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
                 {post.category}
               </span>
-              <span className="text-sm text-[#9ca3af]">By {post.author}</span>
-              <span className="text-sm text-[#9ca3af]">
+              <span className="text-sm text-muted-foreground">By {post.author}</span>
+              <span className="text-sm text-muted-foreground">
                 {new Date(post.created_at).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
@@ -100,39 +96,39 @@ export default async function BlogDetailPage({
               </span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold tracking-[-0.02em] mb-6">
+            <h1 className="mb-6 text-4xl font-bold tracking-[-0.02em] text-foreground md:text-5xl">
               {post.title}
             </h1>
 
-            <p className="text-lg text-[#6b7280] leading-8">{post.excerpt}</p>
+            <p className="text-lg leading-8 text-muted-foreground">{post.excerpt}</p>
           </div>
 
           {post.image_url && (
-            <div className="mb-12 rounded-2xl overflow-hidden bg-[#e5e7eb] h-96">
+            <div className="mb-12 h-96 overflow-hidden rounded-2xl bg-muted">
               <img
                 src={post.image_url}
                 alt={post.title}
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
             </div>
           )}
 
-          <div className="prose prose-sm md:prose-base max-w-none mb-16 text-[#4b5563] leading-8">
+          <div className="prose prose-sm max-w-none mb-16 text-muted-foreground leading-8 md:prose-base">
             {post.content.split("\n").map(
               (paragraph: string, i: number) =>
                 paragraph.trim() && (
                   <p key={i} className="mb-6">
                     {paragraph}
                   </p>
-                ),
+                )
             )}
           </div>
         </article>
 
         {/* Related & Trending */}
-        <div className="border-t border-[#e5e7eb] bg-white">
+        <div className="border-t border-border bg-card">
           <div className="mx-auto max-w-4xl px-6 py-12 md:py-20">
-            <h2 className="mb-8 text-2xl md:text-3xl font-bold tracking-[-0.02em]">
+            <h2 className="mb-8 text-2xl font-bold tracking-[-0.02em] text-foreground md:text-3xl">
               More articles
             </h2>
 
@@ -140,16 +136,16 @@ export default async function BlogDetailPage({
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {relatedBlogs.map((blog: any) => (
                   <Link key={blog.id} href={`/blog/${blog.slug}`}>
-                    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 transition-shadow hover:shadow-md h-full">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xs font-medium text-[#ff6b4a] uppercase">
+                    <div className="h-full rounded-2xl border border-border bg-card p-6 transition-shadow hover:shadow-md">
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className="text-xs font-medium uppercase text-primary">
                           {blog.category}
                         </span>
                       </div>
-                      <h3 className="text-lg font-bold tracking-[-0.02em] mb-3 line-clamp-2">
+                      <h3 className="mb-3 line-clamp-2 text-lg font-bold tracking-[-0.02em] text-foreground">
                         {blog.title}
                       </h3>
-                      <p className="text-sm text-[#6b7280] line-clamp-2">
+                      <p className="line-clamp-2 text-sm text-muted-foreground">
                         {blog.excerpt}
                       </p>
                     </div>
@@ -157,7 +153,7 @@ export default async function BlogDetailPage({
                 ))}
               </div>
             ) : (
-              <p className="text-[#6b7280]">No more articles available.</p>
+              <p className="text-muted-foreground">No more articles available.</p>
             )}
           </div>
         </div>

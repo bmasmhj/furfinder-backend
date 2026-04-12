@@ -27,16 +27,16 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#fafafa] text-[#1a1a2e]">
+    <div className="min-h-screen bg-background text-foreground">
       <main>
-        <section className="bg-[linear-gradient(180deg,#fff_0%,#fff5f3_100%)] px-6 py-20 text-center md:px-8">
-          <span className="inline-flex rounded-full bg-[#fff1ed] px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#ff6b4a]">
+        <section className="bg-gradient-to-b from-background to-orange-50/50 px-6 py-20 text-center dark:to-orange-950/10 md:px-8">
+          <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
             Our Story
           </span>
-          <h1 className="mx-auto mt-5 max-w-4xl text-4xl font-extrabold tracking-[-0.05em] md:text-6xl">
+          <h1 className="mx-auto mt-5 max-w-4xl text-4xl font-extrabold tracking-[-0.05em] text-foreground md:text-6xl">
             Built from one very personal search for home.
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#6b7280]">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
             The Fur Finder exists because losing a pet is chaotic, emotional, and often scattered across too many tools. We wanted one place that could help families act fast.
           </p>
         </section>
@@ -46,8 +46,8 @@ export default function AboutPage() {
           title="Why this platform had to exist"
           description="The original landing page story is now part of the product story itself, because it is the clearest explanation of why the work matters."
         >
-          <div className="rounded-[28px] border border-[#ffd5cc] bg-[linear-gradient(135deg,#fff8f6_0%,#f0fdfb_100%)] px-8 py-10 md:px-10">
-            <div className="space-y-5 text-[15px] leading-8 text-[#374151]">
+          <div className="rounded-[28px] border border-orange-200 bg-gradient-to-br from-orange-50 to-teal-50 px-8 py-10 dark:border-orange-900/30 dark:from-orange-950/20 dark:to-teal-950/20 md:px-10">
+            <div className="space-y-5 text-[15px] leading-8 text-foreground/80">
               {founderStory.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}
@@ -55,7 +55,7 @@ export default function AboutPage() {
           </div>
         </MarketingSection>
 
-        <section className="border-y border-[#f3f4f6] bg-[#f9fafb]">
+        <section className="border-y border-border bg-muted/50">
           <MarketingSection
             eyebrow="Values"
             eyebrowTone="teal"
@@ -65,10 +65,10 @@ export default function AboutPage() {
           >
             <div className="grid gap-6 md:grid-cols-3">
               {values.map((value) => (
-                <article key={value.title} className="rounded-3xl border border-[#e5e7eb] bg-white p-8">
+                <article key={value.title} className="rounded-3xl border border-border bg-card p-8">
                   <div className="text-4xl">{value.icon}</div>
-                  <h2 className="mt-4 text-xl font-bold text-[#1a1a2e]">{value.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-[#6b7280]">{value.body}</p>
+                  <h2 className="mt-4 text-xl font-bold text-foreground">{value.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{value.body}</p>
                 </article>
               ))}
             </div>

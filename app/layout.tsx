@@ -2,15 +2,17 @@ import type { Metadata, Viewport } from "next";
 import { generateMetadata } from "../lib/metadata";
 import { Suspense } from "react";
 import ProgressBar from "@/components/common/ProgressBar";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
   viewportFit: "cover",
-  themeColor: "#3b82f6",
+  themeColor: "#FF6B4A",
 };
 
 export const metadata: Metadata = generateMetadata({
@@ -36,7 +38,6 @@ export default function RootLayout({
           content="black-translucent"
         />
         <meta name="theme-color" content="#FF6B4A" />
-
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -50,11 +51,18 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <Suspense fallback={null}>
-          <ProgressBar />
-        </Suspense>
-        {children}
-        <SpeedInsights />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Suspense fallback={null}>
+            <ProgressBar />
+          </Suspense>
+          {children}
+          <SpeedInsights />
+        </ThemeProvider>
       </body>
     </html>
   );

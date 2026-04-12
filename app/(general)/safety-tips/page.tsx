@@ -1,11 +1,11 @@
-import { ChevronLeft, Shield, Sparkles, Search, CheckCircle } from 'lucide-react';
+import { Shield, Sparkles, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 const categories = [
   {
     title: 'When Your Pet Goes Missing',
     color: 'text-red-500',
-    bg: 'bg-red-50',
+    bg: 'bg-red-50 dark:bg-red-950/20',
     tips: [
       'Search your home and neighborhood thoroughly first',
       "Contact local shelters and vets with your pet's description",
@@ -18,7 +18,7 @@ const categories = [
   {
     title: 'If You Find a Lost Pet',
     color: 'text-teal-500',
-    bg: 'bg-teal-50',
+    bg: 'bg-teal-50 dark:bg-teal-950/20',
     tips: [
       'Check for tags, collar, or microchip (any vet can scan)',
       'Post in local lost & found groups with photo and location',
@@ -30,7 +30,7 @@ const categories = [
   {
     title: 'Prevention Tips',
     color: 'text-indigo-500',
-    bg: 'bg-indigo-50',
+    bg: 'bg-indigo-50 dark:bg-indigo-950/20',
     tips: [
       'Microchip your pet and keep registration details updated',
       'Use a collar with ID tag including your phone number',
@@ -42,7 +42,7 @@ const categories = [
   {
     title: 'Emergency Contacts',
     color: 'text-orange-500',
-    bg: 'bg-orange-50',
+    bg: 'bg-orange-50 dark:bg-orange-950/20',
     tips: [
       'RSPCA: 1300 278 3589',
       'Animal Emergency: Contact your nearest 24hr vet',
@@ -54,68 +54,60 @@ const categories = [
 ];
 
 export default function SafetyTipsPage() {
-
-  return (<div className="min-h-screen bg-gray-50">
-    <div className="bg-gradient-to-r from-emerald-600 to-green-500 text-white px-6 pt-6 pb-8">
-
-
-      <div className="space-y-2">
-        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20">
-          <Shield size={20} />
-        </div>
-        <h1 className="text-2xl font-bold">Pet Safety Guide</h1>
-        <p className="text-sm text-white/80">
-          Essential tips for lost & found situations
-        </p>
-      </div>
-    </div>
-    <div className="p-4 space-y-4">
-      {categories.map((category, index) => (
-        <div key={index} className="bg-white rounded-xl p-4 border shadow-sm">
-          <h2 className="font-semibold text-lg mb-3">{category.title}</h2>
-
-          <div className="space-y-2">
-            {category.tips.map((tip, i) => {
-              const isLink = tip.includes("Partner Directory");
-
-              return (
-                <Link
-                  href={isLink ? "/partners" : "#"}
-                  key={i}
-
-                  className={`flex gap-2 items-start ${isLink ? "cursor-pointer" : ""
-                    }`}
-                >
-                  <CheckCircle
-                    className={`${category.color} mt-1`}
-                    size={18}
-                  />
-
-                  <p
-                    className={`text-sm ${isLink ? "text-emerald-600 underline" : "text-gray-600"
-                      }`}
-                  >
-                    {tip}
-                  </p>
-                </Link>
-              );
-            })}
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="bg-gradient-to-r from-emerald-600 to-green-500 px-6 pb-8 pt-6 text-white">
+        <div className="space-y-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+            <Shield size={20} />
           </div>
+          <h1 className="text-2xl font-bold">Pet Safety Guide</h1>
+          <p className="text-sm text-white/80">
+            Essential tips for lost & found situations
+          </p>
         </div>
-      ))}
+      </div>
+      <div className="space-y-4 p-4">
+        {categories.map((category, index) => (
+          <div key={index} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <h2 className="mb-3 text-lg font-semibold text-foreground">{category.title}</h2>
 
-      <div className="bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-xl p-6 text-center space-y-4">
-        <div className="w-12 h-12 mx-auto flex items-center justify-center rounded-full bg-white/20">
-          <Sparkles />
+            <div className="space-y-2">
+              {category.tips.map((tip, i) => {
+                const isLink = tip.includes("Partner Directory");
+
+                return (
+                  <Link
+                    href={isLink ? "/partners" : "#"}
+                    key={i}
+                    className={`flex items-start gap-2 ${isLink ? "cursor-pointer" : ""}`}
+                  >
+                    <CheckCircle
+                      className={`${category.color} mt-1`}
+                      size={18}
+                    />
+                    <p
+                      className={`text-sm ${isLink ? "text-emerald-600 underline dark:text-emerald-400" : "text-muted-foreground"}`}
+                    >
+                      {tip}
+                    </p>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        <div className="space-y-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 p-6 text-center text-white">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
+            <Sparkles />
+          </div>
+          <p className="text-sm">
+            Use The Fur Finder&apos;s AI matching to quickly find potential matches
+            for lost or found pets
+          </p>
         </div>
-
-        <p className="text-sm">
-          Use The Fur Finder's AI matching to quickly find potential matches
-          for lost or found pets
-        </p>
-
-
       </div>
     </div>
-  </div>)
+  );
 }

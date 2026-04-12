@@ -1,9 +1,11 @@
 "use client";
 
-import { Hamburger, HamburgerIcon, Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { cn } from "@/lib/utils";
 
 export default function Header() {
   const pathname = usePathname();
@@ -16,10 +18,19 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true;
@@ -36,64 +47,90 @@ export default function Header() {
 
   return (
     <>
-      <div className={`nav-wrap${scrolled ? " nav-wrap--scrolled" : ""}`}>
-        <nav
-          className="nav max-w-7xl mx-auto px-6"
-          style={{ padding: "14px 24px" }}
-        >
+      <div
+        className={cn(
+          "sticky top-0 z-50 border-b border-border/70 bg-background/92 backdrop-blur-xl transition-shadow",
+          scrolled && "shadow-sm"
+        )}
+      >
+        <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
           {/* Logo */}
-          <Link href="/" className="nav-logo">
-            <span className="paw">🐾</span> The Fur Finder
+          <Link href="/" className="flex items-center gap-2 text-lg font-bold text-foreground">
+            <span className="text-xl text-primary">🐾</span> The Fur Finder
           </Link>
 
           {/* Desktop nav */}
-          <div className="nav-links nav-links--desktop">
+          <div className="hidden items-center gap-7 md:flex">
             {navLinks.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
-                className={`nav-link${isActive(href) ? " nav-link--active" : ""}`}
+                className={cn(
+                  "relative py-2 text-sm font-medium transition-colors hover:text-primary",
+                  isActive(href) ? "font-bold text-primary" : "text-muted-foreground"
+                )}
               >
                 {label}
+                {isActive(href) && (
+                  <span className="absolute bottom-0 left-0 h-0.5 w-full rounded-full bg-primary" />
+                )}
               </Link>
             ))}
-            <Link href="https://app.thefurfinder.com" className="nav-cta !px-3 hidden md:inline-flex hover:!text-white ">
-              Try on Web 
+            <Link
+              href="https://app.thefurfinder.com"
+              className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+            >
+              Try on Web
             </Link>
+            <ThemeToggle />
           </div>
 
-          {/* Hamburger button (mobile only) */}
-          <button
-            className="nav-hamburger"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((v) => !v)}
-          >
-              <Menu size={20} className="dark:text-white" />
-          </button>
+          {/* Mobile controls */}
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <button
+              className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-muted"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((v) => !v)}
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </nav>
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile overlay */}
       {mobileOpen && (
-        <div className="mobile-overlay" onClick={() => setMobileOpen(false)} />
+        <div
+          className="fixed inset-0 z-[999] bg-black/40 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
       )}
+
+      {/* Mobile drawer */}
       <div
-        className={`mobile-drawer${mobileOpen ? " mobile-drawer--open" : ""}`}
+        className={cn(
+          "fixed right-0 top-0 z-[1000] h-full w-4/5 max-w-[300px] bg-background shadow-2xl transition-transform duration-300 ease-in-out",
+          mobileOpen ? "translate-x-0" : "translate-x-full"
+        )}
       >
-        <div className="mobile-drawer-inner">
+        <div className="flex flex-col gap-4 px-6 pt-20">
           {navLinks.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className={`mobile-nav-link${isActive(href) ? " mobile-nav-link--active" : ""}`}
+              className={cn(
+                "border-b border-border pb-3 text-lg font-semibold transition-colors",
+                isActive(href) ? "text-primary" : "text-foreground"
+              )}
             >
               {label}
             </Link>
           ))}
           <Link
             href="/#download"
-            className="mobile-nav-cta"
+            className="mt-5 rounded-xl bg-primary py-4 text-center font-bold text-white"
             onClick={() => setMobileOpen(false)}
           >
             Download Free

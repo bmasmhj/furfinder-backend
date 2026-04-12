@@ -1,53 +1,78 @@
+import { Check } from "lucide-react"
+
+const cards = [
+  {
+    emoji: "😢",
+    title: "My Pet Is Lost",
+    description: "Your pet is missing and every minute feels like an eternity. Here's how we help you get them back.",
+    items: [
+      "Post a report in under 2 minutes",
+      "AI instantly scans all found reports for matches",
+      "Share a printable flyer with one tap",
+      "Message anyone who spots your pet directly",
+      "Offer a reward to boost your report's visibility",
+    ],
+  },
+  {
+    emoji: "😊",
+    title: "I Found a Pet",
+    description: "You've spotted a lost animal and want to reunite it with its family. You're in the right place.",
+    items: [
+      "Post a found report with photos",
+      "AI matches it against all active lost reports nearby",
+      "Quick Snap to ID the pet using biometric scan",
+      "Find nearby vets and shelters to take the pet",
+      "Contact the owner safely through the app",
+    ],
+  },
+  {
+    emoji: "🌱",
+    title: "I Want to Help",
+    description: "You care about animals in your community and want to play an active part in reuniting them.",
+    items: [
+      "Browse the live map for pets reported near you",
+      "Get area alerts for new reports in your suburb",
+      "Leave community tips on reports you've seen",
+      "Share reports to your social networks",
+      "Contribute to reward pools for lost pets",
+    ],
+  },
+]
+
 export default function WhoisitFor() {
-    return   <section className="who-bg">
-      <div className="section centered max-w-7xl mx-auto">
-        <div className="section-label teal">Who It's For</div>
-        <h2 className="section-title">Built for everyone who loves animals</h2>
-        <p className="section-desc">Whether you've lost a pet, found one, or just want to help your community — there's a place for you in The Fur Finder.</p>
-        <div className="who-grid">
-          <div className="who-card">
-            <div className="who-card-top">
-              <span className="who-emoji">&#x1F622;</span>
-              <h3>My Pet Is Lost</h3>
-              <p>Your pet is missing and every minute feels like an eternity. Here's how we help you get them back.</p>
+  return (
+    <section className="border-y border-border bg-muted/50">
+      <div className="mx-auto max-w-7xl px-6 py-20 text-center">
+        <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-teal-600 dark:text-teal-400">
+          Who It&apos;s For
+        </div>
+        <h2 className="mb-2.5 text-[30px] font-bold tracking-[-0.5px] text-foreground">
+          Built for everyone who loves animals
+        </h2>
+        <p className="mx-auto mb-10 max-w-[580px] text-[15px] leading-[1.7] text-muted-foreground">
+          Whether you&apos;ve lost a pet, found one, or just want to help your community — there&apos;s a place for you in The Fur Finder.
+        </p>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {cards.map((card) => (
+            <div key={card.title} className="overflow-hidden rounded-[20px] border border-border bg-card transition-all hover:-translate-y-0.5 hover:shadow-lg">
+              <div className="px-7 pb-6 pt-8 text-center">
+                <span className="mb-3.5 block text-[40px]">{card.emoji}</span>
+                <h3 className="mb-2 text-[17px] font-bold text-foreground">{card.title}</h3>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">{card.description}</p>
+              </div>
+              <div className="border-t border-border px-7 py-5">
+                {card.items.map((item) => (
+                  <div key={item} className="mb-3 flex items-start gap-2.5 text-left text-[13px] text-foreground/80 last:mb-0">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="who-card-list">
-              <div className="who-item"><span className="who-check">&#x2713;</span> Post a report in under 2 minutes</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> AI instantly scans all found reports for matches</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Share a printable flyer with one tap</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Message anyone who spots your pet directly</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Offer a reward to boost your report's visibility</div>
-            </div>
-          </div>
-          <div className="who-card">
-            <div className="who-card-top">
-              <span className="who-emoji">&#x1F60A;</span>
-              <h3>I Found a Pet</h3>
-              <p>You've spotted a lost animal and want to reunite it with its family. You're in the right place.</p>
-            </div>
-            <div className="who-card-list">
-              <div className="who-item"><span className="who-check">&#x2713;</span> Post a found report with photos</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> AI matches it against all active lost reports nearby</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Quick Snap to ID the pet using biometric scan</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Find nearby vets and shelters to take the pet</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Contact the owner safely through the app</div>
-            </div>
-          </div>
-          <div className="who-card">
-            <div className="who-card-top">
-              <span className="who-emoji">&#x1F331;</span>
-              <h3>I Want to Help</h3>
-              <p>You care about animals in your community and want to play an active part in reuniting them.</p>
-            </div>
-            <div className="who-card-list">
-              <div className="who-item"><span className="who-check">&#x2713;</span> Browse the live map for pets reported near you</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Get area alerts for new reports in your suburb</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Leave community tips on reports you've seen</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Share reports to your social networks</div>
-              <div className="who-item"><span className="who-check">&#x2713;</span> Contribute to reward pools for lost pets</div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>
+  )
 }

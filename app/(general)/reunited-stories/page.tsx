@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MarketingSection } from "@/components/marketing/MarketingPrimitives";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Reunited Stories - The Fur Finder",
   description:
     "Inspiring stories of pets reunited with their families through The Fur Finder.",
 };
-
-import { db } from "@/lib/db";
 
 async function getReunitedStories() {
   try {
@@ -34,9 +33,6 @@ async function getFeaturedStories() {
   }
 }
 
-
-
-
 export default async function ReunitedStoriesPage() {
   const [allStories, featuredResult] = await Promise.all([
     getReunitedStories(),
@@ -47,17 +43,17 @@ export default async function ReunitedStoriesPage() {
   const featuredStories = featuredResult.data || [];
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-[#1a1a2e]">
+    <div className="min-h-screen bg-background text-foreground">
       <main>
         {/* Hero Section */}
-        <section className="bg-[linear-gradient(180deg,#fff_0%,#fff5f3_100%)] px-6 py-20 text-center md:px-8">
-          <span className="inline-flex rounded-full bg-[#fff1ed] px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#ff6b4a]">
+        <section className="bg-gradient-to-b from-background to-orange-50/50 px-6 py-20 text-center dark:to-orange-950/10 md:px-8">
+          <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
             Success Stories
           </span>
-          <h1 className="mt-5 text-4xl font-extrabold tracking-[-0.05em] md:text-6xl">
+          <h1 className="mt-5 text-4xl font-extrabold tracking-[-0.05em] text-foreground md:text-6xl">
             Pets Reunited, Families Complete
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#6b7280]">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground">
             Read inspiring stories of lost pets who found their way home with
             the help of our community and technology.
           </p>
@@ -71,50 +67,48 @@ export default async function ReunitedStoriesPage() {
           >
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {featuredStories.map((story: any) => (
-                <div
+                <Link
+                  href={`/reunited-stories/${story.id}`}
                   key={story.id}
-                  className="rounded-2xl border-2 border-[#ff6b4a] bg-white overflow-hidden"
+                  className="overflow-hidden rounded-2xl border-2 border-primary bg-card transition-all hover:shadow-lg"
                 >
                   {story.image_url && (
-                    <div className="h-48 overflow-hidden bg-[#e5e7eb]">
+                    <div className="h-48 overflow-hidden bg-muted">
                       <img
                         src={story.image_url}
                         alt={story.pet_name}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                       />
                     </div>
                   )}
                   <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="inline-block px-3 py-1 rounded-full bg-[#fff1ed] text-xs font-medium text-[#ff6b4a]">
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                         {story.pet_type}
                       </span>
                       {story.is_featured && (
-                        <span className="inline-block px-3 py-1 rounded-full bg-[#fff3cd] text-xs font-medium text-[#ff9800]">
+                        <span className="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
                           Featured
                         </span>
                       )}
                     </div>
-                    <h3 className="text-xl font-bold mb-2">
+                    <h3 className="mb-2 text-xl font-bold text-foreground">
                       {story.pet_name}&apos;s Journey
                     </h3>
-                    <p className="text-[#6b7280] text-sm mb-4 line-clamp-3">
+                    <p className="mb-4 line-clamp-3 text-sm text-muted-foreground">
                       {story.story_content}
                     </p>
-                    <p className="text-xs text-[#9ca3af]">
+                    <p className="text-xs text-muted-foreground">
                       Reunited:{" "}
                       {story.reunited_date
                         ? new Date(story.reunited_date).toLocaleDateString(
                             "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                            },
+                            { year: "numeric", month: "long" }
                           )
                         : "Recently"}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </MarketingSection>
@@ -128,52 +122,49 @@ export default async function ReunitedStoriesPage() {
           {stories.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {stories.map((story: any) => (
-                <div
+                <Link
+                  href={`/reunited-stories/${story.id}`}
                   key={story.id}
-                  className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden hover:shadow-md transition-shadow"
+                  className="overflow-hidden rounded-2xl border border-border bg-card transition-all hover:shadow-lg hover:-translate-y-0.5"
                 >
                   {story.image_url && (
-                    <div className="h-48 overflow-hidden bg-[#e5e7eb]">
+                    <div className="h-48 overflow-hidden bg-muted">
                       <img
                         src={story.image_url}
                         alt={story.pet_name}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                       />
                     </div>
                   )}
                   <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="inline-block px-3 py-1 rounded-full bg-[#fff1ed] text-xs font-medium text-[#ff6b4a]">
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                         {story.pet_type}
                       </span>
                     </div>
-                    <h3 className="text-lg font-bold mb-2">
+                    <h3 className="mb-2 text-lg font-bold text-foreground">
                       {story.pet_name}&apos;s Journey
                     </h3>
-                    <p className="text-[#6b7280] text-sm mb-4 line-clamp-3">
+                    <p className="mb-4 line-clamp-3 text-sm text-muted-foreground">
                       {story.story_content}
                     </p>
-                    <p className="text-xs text-[#9ca3af]">
+                    <p className="text-xs text-muted-foreground">
                       Reunited:{" "}
                       {story.reunited_date
                         ? new Date(story.reunited_date).toLocaleDateString(
                             "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                            },
+                            { year: "numeric", month: "long" }
                           )
                         : "Recently"}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
-            <div className="rounded-3xl border border-[#e5e7eb] bg-white p-8 text-center">
-              <p className="text-[#6b7280]">
-                No stories available yet. Be the first to share a reunited
-                story!
+            <div className="rounded-3xl border border-border bg-card p-8 text-center">
+              <p className="text-muted-foreground">
+                No stories available yet. Be the first to share a reunited story!
               </p>
             </div>
           )}

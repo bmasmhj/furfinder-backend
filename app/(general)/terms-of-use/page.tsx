@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function TermsOfUsePage() {
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-background">
       <LegalPageLayout
         tone="teal"
         title="The Fur Finder Terms of Use"
