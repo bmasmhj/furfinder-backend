@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Globe, Smartphone, Star, Shield, Zap } from "lucide-react";
+import CopyButton from "@/components/CopyButton";
 
 export const metadata: Metadata = {
   title: "Download The Fur Finder - Free on iOS, Android & Web",
@@ -207,7 +208,7 @@ export default function DownloadPage() {
             <span className="flex-1 truncate text-left text-sm text-muted-foreground">
               thefurfinder.com/download
             </span>
-            <CopyButton />
+            <CopyButton text="https://thefurfinder.com/download" />
           </div>
         </div>
       </section>
@@ -215,17 +216,4 @@ export default function DownloadPage() {
   );
 }
 
-function CopyButton() {
-  return (
-    <button
-      className="shrink-0 rounded-lg bg-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-[#e5553a]"
-      onClick={() => {
-        if (typeof navigator !== "undefined") {
-          navigator.clipboard.writeText("https://thefurfinder.com/download");
-        }
-      }}
-    >
-      Copy
-    </button>
-  );
-}
+
