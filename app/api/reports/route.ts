@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { handleApiError } from '@/lib/api-errors';
 
 import { mapReportRow } from '@/lib/api-helpers';
+import { processNewReportMatches } from '@/lib/match-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -151,7 +152,13 @@ export async function POST(request: NextRequest) {
 
     const report = mapReportRow(result.rows[0], true, false);
 
-    // AI Notification logic and moderation would go here.
+    // Trigger automatic matching
+    try {
+      await processNewReportMatches(report.id);
+    } catch (matchError) {
+      console.error('Match processing failed:', matchError);
+      // Don't fail the report creation if matching fails
+    }
     
     return NextResponse.json(report, { status: 201 });
   } catch (error) {
