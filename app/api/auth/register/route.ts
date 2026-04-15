@@ -21,10 +21,10 @@ export async function POST(request: NextRequest) {
       password, 
       display_name, 
       phone, 
-      consentPrivacy, 
-      consentTerms, 
-      consentAi, 
-      consentDataStorage, 
+      consent_privacy, 
+      consent_terms, 
+      consent_ai, 
+      consent_data_storage, 
       referralCode 
     } = body;
 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Email, password, and display name are required' }, { status: 400 });
     }
 
-    if (!consentPrivacy || !consentTerms || !consentAi || !consentDataStorage) {
+    if (!consent_privacy || !consent_terms || !consent_ai || !consent_data_storage) {
       return NextResponse.json({ message: 'All consent checkboxes must be accepted' }, { status: 400 });
     }
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO users (email, password_hash, display_name, phone, consent_privacy, consent_terms, consent_ai, consent_data_storage, consent_date, referral_code, referred_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10)
        RETURNING id, email, display_name as "display_name", phone, referral_code as "referralCode", role`,
-      [email.toLowerCase(), passwordHash, display_name, phone || '', consentPrivacy, consentTerms, consentAi, consentDataStorage, newCode, referrerId]
+      [email.toLowerCase(), passwordHash, display_name, phone || '', consent_privacy, consent_terms, consent_ai, consent_data_storage, newCode, referrerId]
     );
 
     const user = result.rows[0];

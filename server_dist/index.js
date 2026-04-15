@@ -575,11 +575,11 @@ function generateToken(user) {
   return jwt.sign(user, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 }
 async function registerUser(req, res) {
-  const { email, password, display_name, phone, consentPrivacy, consentTerms, consentAi, consentDataStorage, referralCode } = req.body;
+  const { email, password, display_name, phone, consent_privacy, consent_terms, consent_ai, consent_data_storage, referralCode } = req.body;
   if (!email || !password || !display_name) {
     return res.status(400).json({ message: "Email, password, and display name are required" });
   }
-  if (!consentPrivacy || !consentTerms || !consentAi || !consentDataStorage) {
+  if (!consent_privacy || !consent_terms || !consent_ai || !consent_data_storage) {
     return res.status(400).json({ message: "All consent checkboxes must be accepted" });
   }
   if (password.length < 6) {
@@ -603,7 +603,7 @@ async function registerUser(req, res) {
       `INSERT INTO users (email, password_hash, display_name, phone, consent_privacy, consent_terms, consent_ai, consent_data_storage, consent_date, referral_code, referred_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10)
        RETURNING id, email, display_name, phone, referral_code, role`,
-      [email.toLowerCase(), passwordHash, display_name, phone || "", consentPrivacy, consentTerms, consentAi, consentDataStorage, newCode, referrerId]
+      [email.toLowerCase(), passwordHash, display_name, phone || "", consent_privacy, consent_terms, consent_ai, consent_data_storage, newCode, referrerId]
     );
     const user = {
       id: result.rows[0].id,
