@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ message: 'Authentication required' }, { status: 401 });
     }
 
-    const reportId = params.id;
+    const reportId = await params.id;
     const matches = await findMatchesForReport(reportId);
 
     return NextResponse.json({ matches });

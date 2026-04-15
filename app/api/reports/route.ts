@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const offset = isPaginated ? page * limit : (parseInt(searchParams.get('offset') || '0'));
     const statusFilter = searchParams.get('status');
     const suburbFilter = searchParams.get('suburb');
+    const mineFilter = searchParams.get('mine') === 'true';
     const lat = parseFloat(searchParams.get('lat') || 'NaN');
     const lng = parseFloat(searchParams.get('lng') || 'NaN');
     const radiusKm = parseFloat(searchParams.get('radius') || 'NaN');
@@ -36,6 +37,11 @@ export async function GET(request: NextRequest) {
     if (suburbFilter) {
       params.push(`%${suburbFilter.toLowerCase()}%`);
       innerConditions.push(`LOWER(r.location_name) LIKE $${params.length}`);
+    }
+    
+    if (mineFilter && user) {
+      params.push(user.id);
+      innerConditions.push(`r.user_id = $${params.length}`);
     }
 
     if (hasGeo) {

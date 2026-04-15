@@ -2046,3 +2046,19 @@ ALTER DEFAULT PRIVILEGES FOR ROLE neondb_owner IN SCHEMA public GRANT SELECT,INS
 -- PostgreSQL database dump complete
 --
 
+
+--
+-- Name: claim_requests; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.claim_requests (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    lost_report_id uuid NOT NULL REFERENCES public.pet_reports(id),
+    found_report_id uuid NOT NULL REFERENCES public.pet_reports(id),
+    claimer_user_id uuid NOT NULL REFERENCES public.users(id),
+    found_user_id uuid NOT NULL REFERENCES public.users(id),
+    status character varying(20) DEFAULT 'pending' NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.claim_requests OWNER TO neondb_owner;

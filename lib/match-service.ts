@@ -13,6 +13,10 @@ export interface MatchCandidate {
   score: number;
   status: string;
   locationName: string;
+  reason: string;
+  type: 'report' | 'org_animal';
+  orgType?: string;
+  orgName?: string;
 }
 
 export async function findMatchesForReport(reportId: string) {
@@ -31,8 +35,10 @@ export async function findMatchesForReport(reportId: string) {
   
   const query = `
     SELECT * FROM (
+      -- Search in pet_reports (public reports)
       SELECT 
         id, user_id, pet_name, pet_type, breed, color, photo_uri, status, location_name,
+        'report' as match_type, NULL as org_type, NULL as org_name,
         (6371 * acos(GREATEST(-1.0, LEAST(1.0, cos(radians($2)) * cos(radians(latitude)) * cos(radians(longitude) - radians($1)) + sin(radians($2)) * sin(radians(latitude)))))) AS distance_km
       FROM pet_reports
       WHERE 
@@ -41,6 +47,21 @@ export async function findMatchesForReport(reportId: string) {
         AND id != $4
         AND latitude BETWEEN $2 - 0.05 AND $2 + 0.05
         AND longitude BETWEEN $1 - 0.05 AND $1 + 0.05
+
+      UNION ALL
+
+      -- Search in organisation_animals (shelters, vets, rescues)
+      SELECT 
+        oa.id, o.user_id, oa.pet_name, oa.pet_type, oa.breed, oa.color, oa.photo_uris->>0 as photo_uri, oa.status, o.address as location_name,
+        'org_animal' as match_type, o.type as org_type, o.name as org_name,
+        (6371 * acos(GREATEST(-1.0, LEAST(1.0, cos(radians($2)) * cos(radians(o.latitude)) * cos(radians(o.longitude) - radians($1)) + sin(radians($2)) * sin(radians(o.latitude)))))) AS distance_km
+      FROM organisation_animals oa
+      JOIN organisations o ON oa.org_id = o.id
+      WHERE 
+        oa.pet_type = (SELECT pet_type FROM pet_reports WHERE id = $4)
+        AND oa.created_at >= NOW() - INTERVAL '14 days'
+        AND o.latitude BETWEEN $2 - 0.05 AND $2 + 0.05
+        AND o.longitude BETWEEN $1 - 0.05 AND $1 + 0.05
     ) sub
     ORDER BY distance_km ASC
     LIMIT 50
@@ -105,7 +126,10 @@ export async function findMatchesForReport(reportId: string) {
       score: score,
       status: c.status,
       locationName: c.location_name,
-      reason : reason
+      reason : reason,
+      type: c.match_type,
+      orgType: c.org_type,
+      orgName: c.org_name
     };
   });
 
