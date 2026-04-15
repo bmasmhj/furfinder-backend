@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       id: row.id,
       email: row.email,
-      displayName: row.display_name, // Match original camelCase camelCase
+      display_name: row.display_name, // Match original camelCase camelCase
       phone: row.phone,
       role: row.role || 'user',
     });

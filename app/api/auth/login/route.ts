@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const user = {
       id: row.id,
       email: row.email,
-      displayName: row.display_name,
+      display_name: row.display_name,
       phone: row.phone,
       role: row.role || 'user',
     };

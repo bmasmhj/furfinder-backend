@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: Context) {
       suburb: r.suburb,
       microchipNumber: r.microchip_number,
       createdAt: r.created_at,
-      ownerDisplayName: r.owner_display_name,
+      ownerdisplay_name: r.owner_display_name,
     })));
   } catch (error) {
     return handleApiError(error);

@@ -382,7 +382,7 @@ function generateReferralCode2() {
   for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
 }
-async function ensureUser(email, password, displayName, phone, role) {
+async function ensureUser(email, password, display_name, phone, role) {
   const existing = await db_default.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
   if (existing.rows.length > 0) {
     await db_default.query("UPDATE users SET role = $1 WHERE email = $2", [role, email.toLowerCase()]);
@@ -393,7 +393,7 @@ async function ensureUser(email, password, displayName, phone, role) {
     `INSERT INTO users (email, password_hash, display_name, phone, consent_privacy, consent_terms, consent_ai, consent_data_storage, consent_date, role, referral_code)
      VALUES ($1, $2, $3, $4, true, true, true, true, NOW(), $5, $6)
      RETURNING id`,
-    [email.toLowerCase(), passwordHash, displayName, phone, role, generateReferralCode2()]
+    [email.toLowerCase(), passwordHash, display_name, phone, role, generateReferralCode2()]
   );
   return result.rows[0].id;
 }
@@ -575,8 +575,8 @@ function generateToken(user) {
   return jwt.sign(user, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 }
 async function registerUser(req, res) {
-  const { email, password, displayName, phone, consentPrivacy, consentTerms, consentAi, consentDataStorage, referralCode } = req.body;
-  if (!email || !password || !displayName) {
+  const { email, password, display_name, phone, consentPrivacy, consentTerms, consentAi, consentDataStorage, referralCode } = req.body;
+  if (!email || !password || !display_name) {
     return res.status(400).json({ message: "Email, password, and display name are required" });
   }
   if (!consentPrivacy || !consentTerms || !consentAi || !consentDataStorage) {
@@ -603,12 +603,12 @@ async function registerUser(req, res) {
       `INSERT INTO users (email, password_hash, display_name, phone, consent_privacy, consent_terms, consent_ai, consent_data_storage, consent_date, referral_code, referred_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10)
        RETURNING id, email, display_name, phone, referral_code, role`,
-      [email.toLowerCase(), passwordHash, displayName, phone || "", consentPrivacy, consentTerms, consentAi, consentDataStorage, newCode, referrerId]
+      [email.toLowerCase(), passwordHash, display_name, phone || "", consentPrivacy, consentTerms, consentAi, consentDataStorage, newCode, referrerId]
     );
     const user = {
       id: result.rows[0].id,
       email: result.rows[0].email,
-      displayName: result.rows[0].display_name,
+      display_name: result.rows[0].display_name,
       phone: result.rows[0].phone,
       role: result.rows[0].role || "user"
     };
@@ -657,7 +657,7 @@ async function loginUser(req, res) {
     const user = {
       id: row.id,
       email: row.email,
-      displayName: row.display_name,
+      display_name: row.display_name,
       phone: row.phone,
       role: row.role || "user"
     };
@@ -715,7 +715,7 @@ async function getMe(req, res) {
     return res.json({
       id: row.id,
       email: row.email,
-      displayName: row.display_name,
+      display_name: row.display_name,
       phone: row.phone,
       role: row.role || "user"
     });
@@ -1508,7 +1508,7 @@ Return ONLY valid JSON, no markdown.`;
       const reportId = result.rows[0].id;
       await db_default.query(
         `INSERT INTO timeline_events (report_id, type, description) VALUES ($1, 'created', $2)`,
-        [reportId, `Report created by ${b.contactName || req.user.displayName}`]
+        [reportId, `Report created by ${b.contactName || req.user.display_name}`]
       );
       return res.status(201).json(mapReportRow(result.rows[0], true, false));
     } catch (err) {
@@ -1631,7 +1631,7 @@ Return ONLY valid JSON, no markdown.`;
       if (!text) return res.status(400).json({ message: "Comment text is required" });
       const moderation = moderateContent(text);
       const cleanText = moderation.filteredText;
-      const authorName = author || (req.user ? req.user.displayName : "Anonymous");
+      const authorName = author || (req.user ? req.user.display_name : "Anonymous");
       const result = await db_default.query(
         "INSERT INTO comments (report_id, user_id, author, text) VALUES ($1, $2, $3, $4) RETURNING *",
         [id, req.user?.id || null, authorName, cleanText]
@@ -1794,7 +1794,7 @@ Return ONLY valid JSON, no markdown.`;
         photoUris: typeof row.photo_uris === "string" ? JSON.parse(row.photo_uris) : row.photo_uris || [],
         suburb: row.suburb,
         hasChip: !!row.microchip_number,
-        ownerDisplayName: row.owner_display_name,
+        ownerdisplay_name: row.owner_display_name,
         createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at
       })));
     } catch (err) {
@@ -1979,7 +1979,7 @@ Return ONLY valid JSON, no markdown.`;
       );
       return res.json(result.rows.map((r) => ({
         id: r.blocked_id,
-        displayName: r.display_name,
+        display_name: r.display_name,
         blockedAt: r.created_at.toISOString()
       })));
     } catch (err) {
@@ -2695,7 +2695,7 @@ Return ONLY valid JSON, no markdown.`;
         [text.trim().substring(0, 200), id]
       );
       const otherId = conv.rows[0].participant1_id === userId ? conv.rows[0].participant2_id : conv.rows[0].participant1_id;
-      const senderName = req.user.displayName;
+      const senderName = req.user.display_name;
       await db_default.query(
         `INSERT INTO notifications (user_id, type, title, message) VALUES ($1, 'message', $2, $3)`,
         [otherId, `New message from ${senderName}`, text.trim().substring(0, 100)]

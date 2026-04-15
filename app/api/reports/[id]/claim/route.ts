@@ -78,6 +78,10 @@ export async function POST(request: NextRequest, { params }: Context) {
       [foundReport.user_id, title, message, foundReportId]
     );
 
+    if(result?.id == null ){
+        return;
+    }
+
     if (foundUser?.push_token) {
       sendPushNotification(foundUser.push_token, foundReport.user_id, title, message, {
         type: 'claim_received',

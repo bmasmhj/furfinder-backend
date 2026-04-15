@@ -14,7 +14,7 @@ export async function POST(request: NextRequest, { params }: Context) {
     if (!text) return NextResponse.json({ message: "Comment text is required" }, { status: 400 });
 
     const user = await getCurrentUser();
-    const authorName = author || (user ? user.displayName : 'Anonymous');
+    const authorName = author || (user ? user.display_name : 'Anonymous');
     
     const result = await db.query(
       'INSERT INTO comments (report_id, user_id, author, text) VALUES ($1, $2, $3, $4) RETURNING *',

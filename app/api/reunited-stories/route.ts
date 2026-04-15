@@ -66,6 +66,10 @@ export async function POST(request: NextRequest) {
       ]
     );
 
+    if(result?.id == null){
+      return NextResponse.json({ success: false , message : 'Something went wrong' });
+    }
+
     if (sharedId) {
       await db.query(
         'UPDATE pet_reports SET pet_reunited_id = $1 WHERE pet_reunited_id = $2',

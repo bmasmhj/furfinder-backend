@@ -5,16 +5,20 @@ import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
+
     if (!user) {
-      return NextResponse.json({ message: 'Authentication required' }, { status: 401 });
+      return NextResponse.json(
+        { message: 'Authentication required' },
+        { status: 401 }
+      );
     }
 
-    const reportId = await params.id;
-    const matches = await findMatchesForReport(reportId);
+    const { id } = await context.params; // ✅ MUST await
+    const matches = await findMatchesForReport(id);
 
     return NextResponse.json({ matches });
   } catch (error) {

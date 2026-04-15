@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result.rows.map((r: any) => ({
       id: r.blocked_id,
-      displayName: r.display_name,
+      display_name: r.display_name,
       blockedAt: typeof r.created_at === 'string' ? r.created_at : r.created_at.toISOString(),
     })));
   } catch (error) {

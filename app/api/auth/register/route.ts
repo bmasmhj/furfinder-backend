@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const result = await db.query(
       `INSERT INTO users (email, password_hash, display_name, phone, consent_privacy, consent_terms, consent_ai, consent_data_storage, consent_date, referral_code, referred_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10)
-       RETURNING id, email, display_name as "displayName", phone, referral_code as "referralCode", role`,
+       RETURNING id, email, display_name as "display_name", phone, referral_code as "referralCode", role`,
       [email.toLowerCase(), passwordHash, display_name, phone || '', consentPrivacy, consentTerms, consentAi, consentDataStorage, newCode, referrerId]
     );
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const token = generateToken({
       id: user.id,
       email: user.email,
-      displayName: user.display_name,
+      display_name: user.display_name,
       phone: user.phone,
       role: user.role,
     });
