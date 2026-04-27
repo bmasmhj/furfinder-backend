@@ -47,7 +47,7 @@ export default function HeroSection() {
               Download on App Store
             </a>
             <a
-              href="https://play.google.com/store/apps/details?id=com.petreunite.app"
+              href="https://play.google.com/store/apps/details?id=com.thefurfinder.app"
               className="inline-flex w-full items-center gap-2 rounded-xl border-[1.5px] border-border bg-card px-7 py-3.5 text-[15px] font-semibold text-foreground transition-all hover:border-primary hover:text-primary md:w-auto"
               target="_blank"
               rel="noreferrer"

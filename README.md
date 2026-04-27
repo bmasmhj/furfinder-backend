@@ -1,10 +1,10 @@
-# Pet Reunite AI - Modern Next.js Application
+# The Fur Finder - Modern Next.js Application
 
 A professional, production-ready Next.js application for reuniting lost pets with their families using AI-powered matching technology.
 
 ## Overview
 
-Pet Reunite AI combines advanced machine learning with a compassionate community platform to help reunite lost pets with their owners. The application features:
+The Fur Finder combines advanced machine learning with a compassionate community platform to help reunite lost pets with their owners. The application features:
 
 - **AI-Powered Matching**: Advanced computer vision to match lost and found pets
 - **Real-Time Notifications**: Instant alerts when potential matches are found
@@ -39,7 +39,7 @@ Pet Reunite AI combines advanced machine learning with a compassionate community
 ## Project Structure
 
 ```
-pet-reunite-ai/
+the-fur-finder/
 ├── app/
 │   ├── (marketing)/           # Public marketing pages
 │   │   ├── page.tsx          # Landing page
@@ -105,8 +105,8 @@ pet-reunite-ai/
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/pet-reunite-ai.git
-cd pet-reunite-ai
+git clone https://github.com/yourusername/the-fur-finder.git
+cd the-fur-finder
 ```
 
 2. **Install dependencies**
@@ -311,7 +311,7 @@ MIT
 
 ## Support
 
-For issues or questions, please contact: support@petreunite.ai
+For issues or questions, please contact: support.thefurfinder.com
 
 ## Roadmap
 

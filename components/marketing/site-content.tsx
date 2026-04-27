@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 export const appStoreUrl = 'https://apps.apple.com/app/id6759967208'
-export const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.petreunite.app'
+export const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.thefurfinder.app'
 export const supportEmail = 'thefurfinderofficial@gmail.com'
 
 export const navLinks = [

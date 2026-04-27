@@ -1,4 +1,4 @@
-# Pet Reunite AI - Deployment Guide
+# The Fur Finder - Deployment Guide
 
 ## Prerequisites
 
@@ -135,4 +135,4 @@ npm run build
 
 ## Support
 
-For issues or questions, contact: support@petreunite.ai
+For issues or questions, contact: support.thefurfinder.com

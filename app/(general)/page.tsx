@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const appStoreUrl = "https://apps.apple.com/app/id6759967208";
 const playStoreUrl =
-  "https://play.google.com/store/apps/details?id=com.petreunite.app";
+  "https://play.google.com/store/apps/details?id=com.thefurfinder.app";
 
 async function getFaqs() {
   try {

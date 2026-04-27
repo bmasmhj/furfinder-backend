@@ -6,7 +6,7 @@ export default function TopNav() {
   return (
     <nav className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
       <div className="flex-1">
-        <h2 className="text-lg font-semibold text-foreground">Pet Reunite AI</h2>
+        <h2 className="text-lg font-semibold text-foreground">The Fur Finder</h2>
       </div>
 
       <div className="flex items-center gap-4">

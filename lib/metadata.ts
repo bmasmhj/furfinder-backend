@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
-const SITE_NAME = 'Pet Reunite AI'
-const SITE_URL = process.env.SITE_URL || 'https://petreunitai.com'
+const SITE_NAME = 'The Fur Finder'
+const SITE_URL = process.env.SITE_URL || 'https://thefurfinder.com'
 const SITE_DESCRIPTION = 'Reunite lost pets with their families using AI-powered matching'
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
 
