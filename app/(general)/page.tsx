@@ -5,16 +5,13 @@ import WhoisitFor from "@/components/marketing/WhoIsItFor";
 import { db } from "@/lib/db";
 import Apple from "@/components/icons/Apple";
 import PlayStore from "@/components/icons/PlayStore";
+import { downloadApp } from "@/lib/downloadHandler";
 
 export const metadata: Metadata = {
   title: "The Fur Finder — Australia's AI-Powered Lost & Found Pets App",
   description:
     "Report lost or found pets, get instant AI photo matching, and connect with your community to bring pets home. Available on iOS and Android.",
 };
-
-const appStoreUrl = "https://apps.apple.com/app/id6759967208";
-const playStoreUrl =
-  "https://play.google.com/store/apps/details?id=com.thefurfinder.app";
 
 async function getFaqs() {
   try {
@@ -177,30 +174,26 @@ export default async function HomePage() {
           reunite.
         </p>
         <div className="flex flex-wrap justify-center gap-3.5">
-          <a
-            href={appStoreUrl}
+          <Link
+            href={downloadApp("ios")}
             className="inline-flex items-center gap-3 rounded-[14px] border-[1.5px] border-white/15 bg-white/[0.08] px-7 py-3 text-white backdrop-blur-[10px] transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.14]"
-            target="_blank"
-            rel="noreferrer"
           >
             <Apple className="h-[26px] w-[26px]" />
             <div className="text-left">
               <span className="block text-[10px] font-normal opacity-65">Download on the</span>
               <span className="block text-base font-bold leading-tight">App Store</span>
             </div>
-          </a>
-          <a
-            href={playStoreUrl}
+          </Link>
+          <Link
+            href={downloadApp("android")}
             className="inline-flex items-center gap-3 rounded-[14px] border-[1.5px] border-white/15 bg-white/[0.08] px-7 py-3 text-white backdrop-blur-[10px] transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.14]"
-            target="_blank"
-            rel="noreferrer"
           >
             <PlayStore className="h-[26px] w-[26px]" />
             <div className="text-left">
               <span className="block text-[10px] font-normal opacity-65">Get it on</span>
               <span className="block text-base font-bold leading-tight">Google Play</span>
             </div>
-          </a>
+          </Link>
         </div>
         <p className="mt-6 text-[13px] text-white/40">
           Free to download · iOS &amp; Android · No account needed to browse

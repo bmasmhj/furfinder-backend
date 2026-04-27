@@ -3,6 +3,8 @@ import { Globe, Smartphone, Star, Shield, Zap } from "lucide-react";
 import CopyButton from "@/components/CopyButton";
 import Apple from "@/components/icons/Apple";
 import PlayStore from "@/components/icons/PlayStore";
+import { downloadApp } from "@/lib/downloadHandler";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Download The Fur Finder - Free on iOS, Android & Web",
@@ -10,9 +12,6 @@ export const metadata: Metadata = {
     "Download The Fur Finder — Australia's AI-powered lost & found pet app. Available free on the App Store, Google Play, and Web.",
 };
 
-const appStoreUrl = "https://apps.apple.com/app/id6759967208";
-const playStoreUrl =
-  "https://play.google.com/store/apps/details?id=com.thefurfinder.app";
 const webAppUrl = "https://app.thefurfinder.com";
 
 const highlights = [
@@ -47,10 +46,8 @@ export default function DownloadPage() {
           {/* Download buttons */}
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             {/* App Store */}
-            <a
-              href={appStoreUrl}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href={downloadApp("ios")}
               className="inline-flex w-full items-center gap-3 rounded-2xl border-[1.5px] border-white/15 bg-white/[0.08] px-7 py-4 text-white backdrop-blur-[10px] transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.14] sm:w-auto"
             >
               <Apple />
@@ -62,13 +59,11 @@ export default function DownloadPage() {
                   App Store
                 </span>
               </div>
-            </a>
+            </Link>
 
             {/* Google Play */}
-            <a
-              href={playStoreUrl}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href={downloadApp("android")}
               className="inline-flex w-full items-center gap-3 rounded-2xl border-[1.5px] border-white/15 bg-white/[0.08] px-7 py-4 text-white backdrop-blur-[10px] transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.14] sm:w-auto"
             >
              <PlayStore />
@@ -80,7 +75,7 @@ export default function DownloadPage() {
                   Google Play
                 </span>
               </div>
-            </a>
+            </Link>
 
             {/* Web App */}
             <a
@@ -143,14 +138,12 @@ export default function DownloadPage() {
             </div>
             <h3 className="mb-1 text-lg font-bold text-foreground">iPhone &amp; iPad</h3>
             <p className="mb-5 text-xs text-muted-foreground">iOS 15+ · Free</p>
-            <a
-              href={appStoreUrl}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href={downloadApp("ios")}
               className="block w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-[#e5553a]"
             >
               App Store →
-            </a>
+            </Link>
           </div>
 
           {/* Android */}
@@ -160,14 +153,12 @@ export default function DownloadPage() {
             </div>
             <h3 className="mb-1 text-lg font-bold text-foreground">Android</h3>
             <p className="mb-5 text-xs text-muted-foreground">Android 8+ · Free</p>
-            <a
-              href={playStoreUrl}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href={downloadApp("android")}
               className="block w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-[#e5553a]"
             >
               Google Play →
-            </a>
+            </Link>
           </div>
 
           {/* Web */}

@@ -155,7 +155,7 @@ export default function JoinTestingClient() {
                   <div className="flex-none w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">3</div>
                   <div className="space-y-1">
                     <p className="font-semibold text-lg">Redeem Code (Optional)</p>
-                    <p className="text-muted-foreground text-sm">If you were given a code, open TestFlight and tap "Redeem" at the top right.</p>
+                    <p className="text-muted-foreground text-sm">Use [ ] to reedem out app inside testflight</p>
                   </div>
                 </div>
               </div>

@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react'
 
-export const appStoreUrl = 'https://apps.apple.com/app/id6759967208'
-export const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.thefurfinder.app'
 export const supportEmail = 'thefurfinderofficial@gmail.com'
 
 export const navLinks = [
@@ -152,7 +150,7 @@ export const pricingPlans = [
     price: 'Free',
     note: 'Always free, no credit card needed',
     cta: 'Get Started Free',
-    href: appStoreUrl,
+    href: "/download",
     featured: false,
     features: [
       { included: true, label: 'Post lost and found reports' },
@@ -173,7 +171,7 @@ export const pricingPlans = [
     period: '/month',
     note: 'or $49.99/year — save 2 months',
     cta: 'Start Premium Trial',
-    href: appStoreUrl,
+    href: "/download",
     featured: true,
     badge: 'Most Popular',
     features: [

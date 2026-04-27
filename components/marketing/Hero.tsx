@@ -3,6 +3,8 @@ import Mobile from '@/assets/images/mobile.png'
 import { Globe } from 'lucide-react'
 import Apple from '../icons/Apple'
 import PlayStore from '../icons/PlayStore'
+import Link from 'next/link'
+import { downloadApp } from '@/lib/downloadHandler'
 
 export default function HeroSection() {
   return (
@@ -37,24 +39,20 @@ export default function HeroSection() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <a
-              href="https://apps.apple.com/app/id6759967208"
+            <Link
+              href={downloadApp("ios")}
               className="inline-flex w-full items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_4px_16px_rgba(255,107,74,0.3)] transition-all hover:-translate-y-0.5 hover:bg-[#e5553a] hover:shadow-[0_8px_24px_rgba(255,107,74,0.35)] md:w-auto"
-              target="_blank"
-              rel="noreferrer"
             >
               <Apple className='h-5 w-5'/>
               Download on App Store
-            </a>
-            <a
-              href="https://play.google.com/store/apps/details?id=com.thefurfinder.app"
+            </Link>
+            <Link
+              href={downloadApp("android")}
               className="inline-flex w-full items-center gap-2 rounded-xl border-[1.5px] border-border bg-card px-7 py-3.5 text-[15px] font-semibold text-foreground transition-all hover:border-primary hover:text-primary md:w-auto"
-              target="_blank"
-              rel="noreferrer"
             >
               <PlayStore className='h-5 w-5'/>
               Get on Google Play
-            </a>
+            </Link>
             <a
               href="https://app.thefurfinder.com"
               className="inline-flex w-full items-center gap-2 rounded-xl border-[1.5px] border-border bg-card px-7 py-3.5 text-[15px] font-semibold text-foreground transition-all hover:border-primary hover:text-primary md:w-auto"

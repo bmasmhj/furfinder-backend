@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { appStoreUrl, playStoreUrl } from "@/components/marketing/site-content";
-
 export default function Footer() {
   return (
     <footer className="bg-[#080808] px-6 py-14 text-[#9ca3af]">
