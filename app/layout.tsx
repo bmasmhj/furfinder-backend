@@ -5,6 +5,7 @@ import ProgressBar from "@/components/common/ProgressBar";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -62,7 +63,9 @@ export default function RootLayout({
           </Suspense>
           {children}
           <SpeedInsights />
+          <Analytics />
         </ThemeProvider>
+        
       </body>
     </html>
   );
