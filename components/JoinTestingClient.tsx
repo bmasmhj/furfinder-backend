@@ -13,6 +13,7 @@ import { submitBetaRequest } from "@/app/actions/testing";
 import { Loader2 } from "lucide-react";
 
 type Platform = "ios" | "android" | null;
+const SUPPORT_EMAIL = "support.thefurfinder@gmail.com";
 
 export default function JoinTestingClient() {
   const [platform, setPlatform] = useState<Platform>(null);
@@ -23,19 +24,20 @@ export default function JoinTestingClient() {
 
   const handleSubmitAndroid = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || isSubmitting) return;
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || isSubmitting) return;
 
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      const result = await submitBetaRequest(email, "Android");
+      const result = await submitBetaRequest(normalizedEmail, "Android");
       if (result.success) {
         setSubmitted(true);
       } else {
         setSubmitError(result.error || "Something went wrong. Please try again.");
       }
-    } catch (err) {
+    } catch {
       setSubmitError("Failed to submit request. Please check your connection.");
     } finally {
       setIsSubmitting(false);
@@ -52,8 +54,8 @@ export default function JoinTestingClient() {
           Help us build the <span className="text-primary">future</span> of pet safety
         </h1>
         <p className="text-xl text-muted-foreground">
-          Join our beta testing program and be the first to experience the new Fur Finder. 
-          Select your platform below to get started.
+          Join our testing program and get early access to Fur Finder on your device.
+          Select iPhone or Android below to get started.
         </p>
       </div>
 
@@ -61,6 +63,7 @@ export default function JoinTestingClient() {
         {/* iOS Selection Card */}
         <button
           onClick={() => { setPlatform("ios"); setSubmitted(false); }}
+          aria-pressed={platform === "ios"}
           className={cn(
             "group relative flex flex-col items-center p-8 rounded-3xl border-2 transition-all duration-300 text-left hover:scale-[1.02]",
             platform === "ios" 
@@ -86,6 +89,7 @@ export default function JoinTestingClient() {
         {/* Android Selection Card */}
         <button
           onClick={() => { setPlatform("android"); setSubmitted(false); }}
+          aria-pressed={platform === "android"}
           className={cn(
             "group relative flex flex-col items-center p-8 rounded-3xl border-2 transition-all duration-300 text-left hover:scale-[1.02]",
             platform === "android" 
@@ -119,7 +123,7 @@ export default function JoinTestingClient() {
                 <Smartphone className="w-5 h-5 text-primary" />
                 iOS Installation Steps
               </CardTitle>
-              <CardDescription>Follow these steps to get the app on your iPhone.</CardDescription>
+              <CardDescription>Follow these steps to install Fur Finder with Apple TestFlight.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="space-y-4">
@@ -140,11 +144,11 @@ export default function JoinTestingClient() {
                 <div className="flex gap-4">
                   <div className="flex-none w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">2</div>
                   <div className="space-y-1">
-                    <p className="font-semibold text-lg">Join the Beta</p>
-                    <p className="text-muted-foreground text-sm">Click the invite link below to join The Fur Finder testing group.</p>
+                    <p className="font-semibold text-lg">Open the TestFlight Invite</p>
+                    <p className="text-muted-foreground text-sm">Use this link on your iPhone and accept the invite for The Fur Finder beta.</p>
                     <Button className="mt-2 bg-primary hover:bg-primary/90 text-white" asChild>
                       <a href="https://testflight.apple.com/join/hxx4NTgp" target="_blank" rel="noopener noreferrer">
-                        Join Beta Group
+                        Join on TestFlight
                         <ChevronRight className="w-4 h-4 ml-2" />
                       </a>
                     </Button>
@@ -154,8 +158,8 @@ export default function JoinTestingClient() {
                 <div className="flex gap-4">
                   <div className="flex-none w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">3</div>
                   <div className="space-y-1">
-                    <p className="font-semibold text-lg">Redeem Code (Optional)</p>
-                    <p className="text-muted-foreground text-sm">Use [ ] to reedem out app inside testflight</p>
+                    <p className="font-semibold text-lg">Install the Build</p>
+                    <p className="text-muted-foreground text-sm">In TestFlight, tap <strong>Install</strong> next to The Fur Finder to start testing.</p>
                   </div>
                 </div>
               </div>
@@ -171,7 +175,7 @@ export default function JoinTestingClient() {
                 <PlayStore className="w-5 h-5 text-primary" />
                 Join Android Testing
               </CardTitle>
-              <CardDescription>Enter your email associated with your Google Play account to receive an invite.</CardDescription>
+              <CardDescription>Use the Google account email on your Android device. We&apos;ll send your access request to the team.</CardDescription>
             </CardHeader>
             <CardContent>
               {!submitted ? (
@@ -186,19 +190,34 @@ export default function JoinTestingClient() {
                         placeholder="your.email@gmail.com" 
                         className="pl-10 h-12 rounded-xl"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (submitError) setSubmitError(null);
+                        }}
+                        autoComplete="email"
+                        inputMode="email"
                         required
                       />
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      This helps us add the correct Google account to the internal testing list.
+                    </p>
                   </div>
                   {submitError && (
-                    <p className="text-sm font-medium text-destructive animate-in fade-in slide-in-from-top-1">
-                      {submitError}
-                    </p>
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 animate-in fade-in slide-in-from-top-1" role="alert">
+                      <p className="text-sm font-medium text-destructive">{submitError}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        If this keeps happening, email{" "}
+                        <a href={`mailto:${SUPPORT_EMAIL}`} className="underline underline-offset-2 hover:text-foreground">
+                          {SUPPORT_EMAIL}
+                        </a>
+                        .
+                      </p>
+                    </div>
                   )}
                   <Button 
                     type="submit" 
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !email.trim()}
                     className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-lg shadow-lg shadow-primary/20 disabled:opacity-70"
                   >
                     {isSubmitting ? (
@@ -221,7 +240,8 @@ export default function JoinTestingClient() {
                   </div>
                   <h3 className="text-2xl font-bold">You're on the list!</h3>
                   <p className="text-muted-foreground max-w-sm mx-auto">
-                    We've received your request. You'll receive an email with instructions once you're added to the testing group.
+                    We&apos;ve received your request for <strong>{email.trim().toLowerCase()}</strong>.
+                    You&apos;ll get an email with testing steps once your account is added.
                   </p>
                   <Button variant="ghost" onClick={() => setSubmitted(false)} className="mt-4">
                     Wait, I used the wrong email

@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 
-export const supportEmail = 'support.thefurfinder@gmail.com'
+export const supportEmail = 'support@thefurfinder.com'
+export const partnershipsEmail = 'partnerships@thefurfinder.com'
+export const privacyEmail = 'privacy@thefurfinder.com'
 
 export const navLinks = [
   { href: '/features', label: 'Features' },

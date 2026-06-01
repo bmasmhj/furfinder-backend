@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { partnershipsEmail } from "@/components/marketing/site-content";
 
 export const metadata: Metadata = {
   title: "Advertise - The Fur Finder",
@@ -20,6 +21,13 @@ export default function AdvertisePage() {
         <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground">
           We are preparing advertising options for pet-focused businesses and
           community partners. Stay tuned for launch details.
+        </p>
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
+          For early advertising and partner interest, email{" "}
+          <a className="font-semibold text-primary hover:underline" href={`mailto:${partnershipsEmail}`}>
+            {partnershipsEmail}
+          </a>
+          .
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link

@@ -12,7 +12,7 @@ const categories = [
       'Post on social media and community groups immediately',
       'Put out familiar items (bed, toys) near your home',
       'Check with microchip company to ensure contact details are current',
-      'Browse our Partner Directory for local vets, shelters & rescue groups',
+      'Browse our Partner Network for local vets, shelters & rescue groups',
     ],
   },
   {
@@ -74,24 +74,22 @@ export default function SafetyTipsPage() {
 
             <div className="space-y-2">
               {category.tips.map((tip, i) => {
-                const isLink = tip.includes("Partner Directory");
+                const isLink = tip.includes("Partner Network");
 
                 return (
-                  <Link
-                    href={isLink ? "/partners" : "#"}
-                    key={i}
-                    className={`flex items-start gap-2 ${isLink ? "cursor-pointer" : ""}`}
-                  >
-                    <CheckCircle
-                      className={`${category.color} mt-1`}
-                      size={18}
-                    />
-                    <p
-                      className={`text-sm ${isLink ? "text-emerald-600 underline dark:text-emerald-400" : "text-muted-foreground"}`}
-                    >
-                      {tip}
-                    </p>
-                  </Link>
+                  <div key={i} className="flex items-start gap-2">
+                    <CheckCircle className={`${category.color} mt-1`} size={18} />
+                    {isLink ? (
+                      <Link
+                        href="/partner-registration"
+                        className="text-sm text-emerald-600 underline dark:text-emerald-400"
+                      >
+                        {tip}
+                      </Link>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{tip}</p>
+                    )}
+                  </div>
                 );
               })}
             </div>

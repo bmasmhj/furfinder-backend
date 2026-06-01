@@ -135,4 +135,8 @@ npm run build
 
 ## Support
 
-For issues or questions, contact: support.thefurfinder.com
+For deployment and production support:
+
+- Platform and app support: `support@thefurfinder.com`
+- Partnership and commercial requests: `partnerships@thefurfinder.com`
+- Privacy and compliance requests: `privacy@thefurfinder.com`

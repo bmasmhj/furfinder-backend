@@ -27,6 +27,12 @@ All endpoints return JSON responses with the following format:
 }
 ```
 
+## Support and Contact
+
+- API and integration support: `support@thefurfinder.com`
+- Partnerships and commercial enquiries: `partnerships@thefurfinder.com`
+- Privacy and data rights enquiries: `privacy@thefurfinder.com`
+
 ---
 
 ## Public Endpoints

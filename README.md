@@ -311,7 +311,13 @@ MIT
 
 ## Support
 
-For issues or questions, please contact: support.thefurfinder.com
+For issues, questions, or requests, use the path below:
+
+- Product support, account help, and billing: `support@thefurfinder.com`
+- Partnerships, directory onboarding, and advertising: `partnerships@thefurfinder.com`
+- Privacy and data rights requests: `privacy@thefurfinder.com`
+
+You can also start at the Contact page: `/contact`
 
 ## Roadmap
 

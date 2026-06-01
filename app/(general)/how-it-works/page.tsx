@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { featureCards } from "@/components/marketing/site-content";
 import { db } from "@/lib/db";
 
@@ -124,14 +125,14 @@ export default async function HowitWorks() {
           </div>
           <div>
             <h2 className="mb-4 text-3xl font-bold text-foreground">
-              Are you a Vet or Shelter?
+              Run a clinic, shelter, or rescue team?
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-muted-foreground">
-              Register as an official partner to have the animals in your care
-              automatically included in AI matching results. Help connect owners
-              to their pets faster than ever.
+              Join The Fur Finder partner network so animals in your care are
+              easier to discover in lost-and-found searches. We support
+              veterinary clinics, shelters, rescue organisations, and councils.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="mb-6 flex flex-wrap gap-3">
               {["Free Registration", "AI Match Integration", "Public Directory"].map((tag) => (
                 <span
                   key={tag}
@@ -141,6 +142,12 @@ export default async function HowitWorks() {
                 </span>
               ))}
             </div>
+            <Link
+              href="/partner-registration"
+              className="inline-flex rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e5553a]"
+            >
+              Start partner intake
+            </Link>
           </div>
         </div>
       </section>

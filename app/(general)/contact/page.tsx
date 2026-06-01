@@ -1,6 +1,12 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { MarketingSection } from '@/components/marketing/MarketingPrimitives'
-import { faqItems, supportEmail } from '@/components/marketing/site-content'
+import {
+  faqItems,
+  partnershipsEmail,
+  privacyEmail,
+  supportEmail,
+} from '@/components/marketing/site-content'
 
 export const metadata: Metadata = {
   title: 'Contact - The Fur Finder',
@@ -21,22 +27,53 @@ export default function ContactPage() {
           </p>
         </section>
 
-        <MarketingSection title="How we can help" description="The original support page content has been refocused into clear contact paths instead of a placeholder form.">
+        <MarketingSection
+          title="How we can help"
+          description="Use the path that best matches your request so the right team can respond faster."
+        >
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { title: 'Support', body: 'Questions about reports, matching, accounts, or subscriptions.' },
-              { title: 'Partnerships', body: 'For vets, shelters, rescues, and organisations interested in joining the directory.' },
-              { title: 'Privacy & Data', body: 'For deletion requests, privacy concerns, and legal policy questions.' },
+              {
+                title: 'Support',
+                body: 'Questions about reports, matching, accounts, subscriptions, or app access.',
+                email: supportEmail,
+              },
+              {
+                title: 'Partnerships',
+                body: 'For vets, shelters, rescues, and organisations joining our directory or partner network.',
+                email: partnershipsEmail,
+                href: '/partner-registration',
+                cta: 'Start partner intake',
+              },
+              {
+                title: 'Privacy & Data',
+                body: 'For deletion requests, privacy concerns, and policy-related questions.',
+                email: privacyEmail,
+              },
             ].map((card) => (
               <article key={card.title} className="rounded-3xl border border-border bg-card p-8">
                 <h2 className="text-xl font-bold text-foreground">{card.title}</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{card.body}</p>
-                <a
-                  href={`mailto:${supportEmail}`}
-                  className="mt-6 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#e5553a]"
-                >
-                  {supportEmail}
-                </a>
+                {card.href ? (
+                  <div className="mt-6 space-y-2">
+                    <Link
+                      href={card.href}
+                      className="inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#e5553a]"
+                    >
+                      {card.cta}
+                    </Link>
+                    <p className="text-xs text-muted-foreground">
+                      Or email <a className="font-semibold text-primary hover:underline" href={`mailto:${card.email}`}>{card.email}</a>
+                    </p>
+                  </div>
+                ) : (
+                  <a
+                    href={`mailto:${card.email}`}
+                    className="mt-6 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#e5553a]"
+                  >
+                    {card.email}
+                  </a>
+                )}
               </article>
             ))}
           </div>

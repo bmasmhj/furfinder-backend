@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalPageLayout, LegalSection } from '@/components/marketing/MarketingPrimitives'
-import { privacySections, supportEmail } from '@/components/marketing/site-content'
+import { privacyEmail, privacySections } from '@/components/marketing/site-content'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - The Fur Finder',
@@ -28,7 +28,7 @@ export default function PrivacyPolicyPage() {
             ))}
             <LegalSection
               title="6. Contact Us"
-              body={`If you have questions about this policy or want to exercise your privacy rights, contact us at:\n\nEmail: ${supportEmail}`}
+              body={`If you have questions about this policy or want to exercise your privacy rights, contact us at:\n\nEmail: ${privacyEmail}`}
             />
           </LegalPageLayout>
         </div>
@@ -40,7 +40,7 @@ export default function PrivacyPolicyPage() {
               If you have any concerns about your personal information or our privacy practices, we&apos;re here to help.
             </p>
             <a
-              href={`mailto:${supportEmail}?subject=Privacy%20Inquiry`}
+              href={`mailto:${privacyEmail}?subject=Privacy%20Inquiry`}
               className="inline-flex rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e55a3a]"
             >
               Contact Us
