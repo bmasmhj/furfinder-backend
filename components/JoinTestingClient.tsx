@@ -13,7 +13,7 @@ import { submitBetaRequest } from "@/app/actions/testing";
 import { Loader2 } from "lucide-react";
 
 type Platform = "ios" | "android" | null;
-const SUPPORT_EMAIL = "support.thefurfinder@gmail.com";
+const SUPPORT_EMAIL = "support@thefurfinder.com";
 
 export default function JoinTestingClient() {
   const [platform, setPlatform] = useState<Platform>(null);
