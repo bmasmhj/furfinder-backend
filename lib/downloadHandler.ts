@@ -1,13 +1,16 @@
+export const IOS_APP_STORE_URL =
+  "https://apps.apple.com/us/app/the-fur-finder/id6763890902";
+
+export const ANDROID_BETA_URL = "/join-testing?platform=android#android-beta-request";
+
 export const downloadApp = (os: "android" | "ios" | "") => {
-    // For new send to testing link
-    // https://thefurfinder.com/join-testing
+  if (os === "ios") {
+    return IOS_APP_STORE_URL;
+  }
 
-    return "/join-testing";
+  if (os === "android") {
+    return ANDROID_BETA_URL;
+  }
 
-    // TODO: Implement download handler
-//     if (os === "android") {
-//         return "https://play.google.com/store/apps/details?id=com.thefurfinder.app"
-//     } else {
-//         return "https://apps.apple.com/app/id6759967208"
-//     }
-}
+  return "/download";
+};

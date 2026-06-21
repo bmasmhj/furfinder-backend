@@ -178,8 +178,8 @@ export default async function HomePage() {
           >
             <Apple className="h-[26px] w-[26px]" />
             <div className="text-left">
-              <span className="block text-[10px] font-normal opacity-65">Join through</span>
-              <span className="block text-base font-bold leading-tight">iOS TestFlight</span>
+              <span className="block text-[10px] font-normal opacity-65">Download on</span>
+              <span className="block text-base font-bold leading-tight">App Store</span>
             </div>
           </Link>
           <Link

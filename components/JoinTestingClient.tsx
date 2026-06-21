@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, ChevronRight, Download, Mail, Smartphone, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Download, Mail, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,9 @@ import PlayStore from "@/components/icons/PlayStore";
 import { cn } from "@/lib/utils";
 import { submitBetaRequest } from "@/app/actions/testing";
 import { Loader2 } from "lucide-react";
+import { downloadApp } from "@/lib/downloadHandler";
 
-type Platform = "ios" | "android" | null;
+type Platform = "android" | null;
 const SUPPORT_EMAIL = "support@thefurfinder.com";
 
 export default function JoinTestingClient() {
@@ -21,6 +22,37 @@ export default function JoinTestingClient() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const requestSectionRef = useRef<HTMLDivElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (
+      params.get("platform")?.toLowerCase() === "android" ||
+      window.location.hash === "#android-beta-request"
+    ) {
+      setPlatform("android");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (platform !== "android") return;
+
+    const scrollTimer = window.setTimeout(() => {
+      requestSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      emailInputRef.current?.focus({ preventScroll: true });
+    }, 80);
+
+    return () => window.clearTimeout(scrollTimer);
+  }, [platform]);
+
+  const handleSelectAndroid = () => {
+    setPlatform("android");
+    setSubmitted(false);
+  };
 
   const handleSubmitAndroid = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,41 +86,39 @@ export default function JoinTestingClient() {
           Help us build the <span className="text-primary">future</span> of pet safety
         </h1>
         <p className="text-xl text-muted-foreground">
-          Join our testing program and get early access to Fur Finder on your device.
-          Select iPhone or Android below to get started.
+          Download The Fur Finder on iPhone or request Android beta testing access.
+          Select your device below to get started.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
-        {/* iOS Selection Card */}
-        <button
-          onClick={() => { setPlatform("ios"); setSubmitted(false); }}
-          aria-pressed={platform === "ios"}
+        {/* iOS App Store Card */}
+        <a
+          href={downloadApp("ios")}
+          target="_blank"
+          rel="noopener noreferrer"
           className={cn(
             "group relative flex flex-col items-center p-8 rounded-3xl border-2 transition-all duration-300 text-left hover:scale-[1.02]",
-            platform === "ios" 
-              ? "border-primary bg-primary/5 shadow-lg shadow-primary/10" 
-              : "border-border bg-card/50 backdrop-blur-sm hover:border-primary/50"
+            "border-border bg-card/50 backdrop-blur-sm hover:border-primary/50"
           )}
         >
           <div className={cn(
             "w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300",
-            platform === "ios" ? "bg-primary text-white" : "bg-muted group-hover:bg-primary/20"
+            "bg-muted group-hover:bg-primary/20"
           )}>
-            <Apple className={cn("w-8 h-8", platform === "ios" ? "fill-white" : "fill-foreground group-hover:fill-primary")} />
+            <Apple className="w-8 h-8 fill-foreground group-hover:fill-primary" />
           </div>
-          <h3 className="text-2xl font-semibold mb-2">iOS Beta</h3>
-          <p className="text-muted-foreground text-center">Available via Apple TestFlight</p>
-          {platform === "ios" && (
-            <div className="absolute top-4 right-4 text-primary">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-          )}
-        </button>
+          <h3 className="text-2xl font-semibold mb-2">iOS App</h3>
+          <p className="text-muted-foreground text-center">Download from the App Store</p>
+          <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+            <Download className="h-4 w-4" />
+            Open App Store
+          </span>
+        </a>
 
         {/* Android Selection Card */}
         <button
-          onClick={() => { setPlatform("android"); setSubmitted(false); }}
+          onClick={handleSelectAndroid}
           aria-pressed={platform === "android"}
           className={cn(
             "group relative flex flex-col items-center p-8 rounded-3xl border-2 transition-all duration-300 text-left hover:scale-[1.02]",
@@ -114,59 +144,7 @@ export default function JoinTestingClient() {
       </div>
 
       {/* Dynamic Content Area */}
-      <div className="max-w-2xl mx-auto">
-        {platform === "ios" && (
-          <Card className="border-none shadow-2xl bg-card/80 backdrop-blur-md overflow-hidden">
-            <div className="h-2 bg-primary" />
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-primary" />
-                iOS Installation Steps
-              </CardTitle>
-              <CardDescription>Follow these steps to install Fur Finder with Apple TestFlight.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="flex-none w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">1</div>
-                  <div className="space-y-1">
-                    <p className="font-semibold text-lg">Install TestFlight</p>
-                    <p className="text-muted-foreground text-sm">Download the TestFlight app from the App Store if you haven't already.</p>
-                    <Button variant="outline" size="sm" className="mt-2" asChild>
-                      <a href="https://apps.apple.com/app/testflight/id899247664" target="_blank" rel="noopener noreferrer">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download TestFlight
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-none w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">2</div>
-                  <div className="space-y-1">
-                    <p className="font-semibold text-lg">Open the TestFlight Invite</p>
-                    <p className="text-muted-foreground text-sm">Use this link on your iPhone and accept the invite for The Fur Finder beta.</p>
-                    <Button className="mt-2 bg-primary hover:bg-primary/90 text-white" asChild>
-                      <a href="https://testflight.apple.com/join/hxx4NTgp" target="_blank" rel="noopener noreferrer">
-                        Join on TestFlight
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-none w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">3</div>
-                  <div className="space-y-1">
-                    <p className="font-semibold text-lg">Install the Build</p>
-                    <p className="text-muted-foreground text-sm">In TestFlight, tap <strong>Install</strong> next to The Fur Finder to start testing.</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
+      <div ref={requestSectionRef} id="android-beta-request" className="max-w-2xl mx-auto scroll-mt-24">
         {platform === "android" && (
           <Card className="border-none shadow-2xl bg-card/80 backdrop-blur-md overflow-hidden">
             <div className="h-2 bg-primary" />
@@ -185,6 +163,7 @@ export default function JoinTestingClient() {
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input 
+                        ref={emailInputRef}
                         id="email" 
                         type="email" 
                         placeholder="your.email@gmail.com" 
@@ -255,7 +234,7 @@ export default function JoinTestingClient() {
         {!platform && (
           <div className="text-center p-12 border-2 border-dashed border-border rounded-3xl bg-card/30 backdrop-blur-sm">
             <Smartphone className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-            <p className="text-muted-foreground italic">Please select your device platform above to see instructions.</p>
+            <p className="text-muted-foreground italic">Select Android above to request beta testing access.</p>
           </div>
         )}
       </div>

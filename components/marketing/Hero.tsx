@@ -43,7 +43,7 @@ export default function HeroSection() {
               className="inline-flex w-full items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_4px_16px_rgba(255,107,74,0.3)] transition-all hover:-translate-y-0.5 hover:bg-[#e5553a] hover:shadow-[0_8px_24px_rgba(255,107,74,0.35)] md:w-auto"
             >
               <Apple className='h-5 w-5'/>
-              Join iOS TestFlight
+              Download on App Store
             </Link>
             <Link
               href={downloadApp("android")}

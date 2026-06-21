@@ -9,7 +9,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Get The Fur Finder - Current Platform Availability",
   description:
-    "See current TestFlight, Android beta, and web availability for The Fur Finder.",
+    "Download The Fur Finder for iOS, request Android beta access, or open the web experience.",
 };
 
 const webAppUrl = "https://app.thefurfinder.com";
@@ -39,8 +39,8 @@ export default function DownloadPage() {
           </h1>
 
           <p className="mx-auto mb-10 max-w-lg text-lg leading-relaxed text-white/70">
-            Access the current beta or open the web experience. Public App Store
-            and Google Play listings are not currently advertised on this page.
+            Download the iOS app, request Android beta access, or open the web
+            experience from your browser.
           </p>
 
           {/* Download buttons */}
@@ -52,9 +52,9 @@ export default function DownloadPage() {
             >
               <Apple />
               <div className="text-left">
-                <span className="block text-[10px] font-normal opacity-65">Join through</span>
+                <span className="block text-[10px] font-normal opacity-65">Download on</span>
                 <span className="block text-lg font-bold leading-tight">
-                  iOS TestFlight
+                  App Store
                 </span>
               </div>
             </Link>
@@ -132,13 +132,13 @@ export default function DownloadPage() {
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 text-white shadow-lg">
               <Apple className="w-8 h-8" />
             </div>
-            <h3 className="mb-1 text-lg font-bold text-foreground">iOS beta</h3>
-            <p className="mb-5 text-xs text-muted-foreground">TestFlight access, subject to availability</p>
+            <h3 className="mb-1 text-lg font-bold text-foreground">iOS app</h3>
+            <p className="mb-5 text-xs text-muted-foreground">Available from the App Store</p>
             <Link
               href={downloadApp("ios")}
               className="block w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-[#e5553a]"
             >
-              View TestFlight instructions →
+              Download on App Store →
             </Link>
           </div>
 

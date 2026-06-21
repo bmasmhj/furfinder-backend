@@ -20,6 +20,7 @@ import { PetFlyerActions, PrintButton } from "@/components/app/PetFlyerActions";
 import LeafletMap from "@/components/app/LeafletMap";
 import Apple from "@/components/icons/Apple";
 import PlayStore from "@/components/icons/PlayStore";
+import { downloadApp } from "@/lib/downloadHandler";
 
 
 
@@ -235,10 +236,10 @@ export default async function PetIdPage({
                                 View current app access options to report sightings and enable available nearby alerts for {displayName}.
                             </p>
                             <div className="flex flex-wrap gap-3 md:gap-4">
-                                <DownloadButton href="/download" variant="secondary">
-                                      <Apple className="h-5 w-5" /> iOS beta
+                                <DownloadButton href={downloadApp("ios")} variant="secondary">
+                                      <Apple className="h-5 w-5" /> iOS app
                                 </DownloadButton>
-                                <DownloadButton href="/download" variant="secondary">
+                                <DownloadButton href={downloadApp("android")} variant="secondary">
                                         <PlayStore className="h-5 w-5" />
                                       Android beta
                                 </DownloadButton>
