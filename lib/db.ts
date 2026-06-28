@@ -1,6 +1,4 @@
-// Alias for compatibility with route imports
-export const db = { query, queryOne, queryMany, execute, closePool };
-import { Pool, QueryResult, type QueryResultRow } from '@neondatabase/serverless'
+import { Pool, QueryResult, type QueryResultRow } from 'pg'
 
 let pool: Pool | null = null
 
@@ -58,3 +56,6 @@ export async function closePool(): Promise<void> {
     pool = null
   }
 }
+
+// Alias for compatibility with route imports
+export const db = { query, queryOne, queryMany, execute, closePool };
